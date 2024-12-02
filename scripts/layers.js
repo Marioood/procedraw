@@ -1,4 +1,4 @@
-//layer classes
+//layer classes (data processing)
 /*
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
@@ -180,7 +180,7 @@ class LayerBorder extends Layer {
 			y1 = o.y0;
 		}
 		
-		for(let x = x0; x <= x1; x++) {
+		for(let x = x0 + 1; x <= x1 - 1; x++) {
 			img.plotPixel(o.colorTop, x, y0, this.od.alpha, this.od.blend);
 			img.plotPixel(o.colorBottom, x, y1, this.od.alpha, this.od.blend);
 		}

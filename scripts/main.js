@@ -18,10 +18,6 @@ layerInput.addEventListener("input", function (e) {
 //hack-y way to get the optios to show up REMOVE
 layerInput.dispatchEvent(new Event("input"));
 
-/*for(let i = 0; i < 256; i++) {
-	console.log(img.data[i]);
-}*/
-
 //NEW goalz
 //layer creation
 //serialization
@@ -32,11 +28,6 @@ layerInput.dispatchEvent(new Event("input"));
 //layer tiling periods, layer offsets
 //layer tint
 //filters (?) they seem kinda slow.....
+//normalized is broken?
 //hex codes in color input
-
-/*const options = Object.keys(layer.o);
-
-console.log(options);
-const myOption = options[2];
-
-layer.o[myOption] = true;*/
+//add those cute blended corners to LayerBorder that the old version had

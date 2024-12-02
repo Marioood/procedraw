@@ -1,4 +1,4 @@
-//intermingling of html and js - scary!!
+//intermingling of html and js - scary!! (data output n input)
 class Tether {
 	canvas = undefined;
 	ctx = undefined;
@@ -10,6 +10,7 @@ class Tether {
 	}
 	
 	generateLayerOptions(options, types, containerId) {
+		//this grotesque hell creature needs comments
 		const container = document.getElementById(containerId);
 		const layer = img.layers[this.currentLayer];
 		//change this later!!!! maybe?
@@ -101,14 +102,6 @@ class Tether {
 			const lineBreak = document.createElement("br");
 			container.appendChild(lineBreak);
 		}
-		
-		
-		/*const checkbox = document.getElementById("OPTION");
-		checkbox.addEventListener("input", function (e) {
-			console.log(this.checked);
-			img.options.normalized = checkbox.checked;
-			img.printImage();
-		});*/
 	}
 	
 	killAllChildren(elementId) {

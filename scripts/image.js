@@ -1,9 +1,4 @@
-//global layer management
-//global variables are stored in an ect so accessing stuff is less confusing (dont know where imgX is from, but know where img.x is from)
-//makes the image stuff soooorta act like a class? not really though
-
-//actually global classes are  easier....
-
+//global layer management (data funnelling n processing)
 class ImageManager {
 	x = 128;
 	y = 128;
