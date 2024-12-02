@@ -1,0 +1,10 @@
+GOALS
+simple to create layers (in code)
+
+only draw whats necessary
+
+cache what's drawn (maybe? test speed)
+
+
+
+note to self - input doesnt clear if page is reloaded (might not affect dynamic elements)

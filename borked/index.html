@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			body {
+				background-color: grey;
+				margin: 0;
+			}
+			canvas {
+				position: absolute;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="render" width="256" height="256" onmousemove="go2Mouse(event)" onmousedown="processClick(event)" onmouseup="processUnclick(event)"></canvas>
+		<script src="scripts/layers.js"></script>
+		<script>
+			const canvas = document.getElementById("render");
+			const ctx = canvas.getContext("2d");
+			
+			const layer = new LayerXorFractal();
+			console.log(layer.options.scale);
+			layer.generate();
+			let img = ctx.createImageData(imgX, imgY);
+			
+			for(let i = 0; i < imgX * imgY * 4; i++) {
+				img.data[i] = imgData[i];
+			}
+			
+			ctx.putImageData(img, 0, 0);
+			
+			let mouseDown = false;
+			let mouseOffsX = 0;
+			let mouseOffsY = 0;
+			
+			function go2Mouse(event) {
+				//dont go to mouse if nothing is clicked
+				if(!mouseDown) return;
+				console.log(event.offsetX + ", " + event.offsetY);
+				canvas.style.left = (event.clientX - mouseOffsX) + "px";
+				canvas.style.top = (event.clientY - mouseOffsY) + "px";
+			}
+			
+			function processClick(event) {
+				mouseOffsX = event.offsetX;
+				mouseOffsY = event.offsetY;
+				mouseDown = true;
+			}
+			
+			function processUnclick(event) {
+				mouseDown = false;
+			}
+		</script>
+	</body>
+</html>
