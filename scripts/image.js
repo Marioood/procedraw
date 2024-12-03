@@ -9,8 +9,8 @@ class ImageManager {
 
 	layers = [
 		new LayerSolid(1, "plain"),
-		new LayerXorFractal(0.75, "plain"),
-		new LayerNoise(0.1, "plain"),
+		new LayerXorFractal(0.5, "multiply"),
+		new LayerNoise(0.25, "multiply"),
 		new LayerBorder(1, "plain")
 	];
 	
@@ -18,6 +18,7 @@ class ImageManager {
 		//regenerate data array if size will change
 		if(this.x * this.y != this.xOld * this.yOld) {
 			this.data = new Array(this.x * this.y * 4);
+			//TODO: replace this with a user-controlled background color
 			for(let i = 0; i < img.data.length; i++) {
 				img.data[i] = 255;
 			}
@@ -82,12 +83,14 @@ class ImageManager {
 				//lerp
 				return b + strength * (l - b);
 			case "screen":
-				return 1 - (1 - l * (strength)) * (1 - b);
+				return 1 - (1 - l * strength) * (1 - b);
 			case "overlay":
+				//fuck you wikipedia
+				//this blend mode is innaccurate. the bright parts are too bright and the image doesnt get blown out when its on pure color (ex: 255, 0, 0)
 				if(l < 0.5) {
-					return this.combinePixel(l * 255, b * 255, "multiply", strength);
+					return (2 * (l * strength) + 1 - strength) * b;
 				} else {
-					return this.combinePixel(l * 255, b * 255, "screen", strength);
+					return 1 - (1 - l * strength) * (1 - b);
 				}
 		}
 	}

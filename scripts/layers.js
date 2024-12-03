@@ -49,8 +49,8 @@ class Layer {
 
 class LayerXorFractal extends Layer {
 	options = {
-		scaleX: 1,
-		scaleY: 1,
+		scaleX: 4,
+		scaleY: 4,
 		normalized: false
 	};
 	

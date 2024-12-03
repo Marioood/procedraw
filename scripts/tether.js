@@ -64,7 +64,6 @@ class Tether {
 					input.setAttribute("type", "checkbox");
 					//doesnt work with the "checked" atrribute.... janky
 					input.setAttribute("value", options[optionKeys[i]]);
-					console.log(options[optionKeys[i]])
 					input.addEventListener("input", function (e) {
 						options[optionKeys[i]] = input.checked;
 						img.printImage();
@@ -74,9 +73,17 @@ class Tether {
 					input.setAttribute("type", "color");
 					input.setAttribute("value", img.RGB2Hex(options[optionKeys[i]]));
 					
+					let oldTime;
+					
 					input.addEventListener("input", function (e) {
-						options[optionKeys[i]] = img.parseHex(input.value);
-						img.printImage();
+						//intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
+						let curTime = Math.round(Date.now() / 100);
+						
+						if(oldTime != curTime) {
+							oldTime = curTime;
+							options[optionKeys[i]] = img.parseHex(input.value);
+							img.printImage();
+						}
 					});
 					break;
 				case "dropdown":
@@ -95,7 +102,6 @@ class Tether {
 						img.printImage();
 					});
 					break;
-					
 			}
 			container.appendChild(input);
 			//spacing
@@ -110,5 +116,13 @@ class Tether {
 		while(container.firstChild) {
 			container.removeChild(container.lastChild);
 		}
+	}
+	
+	updateLayerOptions() {
+		this.killAllChildren("layer-options");
+		this.killAllChildren("layer-options-default");
+		const layer = img.layers[this.currentLayer];
+		this.generateLayerOptions(layer.od, layer.typesDefault, "layer-options-default");
+		this.generateLayerOptions(layer.options, layer.types, "layer-options");
 	}
 }
