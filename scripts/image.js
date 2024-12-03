@@ -8,10 +8,8 @@ class ImageManager {
 	layer = undefined;
 
 	layers = [
-		new LayerSolid(1, "plain"),
-		new LayerXorFractal(0.5, "multiply"),
-		new LayerNoise(0.25, "multiply"),
-		new LayerBorder(1, "plain")
+		new LayerSolid(),
+		new LayerWandering()
 	];
 	
 	printImage() {

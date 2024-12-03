@@ -4,10 +4,6 @@ default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
 class Layer {
-	constructor(alpha, blend) {
-		this.od.blend = blend;
-		this.od.alpha = alpha;
-	}
 	//layer options
 	options = {};
 	//setting types (for the editor input types)
@@ -16,7 +12,7 @@ class Layer {
 	//short for "options default" cause do was taken apparent
 	od = {
 		//the translucency of the layer (0 is transparent, 1 is opaque)
-		alpha: 0,
+		alpha: 1,
 		//blend mode
 		blend: "plain"
 	};
@@ -24,16 +20,16 @@ class Layer {
 	typesDefault = {
 		alpha: {
 			type: "number",
-			decimal: true,
+			step: 0.1,
 			min: 0,
 			max: 1
 		},
 		blend: {
 			type: "dropdown",
 			items: [
+				"plain",
 				"add",
 				"multiply",
-				"plain",
 				"screen",
 				"overlay"
 			]
@@ -57,11 +53,11 @@ class LayerXorFractal extends Layer {
 	types = {
 		scaleX: {
 			type: "number",
-			decimal: true
+			step: 0.1
 		},
 		scaleY: {
 			type: "number",
-			decimal: true
+			step: 0.1
 		},
 		normalized: {
 			type: "boolean"
@@ -144,20 +140,16 @@ class LayerBorder extends Layer {
 			type: "color"
 		},
 		x0: {
-			type: "number",
-			min: 0
+			type: "number"
 		},
 		y0: {
-			type: "number",
-			min: 0
+			type: "number"
 		},
 		x1: {
-			type: "number",
-			min: 0
+			type: "number"
 		},
 		y1: {
-			type: "number",
-			min: 0
+			type: "number"
 		}
 	};
 
@@ -191,116 +183,142 @@ class LayerBorder extends Layer {
 	}
 }
 
-/*class Liney{
-	constructor(breaks = 0.5, depth = 2, brightness = 1, go2x = X) {
-		this.depth = depth;
-		this.breaks = breaks;
-		this.brightness = brightness;
-		this.xDir = go2x;
+class LayerLiney extends Layer {
+	options = {
+		breaks: 0.5,
+		depth: 2,
+		brightness: 1,
+		go2x: true
 	}
 	
-	getCol() {
-		return Math.round((Math.random() * this.brightness) * this.depth) / this.depth;
+	types = {
+		breaks: {
+			type: "number",
+			step: 0.05,
+			max: 1,
+			min: 0
+		},
+		depth: {
+			type: "number",
+			max: 255,
+			min: 1
+		},
+		brightness: {
+			type: "number",
+			step: 0.05,
+			max: 1,
+			min: 0
+		},
+		go2x: {
+			type: "boolean"
+		}
 	}
 	
-	generate() {
-		let lines = new Array(IMG_SIZE);
+	generate(o) {
 		let maxL, maxI;
 
-		if(this.xDir) {
-			maxL = WIDTH;
-			maxI = HEIGHT;
+		if(o.go2x) {
+			maxL = img.x;
+			maxI = img.y;
 		} else {
-			maxL = HEIGHT;
-			maxI = WIDTH;
+			maxL = img.y;
+			maxI = img.x;
 		}
+		
 		for(let i = 0; i < maxI; i++) {
-			let col = this.getCol();
+			let col = 0.5;
 			for(let l = 0; l < maxL; l++) {
-				if(Math.random() < this.breaks) {
-					col = this.getCol();
+				if(Math.random() < o.breaks || l == 0) {
+					col = Math.round((Math.random() * o.brightness) * o.depth) / o.depth * 255;
 				}
-				if(this.xDir) {
-					lines[l + (i * WIDTH)] = col;
+				let x, y;
+				if(o.go2x) {
+					x = l;
+					y = i;
 				} else {
-					lines[i + (l * WIDTH)] = col;
+					x = i;
+					y = l;
 				}
+				
+				img.plotPixel([col, col, col, 255], x, y, this.od.alpha, this.od.blend);
 			}
-		}
-		for(let i = 0; i < IMG_SIZE; i++) {
-			let col = 0;
-			col = lerp(0, 255, lines[i]);
-			
-			layerData[i * 4] = col;
-			layerData[i * 4 + 1] = col;
-			layerData[i * 4 + 2] = col;
-			layerData[i * 4 + 3] = 255;
 		}
 	}
 }
 
-class Wandering{
-	constructor(color, maxLines = 4, go2X = X, spread = 0.5, variance = 2, bias = 0.5) {
-		this.color = color;
-		if(go2X) {
-			maxLines *= DIF_X;
-		} else {
-			maxLines *= DIF_Y;
-		}
-		this.maxLines = maxLines;
-		this.spread = spread;
-		this.variance = variance;
-		this.go2X = go2X;
-		this.bias = bias;
+class LayerWandering extends Layer{
+	options = {
+		color: [255, 255, 255, 255],
+		maxLines: 4,
+		go2X: true,
+		spread: 0.5,
+		variance: 2,
+		bias: 0.5
 	}
 	
-	generate() {
-		let lines = new Array(IMG_SIZE);
+	types = {
+		color: {
+			type: "color"
+		},
+		maxLines: {
+			type: "number",
+			min: 1
+		},
+		go2X: {
+			type: "boolean"
+		},
+		spread: {
+			type: "number",
+			step: 0.05,
+			max: 1,
+			min: 0
+		},
+		variance: {
+			type: "number"
+		},
+		bias: {
+			type: "number",
+			step: 0.05,
+			max: 1,
+			min: 0
+		}
+	}
+	
+	generate(o) {
+		//bug: weird space at the top?
+		//spacing is just weird with this one
 		let maxN;
 
-		if(this.go2X) {
-			maxN = WIDTH;
+		if(o.go2X) {
+			maxN = img.x;
 		} else {
-			maxN = HEIGHT;
+			maxN = img.y;
 		}
 		
-		for(let i = 0; i < this.maxLines; i++) {
-			let pos = Math.round(i * (maxN / this.maxLines) + (Math.random() - 0.5) * this.variance + this.maxLines / 2);
+		for(let i = 0; i < o.maxLines; i++) {
+			let pos = Math.round(i * (maxN / o.maxLines) + (Math.random() - 0.5) * o.variance);
 			for(let n = 0; n < maxN; n++) {
-				if(this.go2X) {
-					lines[n + pos * WIDTH] = 1;
+				let x, y;
+				
+				if(o.go2X) {
+					x = n;
+					y = pos;
 				} else {
-		 		 	lines[pos + n * WIDTH] = 1;
+					x = pos;
+					y = n;
 				}
-				if(Math.random() < this.spread) {
-					if(Math.random() < this.bias) {
+				
+				img.plotPixel(o.color, x, y, this.od.alpha, this.od.blend);
+				
+				if(Math.random() < o.spread) {
+					if(Math.random() < o.bias) {
 						pos++;
 					} else {
 						pos--;
 					}
-					//pos += Math.round((Math.random() - 0.5) * 3);
 					pos %= maxN;
 				}
 			}
 		}
-		let col = hex2arr(this.color);
-		
-		for(let i = 0; i < IMG_SIZE; i++) {
-			let r = 0;
-			let g = 0;
-			let b = 0;
-			let a = 0;
-			if(lines[i] == 1) {
-				r = col[0];
-				g = col[1];
-				b = col[2];
-				a = 255;
-			}
-			
-			layerData[i * 4] = r;
-			layerData[i * 4 + 1] = g;
-			layerData[i * 4 + 2] = b;
-			layerData[i * 4 + 3] = a;
-		}
 	}
-}*/
+}

@@ -3,6 +3,7 @@ class Tether {
 	canvas = undefined;
 	ctx = undefined;
 	currentLayer = 0;
+	currentClass = LayerXorFractal;
 	
 	constructor() {
 		this.canvas = document.getElementById("render");
@@ -23,7 +24,7 @@ class Tether {
 			container.appendChild(message);
 			return;
 		}
-		
+
 		for(let i = 0; i < optionKeys.length; i++) {
 			//label
 			const label = document.createElement("label");
@@ -44,8 +45,8 @@ class Tether {
 				case "number":
 					input.setAttribute("type", "number");
 					input.setAttribute("value", options[optionKeys[i]]);
-					if(limits.decimal) {
-						input.setAttribute("step", 0.1);
+					if(limits.step != undefined) {
+						input.setAttribute("step", limits.step);
 					}
 					//theres probably a better way of doing this but i cant be bothered to learn it (web dev grindset)
 					if(limits.min != undefined) {
