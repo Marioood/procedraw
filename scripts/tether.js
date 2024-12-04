@@ -4,10 +4,15 @@ class Tether {
 	ctx = undefined;
 	currentLayer = 0;
 	currentClass = LayerXorFractal;
+	canvasScale = 4;
 	
 	constructor() {
 		this.canvas = document.getElementById("render");
 		this.ctx = this.canvas.getContext("2d");
+		this.canvas.setAttribute("width", img.x);
+		this.canvas.setAttribute("height", img.y);
+		this.canvas.style.width = img.x * this.canvasScale + "px";
+		this.canvas.style.height = img.y * this.canvasScale + "px";
 	}
 	
 	generateLayerOptions(options, types, containerId) {
@@ -99,7 +104,7 @@ class Tether {
 					input.selectedIndex = limits.items.indexOf(options[optionKeys[i]]);
 					
 					input.addEventListener("change", function (e) {
-						options[optionKeys[i]] = limits.items[this.selectedIndex];
+						options[optionKeys[i]] = limits.items[input.selectedIndex];
 						img.printImage();
 					});
 					break;
@@ -122,8 +127,15 @@ class Tether {
 	updateLayerOptions() {
 		this.killAllChildren("layer-options");
 		this.killAllChildren("layer-options-default");
-		const layer = img.layers[this.currentLayer];
-		this.generateLayerOptions(layer.od, layer.typesDefault, "layer-options-default");
-		this.generateLayerOptions(layer.options, layer.types, "layer-options");
+		if(img.layers.length == 0) {
+			
+		} else {
+			const layer = img.layers[this.currentLayer];
+			this.generateLayerOptions(layer.od, layer.typesDefault, "layer-options-default");
+			this.generateLayerOptions(layer.options, layer.types, "layer-options");
+				
+			const layerTitle = document.getElementById("layer-title");
+			layerTitle.textContent = img.layers[this.currentLayer].name + " layer options";
+		}
 	}
 }

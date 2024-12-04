@@ -1,74 +1,66 @@
 //global layer management (data funnelling n processing)
 class ImageManager {
-	x = 128;
-	y = 128;
-	xOld = 0;
-	yOld = 0;
+	x = 64;
+	y = 64;
 	data = [];
 	layer = undefined;
+	bg = [128, 128, 128, 255];
 
-	layers = [
-		new LayerSolid(),
-		new LayerWandering()
-	];
+	layers = [];
 	
 	printImage() {
-		//regenerate data array if size will change
-		if(this.x * this.y != this.xOld * this.yOld) {
-			this.data = new Array(this.x * this.y * 4);
-			//TODO: replace this with a user-controlled background color
-			for(let i = 0; i < img.data.length; i++) {
-				img.data[i] = 255;
-			}
-			this.xOld = this.x;
-			this.yOld = this.y;
+		//write the background color
+		for(let i = 0; i < this.x * this.y; i++) {
+			img.data[i * 4] = this.bg[0];
+			img.data[i * 4 + 1] = this.bg[1];
+			img.data[i * 4 + 2] = this.bg[2];
+			img.data[i * 4 + 3] = this.bg[3];
 		}
-		
+		//layer the layers
 		for(let i = 0; i < this.layers.length; i++) {
 			const layer = this.layers[i];
 			//this.layer.options = this.layer.defaults;
 			layer.generate(layer.options);
 		}
-
+		//canvas stuff
 		let canvasImg = t.ctx.createImageData(this.x, this.y);
-
+		//write to canvas data
 		for(let i = 0; i < this.x * this.y * 4; i++) {
 			canvasImg.data[i] = this.data[i];
 		}
-
+		//insert new image data
 		t.ctx.putImageData(canvasImg, 0, 0);
+	}
+	
+	updateSize() {
+		//if the width or height is too big then i predict that everything will expode
+		if(this.x > 256) {
+			this.x = 256;
+			console.log("hey, quit doing that!");
+		}
+		if(this.y > 256) {
+			this.y = 256;
+			console.log("hey, quit doing that!");
+		}
+		this.data = new Array(this.x * this.y * 4);
 	}
 
 	plotPixel(color, x, y, alpha, blend) {
+		//drop the pixel if its out of bounds
+		if(x < 0 || x >= this.x || y < 0 || y >= this.y) return;
 		//color is an array of 4 bytes
 		//[red, blue, green, alpha]
 		const pos = x + y * this.x;
-		
+		//todo: actually have alpha CHANNEL affect (effect? idk) the color, not just the layer's alpha
 		this.data[pos * 4] = this.combinePixel(color[0], this.data[pos * 4], blend, alpha) * 255;
 		this.data[pos * 4 + 1] = this.combinePixel(color[1], this.data[pos * 4 + 1], blend, alpha) * 255;
 		this.data[pos * 4 + 2] = this.combinePixel(color[2], this.data[pos * 4 + 2], blend, alpha) * 255;
-		this.data[pos * 4 + 3] = color[3];
-	}
-	
-	parseRGB(hex) {
-		const r = (hex & 0xFF0000) >> 16;
-		const g = (hex & 0x00FF00) >> 8;
-		const b = hex & 0x0000FF;
-		return [r, g, b, 255];
-	}
-	
-	RGB2Hex(arr) {
-		//[255, 255, 255, 255] to #ffffffff
-		return "#" + arr[0].toString(16) + arr[1].toString(16) + arr[2].toString(16);
-	}
-	
-	parseHex(hex) {
-		//convert #RRGGBB to 0xRRGGBB
-		return img.parseRGB(Number("0x" + hex.slice(1)));
+		//add the alphas together
+		this.data[pos * 4 + 3] = color[3];//(color[3] * alpha) + this.data[pos * 4 + 3];
 	}
 	
 	combinePixel(l, b, blend, strength) {
-		//values are normalized (0 through 1)!!!
+		//values are normalized (0 through 1)
 		l /= 255;
 		b /= 255;
 
@@ -91,5 +83,29 @@ class ImageManager {
 					return 1 - (1 - l * strength) * (1 - b);
 				}
 		}
+	}
+	
+	parseRGB(hex) {
+		const r = (hex & 0xFF0000) >> 16;
+		const g = (hex & 0x00FF00) >> 8;
+		const b = hex & 0x0000FF;
+		return [r, g, b, 255];
+	}
+	
+	RGB2Hex(arr) {
+		//[255, 255, 255, 255] to #ffffff (no alpha - do dat later)
+		let r = arr[0].toString(16);
+		let g = arr[1].toString(16);
+		let b = arr[2].toString(16);
+		//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
+		if(r.length < 2) r = "0" + r;
+		if(g.length < 2) g = "0" + g;
+		if(b.length < 2) b = "0" + b;
+		return "#" + r + g + b;
+	}
+	
+	parseHex(hex) {
+		//convert #RRGGBB to 0xRRGGBB
+		return img.parseRGB(Number("0x" + hex.slice(1)));
 	}
 }

@@ -4,6 +4,8 @@ default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
 class Layer {
+	//class name - dont change this when naming layers is added, just call that one "displayName"
+	name;
 	//layer options
 	options = {};
 	//setting types (for the editor input types)
@@ -20,7 +22,7 @@ class Layer {
 	typesDefault = {
 		alpha: {
 			type: "number",
-			step: 0.1,
+			step: 0.05,
 			min: 0,
 			max: 1
 		},
@@ -44,10 +46,12 @@ class Layer {
 }
 
 class LayerXorFractal extends Layer {
+	name = "xorFractal";
+	
 	options = {
-		scaleX: 4,
-		scaleY: 4,
-		normalized: false
+		scaleX: 1,
+		scaleY: 1,
+		normalized: true
 	};
 	
 	types = {
@@ -84,6 +88,8 @@ class LayerXorFractal extends Layer {
 }
 
 class LayerSolid extends Layer {
+	name = "solid";
+	
 	options = {
 		color: [127, 127, 127, 255]
 	};
@@ -104,6 +110,8 @@ class LayerSolid extends Layer {
 }
 
 class LayerNoise extends Layer {
+	name = "noise";
+	
 	generate(o) {
 		for(let y = 0; y < img.y; y++) {
 			for(let x = 0; x < img.x; x++) {
@@ -115,6 +123,8 @@ class LayerNoise extends Layer {
 }
 
 class LayerBorder extends Layer {
+	name = "border";
+	
 	options = {
 		colorTop: [255, 255, 255, 255],
 		colorBottom: [0, 0, 0, 255],
@@ -123,7 +133,8 @@ class LayerBorder extends Layer {
 		x0: 0,
 		y0: 0,
 		x1: 63,
-		y1: 63
+		y1: 63,
+		thickness: 1
 	};
 	
 	types = {
@@ -150,12 +161,16 @@ class LayerBorder extends Layer {
 		},
 		y1: {
 			type: "number"
+		},
+		thickness: {
+			type: "number",
+			min: 1
 		}
 	};
-
+	
 	generate(o) {
 		let x0, y0, x1, y1;
-		
+		//dont make the borders inside-out -- they dont work that way
 		if(o.x0 < o.x1) {
 			x0 = o.x0;
 			x1 = o.x1;
@@ -171,19 +186,40 @@ class LayerBorder extends Layer {
 			y0 = o.y1;
 			y1 = o.y0;
 		}
-		
-		for(let x = x0 + 1; x <= x1 - 1; x++) {
-			img.plotPixel(o.colorTop, x, y0, this.od.alpha, this.od.blend);
-			img.plotPixel(o.colorBottom, x, y1, this.od.alpha, this.od.blend);
+		//just draw the border multiple times to do a thicker one
+		for(let i = 0; i < o.thickness; i++) {
+			for(let x = x0 + 1; x < x1; x++) {
+				img.plotPixel(o.colorTop, x, y0, this.od.alpha, this.od.blend);
+				img.plotPixel(o.colorBottom, x, y1, this.od.alpha, this.od.blend);
+			}
+			for(let y = y0 + 1; y < y1; y++) {
+				img.plotPixel(o.colorLeft, x0, y, this.od.alpha, this.od.blend);
+				img.plotPixel(o.colorRight, x1, y, this.od.alpha, this.od.blend);
+			}
+			//corners
+			img.plotPixel(this.blend(o.colorLeft, o.colorTop), x0, y0, this.od.alpha, this.od.blend);
+			img.plotPixel(this.blend(o.colorRight, o.colorTop), x1, y0, this.od.alpha, this.od.blend);
+			img.plotPixel(this.blend(o.colorLeft, o.colorBottom), x0, y1, this.od.alpha, this.od.blend);
+			img.plotPixel(this.blend(o.colorRight, o.colorBottom), x1, y1, this.od.alpha, this.od.blend);
+			x0++;
+			y0++;
+			x1--;
+			y1--;
 		}
-		for(let y = y0; y <= y1; y++) {
-			img.plotPixel(o.colorLeft, x0, y, this.od.alpha, this.od.blend);
-			img.plotPixel(o.colorRight, x1, y, this.od.alpha, this.od.blend);
-		}
+	}
+	
+	blend(col0, col1) {
+		const r = (col0[0] + col1[0]) / 2;
+		const g = (col0[1] + col1[1]) / 2;
+		const b = (col0[2] + col1[2]) / 2;
+		const a = (col0[3] + col1[3]) / 2;
+		return [r, g, b, a];
 	}
 }
 
 class LayerLiney extends Layer {
+	name = "liney";
+	
 	options = {
 		breaks: 0.5,
 		depth: 2,
@@ -247,6 +283,8 @@ class LayerLiney extends Layer {
 }
 
 class LayerWandering extends Layer{
+	name = "wandering";
+	
 	options = {
 		color: [255, 255, 255, 255],
 		maxLines: 4,
@@ -274,7 +312,8 @@ class LayerWandering extends Layer{
 			min: 0
 		},
 		variance: {
-			type: "number"
+			type: "number",
+			min: 0
 		},
 		bias: {
 			type: "number",
@@ -285,18 +324,20 @@ class LayerWandering extends Layer{
 	}
 	
 	generate(o) {
-		//bug: weird space at the top?
-		//spacing is just weird with this one
-		let maxN;
+		//variance is kinda funky
+		//lines are supposed to wrap around, they do not
+		let maxN, inverseMaxN;
 
 		if(o.go2X) {
 			maxN = img.x;
+			inverseMaxN = img.y;
 		} else {
 			maxN = img.y;
+			inverseMaxN = img.x;
 		}
 		
 		for(let i = 0; i < o.maxLines; i++) {
-			let pos = Math.round(i * (maxN / o.maxLines) + (Math.random() - 0.5) * o.variance);
+			let pos = Math.round((i + 0.5) * (inverseMaxN / o.maxLines) + (Math.random() - 0.5) * o.variance);
 			for(let n = 0; n < maxN; n++) {
 				let x, y;
 				
@@ -316,7 +357,7 @@ class LayerWandering extends Layer{
 					} else {
 						pos--;
 					}
-					pos %= maxN;
+					pos %= inverseMaxN;
 				}
 			}
 		}
