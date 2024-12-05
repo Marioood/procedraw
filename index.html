@@ -1,61 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<title>procedraw</title>
+		<meta charset="UTF-8">
 		<link rel="icon" type="image/x-icon" href="img/favicon.ico">
-		<style>
-			body {
-				background-color: black;
-				color: white;
-			}
-			canvas {
-				image-rendering: pixelated;
-			}
-			h2 {
-				font-style: italic;
-			}
-			div {
-				border: white 1px solid;
-			}
-			div > div {
-				border: grey 1px solid;
-			}
-		</style>
+		<link rel="stylesheet" href="style.css"></link>
 	</head>
 	<body>
-		<h2>our beauty</h2>
-		<button id="img-save">Save!</button>
-		<p id="img-save-data">SAVE DATA HERE</p>
-		<label for="bg-color">Background color: </label>
-		<input type="color" id="img-bg-color"></input>
-		<br>
-		<label for="img-width">Width: </label>
-		<input type="number" id="img-width" min="1" max="256"></input>
-		<label for="img-height">Height: </label>
-		<input type="number" id="img-height" min="1" max="256"></input>
-		<br>
-		<label for="canvas-scale">Scale: </label>
-		<input type="number" id="canvas-scale" min="1" max="16" step="0.25"></input>
-		<br>
-		<button id="img-refresh">⟳</button>
-		<br>
-		<canvas id="render" width="256" height="256"></canvas>
-		<br>
-		<select id="layer-class-select"></select>
-		<button id="add-layer">+</button>
-		<button id="remove-layer">−</button>
-		<button id="dupe-layer">D</button>
-		<div>
-			<h2>settings</h2>
-			<label for="current-layer">Current layer idx: </label>
-			<input type="number" id="current-layer" value="0">
-			<h3>universal options</h3>
-			<div id="layer-options-default">
-				<!-- layer parameters go here -->
+		<div class="canvas-container">
+			<canvas id="render" width="256" height="256"></canvas>
+		</div>
+		<div class="right-container">
+			<h2>our beauty</h2>
+			<button id="img-save">Save!</button>
+			<br>
+			<textarea id="img-save-data" readonly="true" class="save-box">SAVE DATA HERE</textarea>
+			<br>
+			<button id="img-load-button">Load!</button>
+			<input type="text" id="img-load-data">
+			<br>
+			<label for="img-bg-color">Background color: </label>
+			<input type="color" id="img-bg-color">
+			<br>
+			<label for="img-width">Width: </label>
+			<input type="number" id="img-width" min="1" max="256">
+			<label for="img-height">Height: </label>
+			<input type="number" id="img-height" min="1" max="256">
+			<br>
+			<label for="canvas-scale">Scale: </label>
+			<input type="number" id="canvas-scale" min="1" max="32" step="0.25">
+			<br>
+			<button id="img-refresh">R</button>
+		</div>
+		<div class="left-container">
+			<div class="layer-control-container">
+				<div class="sticky-header">
+					<!--<label for="current-layer">Current layer idx: </label>
+					<input type="number" id="current-layer" value="0">
+					<br>-->
+					<select id="layer-class-select"></select>
+					<button id="add-layer">+</button>
+					<button id="remove-layer">−</button>
+					<button id="dupe-layer">D</button>
+				</div>
+				<div id="layer-list-container">
+					<!-- layers go here -->
+				</div>
 			</div>
-			<h3 id="layer-title">LAYER CLASS HERE options</h3>
-			<div id="layer-options">
-				<!-- layer parameters go here -->
+			<div class="setting-container">
+				<h4>universal options</h4>
+				<div id="layer-options-default">
+					<!-- layer parameters go here -->
+				</div>
+				<h4 id="layer-title">LAYER CLASS HERE options</h4>
+				<div id="layer-options">
+					<!-- layer parameters go here -->
+				</div>
 			</div>
 		</div>
 		<script src="scripts/tether.js"></script>

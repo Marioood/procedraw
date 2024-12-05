@@ -3,6 +3,7 @@ class Tether {
 	canvas = undefined;
 	ctx = undefined;
 	currentLayer = 0;
+	previousLayer = 0;
 	currentClass = LayerXorFractal;
 	canvasScale = 4;
 	
@@ -33,51 +34,59 @@ class Tether {
 		for(let i = 0; i < optionKeys.length; i++) {
 			//label
 			const label = document.createElement("label");
-			const id = containerId + this.currentLayer + "-param-" + i + "-";
-			label.setAttribute("for", id);
+			const id = containerId + "dyn-param-" + i + "-";
+			label.for = id;
 			const text = optionKeys[i] + ": ";
 			
 			label.appendChild(document.createTextNode(text));
 			container.appendChild(label);
 			//input box
 			let input = document.createElement("input");
-			input.setAttribute("id", id);
+			input.id = id;
 			
 			//how the options are displayed (eg. color or number? decimal or integer?)
 			const limits = types[optionKeys[i]];
 			
 			switch(limits.type) {
 				case "number":
-					input.setAttribute("type", "number");
-					input.setAttribute("value", options[optionKeys[i]]);
+					input.type = "number";
+					input.value = options[optionKeys[i]];
 					if(limits.step != undefined) {
-						input.setAttribute("step", limits.step);
+						input.step = limits.step;
 					}
 					//theres probably a better way of doing this but i cant be bothered to learn it (web dev grindset)
 					if(limits.min != undefined) {
-						input.setAttribute("min", limits.min);
+						input.min = limits.min;
 					}
 					if(limits.max != undefined) {
-						input.setAttribute("max", limits.max);
+						input.max = limits.max;
 					}
 					
 					input.addEventListener("input", function (e) {
+						let val = input.value
+						//do a safety check on unsafe options
+						//"unsafe options" are ones that control loops (e.g. maxLines for wandering, thickness for border)
+						//having unsafe options too high can crash or freeze the browser!!
+						if(limits.unsafe) {
+							val = Math.min(Math.max(val, limits.min), limits.max);
+							input.value = val;
+						}
 						options[optionKeys[i]] = Number(input.value);
 						img.printImage();
 					});
 					break;
 				case "boolean":
-					input.setAttribute("type", "checkbox");
+					input.type = "checkbox";
 					//doesnt work with the "checked" atrribute.... janky
-					input.setAttribute("value", options[optionKeys[i]]);
+					input.value = options[optionKeys[i]];
 					input.addEventListener("input", function (e) {
 						options[optionKeys[i]] = input.checked;
 						img.printImage();
 					});
 					break;
 				case "color":
-					input.setAttribute("type", "color");
-					input.setAttribute("value", img.RGB2Hex(options[optionKeys[i]]));
+					input.type = "color";
+					input.value = img.RGB2Hex(options[optionKeys[i]]);
 					
 					let oldTime;
 					
@@ -94,7 +103,7 @@ class Tether {
 					break;
 				case "dropdown":
 					input = document.createElement("select");
-					input.setAttribute("id", id);
+					input.id = id;
 					
 					for(let i = 0; i < limits.items.length; i++) {
 						const option = document.createElement("option");
@@ -137,5 +146,131 @@ class Tether {
 			const layerTitle = document.getElementById("layer-title");
 			layerTitle.textContent = img.layers[this.currentLayer].name + " layer options";
 		}
+	}
+	
+	generateLayerList() {
+		/*<div class="layer-container">
+			<div style="float:left;">
+				<button>^</button>
+				<br>
+				<button>V</button>
+			</div>
+			<img src="img/icon/xorFractal.png"></img>
+			<span>CLASS NAME</span>
+		</div>
+		
+		<div class="layer-container">
+			<div style="float:left; height: 100%;">
+				<button style="height: 50%;">^</button>
+				<br>
+				<button style="height: 50%;">V</button>
+			</div>
+			<img src="img/icon/xorFractal.png"></img>
+			<span>CLASS NAME</span>
+		</div>*/
+		
+		const listContainer = document.getElementById("layer-list-container");
+		this.killAllChildren("layer-list-container");
+		for(let i = 0; i < img.layers.length; i++) {
+			const layer = img.layers[i];
+			const layerContainer = document.createElement("div");
+			layerContainer.className = "layer-container";
+			layerContainer.id = "dyn-layer-" + i;
+			
+			//javascript is shitty so i have to do this if i want to reference a class in an event (except for global self referencing-which is disgusting)
+			const tempTether = this;
+			const buttonContainer = document.createElement("div");
+		
+			buttonContainer.className = "layer-button-container";
+			
+			const up = document.createElement("button");
+			up.dataset.idx = i;
+			up.appendChild(document.createTextNode("^"));
+			buttonContainer.appendChild(up);
+			
+			up.addEventListener("click", function (e) {
+				const idx = Number(this.dataset.idx);
+				//make sure not to move layers out of bounds
+				if(idx > 0) {
+					const tempLayer = img.layers[idx - 1];
+					img.layers[idx - 1] = img.layers[idx];
+					img.layers[idx] = tempLayer;
+					tempTether.generateLayerList();
+					tempTether.setCurrentLayer(Number(idx - 1));
+					tempTether.updateLayerOptions();
+					tempTether.unhighlightLayer(tempTether.previousLayer);
+					tempTether.highlightLayer(tempTether.currentLayer);
+				}
+			});
+			
+			const buttonBreak = document.createElement("br");
+			buttonContainer.appendChild(buttonBreak);
+			
+			const down = document.createElement("button");
+			down.dataset.idx = i;
+			down.appendChild(document.createTextNode("V"));
+			
+			down.addEventListener("click", function (e) {
+				const idx = Number(this.dataset.idx);
+				//make sure not to move layers out of bounds
+				if(idx < img.layers.length - 1) {
+					const tempLayer = img.layers[idx + 1];
+					img.layers[idx + 1] = img.layers[idx];
+					img.layers[idx] = tempLayer;
+					tempTether.generateLayerList();
+					tempTether.setCurrentLayer(Number(idx + 1));
+					tempTether.updateLayerOptions();
+					tempTether.unhighlightLayer(tempTether.previousLayer);
+					tempTether.highlightLayer(tempTether.currentLayer);
+				}
+			});
+			
+			buttonContainer.appendChild(down);
+			layerContainer.appendChild(buttonContainer);
+			
+			const layerSelect = document.createElement("div");
+			layerSelect.className = "layer-select";
+			
+			const icon = document.createElement("img");
+			icon.src = "img/icon/" + layer.name + ".png";
+			
+			layerSelect.appendChild(icon);
+			
+			const name = document.createElement("span");
+			const text = i + ". " + layer.name;
+			name.appendChild(document.createTextNode(text));
+			layerSelect.appendChild(name);
+			//store the layer's index in the element itself (never knew you could do that, neato)
+			layerSelect.dataset.idx = i;
+			
+			layerSelect.addEventListener("click", function (e) {
+				tempTether.setCurrentLayer(Number(this.dataset.idx));
+				tempTether.updateLayerOptions();
+				tempTether.unhighlightLayer(tempTether.previousLayer);
+				tempTether.highlightLayer(tempTether.currentLayer);
+			});
+			layerContainer.appendChild(layerSelect);
+			listContainer.appendChild(layerContainer);
+		}
+		
+		this.unhighlightLayer(this.previousLayer);
+		this.highlightLayer(this.currentLayer);
+	}
+	
+	setCurrentLayer(idx) {
+		this.previousLayer = this.currentLayer;
+		this.currentLayer = idx;
+	}
+	
+	highlightLayer(idx) {
+		//uhighlight current layer
+		const newLayer = document.getElementById("dyn-layer-" + idx);
+		newLayer.classList.add("layer-highlight");
+	}
+	
+	unhighlightLayer(idx) {
+		//unhighlight previous layerer
+		const oldLayer = document.getElementById("dyn-layer-" + idx);
+		oldLayer.classList.remove("layer-highlight");
 	}
 }

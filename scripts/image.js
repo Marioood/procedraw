@@ -5,8 +5,16 @@ class ImageManager {
 	data = [];
 	layer = undefined;
 	bg = [128, 128, 128, 255];
-
 	layers = [];
+	layerClasses = {
+		xorFractal: LayerXorFractal,
+		solid: LayerSolid,
+		noise: LayerNoise,
+		border: LayerBorder,
+		liney: LayerLiney,
+		wandering: LayerWandering,
+		checkers: LayerCheckers
+	};
 	
 	printImage() {
 		//write the background color
@@ -18,9 +26,9 @@ class ImageManager {
 		}
 		//layer the layers
 		for(let i = 0; i < this.layers.length; i++) {
-			const layer = this.layers[i];
+			this.layer = this.layers[i];
 			//this.layer.options = this.layer.defaults;
-			layer.generate(layer.options);
+			this.layer.generate(this.layer.options);
 		}
 		//canvas stuff
 		let canvasImg = t.ctx.createImageData(this.x, this.y);
@@ -45,9 +53,12 @@ class ImageManager {
 		this.data = new Array(this.x * this.y * 4);
 	}
 
-	plotPixel(color, x, y, alpha, blend) {
+	plotPixel(color, x, y) {
 		//drop the pixel if its out of bounds
 		if(x < 0 || x >= this.x || y < 0 || y >= this.y) return;
+		//get alpha n blend from global memory... its less to type
+		const alpha = this.layer.od.alpha;
+		const blend = this.layer.od.blend;
 		//color is an array of 4 bytes
 		//[red, blue, green, alpha]
 		const pos = x + y * this.x;
@@ -78,7 +89,8 @@ class ImageManager {
 				//fuck you wikipedia
 				//this blend mode is innaccurate. the bright parts are too bright and the image doesnt get blown out when its on pure color (ex: 255, 0, 0)
 				if(l < 0.5) {
-					return (2 * (l * strength) + 1 - strength) * b;
+					//return (2 * (l * strength) + 1 - strength) * b;
+					return ((l * strength) + 1 - strength) * b;
 				} else {
 					return 1 - (1 - l * strength) * (1 - b);
 				}

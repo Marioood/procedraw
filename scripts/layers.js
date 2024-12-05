@@ -16,7 +16,10 @@ class Layer {
 		//the translucency of the layer (0 is transparent, 1 is opaque)
 		alpha: 1,
 		//blend mode
-		blend: "plain"
+		blend: "plain",
+		//multiply the image by a color
+		//tint: 4
+		//maybe add "disolve"? like the coverage option for the noise filter
 	};
 	
 	typesDefault = {
@@ -81,7 +84,7 @@ class LayerXorFractal extends Layer {
 		for(let y = 0; y < img.y; y++) {
 			for(let x = 0; x < img.x; x++) {
 				let col = (x * scaleX) ^ (y * scaleY);
-				img.plotPixel([col, col, col, 255], x, y, this.od.alpha, this.od.blend);
+				img.plotPixel([col, col, col, 255], x, y);
 			}
 		}
 	}
@@ -103,7 +106,7 @@ class LayerSolid extends Layer {
 	generate(o) {
 		for(let y = 0; y < img.y; y++) {
 			for(let x = 0; x < img.x; x++) {
-				img.plotPixel(o.color, x, y, this.od.alpha, this.od.blend);
+				img.plotPixel(o.color, x, y);
 			}
 		}
 	}
@@ -112,11 +115,26 @@ class LayerSolid extends Layer {
 class LayerNoise extends Layer {
 	name = "noise";
 	
+	options = {
+		coverage: 1
+	};
+	
+	types = {
+		coverage: {
+			type: "number",
+			min: 0,
+			max: 1,
+			step: 0.05
+		}
+	};
+	
 	generate(o) {
 		for(let y = 0; y < img.y; y++) {
 			for(let x = 0; x < img.x; x++) {
-				let col = Math.random() * 255;
-				img.plotPixel([col, col, col, 255], x, y, this.od.alpha, this.od.blend);
+				if(o.coverage > Math.random()) {
+					let col = Math.random() * 255;
+					img.plotPixel([col, col, col, 255], x, y);
+				}
 			}
 		}
 	}
@@ -151,20 +169,34 @@ class LayerBorder extends Layer {
 			type: "color"
 		},
 		x0: {
-			type: "number"
+			type: "number",
+			min: -256,
+			max: 512,
+			unsafe: true
 		},
 		y0: {
-			type: "number"
+			type: "number",
+			min: -256,
+			max: 512,
+			unsafe: true
 		},
 		x1: {
-			type: "number"
+			type: "number",
+			min: -256,
+			max: 512,
+			unsafe: true
 		},
 		y1: {
-			type: "number"
+			type: "number",
+			min: -256,
+			max: 512,
+			unsafe: true
 		},
 		thickness: {
 			type: "number",
-			min: 1
+			min: 1,
+			max: 256,
+			unsafe: true
 		}
 	};
 	
@@ -189,18 +221,18 @@ class LayerBorder extends Layer {
 		//just draw the border multiple times to do a thicker one
 		for(let i = 0; i < o.thickness; i++) {
 			for(let x = x0 + 1; x < x1; x++) {
-				img.plotPixel(o.colorTop, x, y0, this.od.alpha, this.od.blend);
-				img.plotPixel(o.colorBottom, x, y1, this.od.alpha, this.od.blend);
+				img.plotPixel(o.colorTop, x, y0);
+				img.plotPixel(o.colorBottom, x, y1);
 			}
 			for(let y = y0 + 1; y < y1; y++) {
-				img.plotPixel(o.colorLeft, x0, y, this.od.alpha, this.od.blend);
-				img.plotPixel(o.colorRight, x1, y, this.od.alpha, this.od.blend);
+				img.plotPixel(o.colorLeft, x0, y);
+				img.plotPixel(o.colorRight, x1, y);
 			}
 			//corners
-			img.plotPixel(this.blend(o.colorLeft, o.colorTop), x0, y0, this.od.alpha, this.od.blend);
-			img.plotPixel(this.blend(o.colorRight, o.colorTop), x1, y0, this.od.alpha, this.od.blend);
-			img.plotPixel(this.blend(o.colorLeft, o.colorBottom), x0, y1, this.od.alpha, this.od.blend);
-			img.plotPixel(this.blend(o.colorRight, o.colorBottom), x1, y1, this.od.alpha, this.od.blend);
+			img.plotPixel(this.blend(o.colorLeft, o.colorTop), x0, y0);
+			img.plotPixel(this.blend(o.colorRight, o.colorTop), x1, y0);
+			img.plotPixel(this.blend(o.colorLeft, o.colorBottom), x0, y1);
+			img.plotPixel(this.blend(o.colorRight, o.colorBottom), x1, y1);
 			x0++;
 			y0++;
 			x1--;
@@ -276,7 +308,7 @@ class LayerLiney extends Layer {
 					y = l;
 				}
 				
-				img.plotPixel([col, col, col, 255], x, y, this.od.alpha, this.od.blend);
+				img.plotPixel([col, col, col, 255], x, y);
 			}
 		}
 	}
@@ -300,7 +332,9 @@ class LayerWandering extends Layer{
 		},
 		maxLines: {
 			type: "number",
-			min: 1
+			min: 1,
+			max: 256,
+			unsafe: true
 		},
 		go2X: {
 			type: "boolean"
@@ -349,7 +383,7 @@ class LayerWandering extends Layer{
 					y = n;
 				}
 				
-				img.plotPixel(o.color, x, y, this.od.alpha, this.od.blend);
+				img.plotPixel(o.color, x, y);
 				
 				if(Math.random() < o.spread) {
 					if(Math.random() < o.bias) {
@@ -359,6 +393,41 @@ class LayerWandering extends Layer{
 					}
 					pos %= inverseMaxN;
 				}
+			}
+		}
+	}
+}
+	
+class LayerCheckers extends Layer {
+	name = "checkers";
+	
+	options = {
+		evenColor: [255, 255, 255, 255],
+		oddColor: [0, 0, 0, 255],
+		scaleX: 1,
+		scaleY: 1
+	};
+	
+	types = {
+		evenColor: {
+			type: "color"
+		},
+		oddColor: {
+			type: "color"
+		},
+		scaleX: {
+			type: "number"
+		},
+		scaleY: {
+			type: "number"
+		}
+	};
+	
+	generate(o) {
+		for(let y = 0; y < img.y; y++) {
+			for(let x = 0; x < img.x; x++) {
+				let col = (Math.floor(x / o.scaleX) + Math.floor(y / o.scaleY)) % 2 == 0 ? o.evenColor : o.oddColor;
+				img.plotPixel(col, x, y);
 			}
 		}
 	}
