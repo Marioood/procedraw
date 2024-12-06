@@ -26,9 +26,11 @@ class ImageManager {
 		}
 		//layer the layers
 		for(let i = 0; i < this.layers.length; i++) {
-			this.layer = this.layers[i];
-			//this.layer.options = this.layer.defaults;
-			this.layer.generate(this.layer.options);
+			if(this.layers[i].od.shown) {
+				this.layer = this.layers[i];
+				//this.layer.options = this.layer.defaults;
+				this.layer.generate(this.layer.options);
+			}
 		}
 		//canvas stuff
 		let canvasImg = t.ctx.createImageData(this.x, this.y);
@@ -59,20 +61,21 @@ class ImageManager {
 		//get alpha n blend from global memory... its less to type
 		const alpha = this.layer.od.alpha;
 		const blend = this.layer.od.blend;
+		const tint = this.layer.od.tint;
 		//color is an array of 4 bytes
 		//[red, blue, green, alpha]
 		const pos = x + y * this.x;
 		//todo: actually have alpha CHANNEL affect (effect? idk) the color, not just the layer's alpha
-		this.data[pos * 4] = this.combinePixel(color[0], this.data[pos * 4], blend, alpha) * 255;
-		this.data[pos * 4 + 1] = this.combinePixel(color[1], this.data[pos * 4 + 1], blend, alpha) * 255;
-		this.data[pos * 4 + 2] = this.combinePixel(color[2], this.data[pos * 4 + 2], blend, alpha) * 255;
+		this.data[pos * 4] = this.combinePixel((color[0] / 255) * (tint[0] / 255), this.data[pos * 4], blend, alpha) * 255;
+		this.data[pos * 4 + 1] = this.combinePixel((color[1] / 255) * (tint[1] / 255), this.data[pos * 4 + 1], blend, alpha) * 255;
+		this.data[pos * 4 + 2] = this.combinePixel((color[2] / 255) * (tint[2] / 255), this.data[pos * 4 + 2], blend, alpha) * 255;
 		//add the alphas together
 		this.data[pos * 4 + 3] = color[3];//(color[3] * alpha) + this.data[pos * 4 + 3];
 	}
 	
 	combinePixel(l, b, blend, strength) {
 		//values are normalized (0 through 1)
-		l /= 255;
+		//l /= 255;
 		b /= 255;
 
 		switch(blend) {
@@ -87,12 +90,10 @@ class ImageManager {
 				return 1 - (1 - l * strength) * (1 - b);
 			case "overlay":
 				//fuck you wikipedia
-				//this blend mode is innaccurate. the bright parts are too bright and the image doesnt get blown out when its on pure color (ex: 255, 0, 0)
 				if(l < 0.5) {
-					//return (2 * (l * strength) + 1 - strength) * b;
-					return ((l * strength) + 1 - strength) * b;
+					return (2 * (l * strength) + 1 - strength) * b;
 				} else {
-					return 1 - (1 - l * strength) * (1 - b);
+					return 1 - (1 - l * strength) * ((strength + 1) * (1 - b));
 				}
 		}
 	}

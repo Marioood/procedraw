@@ -5,7 +5,7 @@ class Serialization {
 			bg: img.RGB2Hex(img.bg),
 			x: img.x,
 			y: img.y,
-			version: "VOLATILE loading version"
+			version: "VOLATILE 0.1"
 		};
 		saved.layers = [];
 		
@@ -14,6 +14,8 @@ class Serialization {
 			let optionsNew = {};
 			const optionKeys = Object.keys(layer.options);
 			let newLayer = {};
+			let newOptionDefaults = Object.assign({}, layer.od);
+			newOptionDefaults.tint = img.RGB2Hex(newOptionDefaults.tint);
 			//dont bother saving the options if they're empty
 			if(optionKeys.length > 0) {
 				//replace some options so theyre a little smaller (colors are arrays during runtime - but theyre smaller as hex strings)
@@ -29,13 +31,13 @@ class Serialization {
 				}
 				newLayer = {
 					name: layer.name,
-					od: layer.od,
+					od: newOptionDefaults,
 					options: optionsNew
 				};
 			} else {
 				newLayer = {
 					name: layer.name,
-					od: layer.od
+					od: newOptionDefaults
 				};
 			}
 			saved.layers.push(newLayer);
@@ -58,7 +60,10 @@ class Serialization {
 			const fauxLayer = saved.layers[i];
 			let newLayer = new img.layerClasses[fauxLayer.name];
 			
-			newLayer.od = fauxLayer.od
+			newLayer.od = Object.assign(newLayer.od, fauxLayer.od);
+			if(fauxLayer.od.tint != undefined) {
+				newLayer.od.tint = img.parseHex(newLayer.od.tint);
+			}
 			//dont bother writing option data if there is none!!
 			if(fauxLayer.options != undefined) {
 				//clean up colors!

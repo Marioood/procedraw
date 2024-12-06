@@ -18,7 +18,8 @@ class Layer {
 		//blend mode
 		blend: "plain",
 		//multiply the image by a color
-		//tint: 4
+		tint: [255, 255, 255, 255],
+		shown: true
 		//maybe add "disolve"? like the coverage option for the noise filter
 	};
 	
@@ -38,6 +39,12 @@ class Layer {
 				"screen",
 				"overlay"
 			]
+		},
+		tint: {
+			type: "color"
+		},
+		shown: {
+			type: "boolean"
 		}
 	};
 	
@@ -93,20 +100,10 @@ class LayerXorFractal extends Layer {
 class LayerSolid extends Layer {
 	name = "solid";
 	
-	options = {
-		color: [127, 127, 127, 255]
-	};
-	
-	types = {
-		color: {
-			type: "color"
-		}
-	};
-	
 	generate(o) {
 		for(let y = 0; y < img.y; y++) {
 			for(let x = 0; x < img.x; x++) {
-				img.plotPixel(o.color, x, y);
+				img.plotPixel([255, 255, 255, 255], x, y);
 			}
 		}
 	}
@@ -318,19 +315,23 @@ class LayerWandering extends Layer{
 	name = "wandering";
 	
 	options = {
-		color: [255, 255, 255, 255],
-		maxLines: 4,
+		//maxLines: 4,
+		spacing: 8,
 		go2X: true,
 		spread: 0.5,
 		variance: 2,
 		bias: 0.5
+		//thickness: 1
 	}
 	
 	types = {
-		color: {
-			type: "color"
-		},
-		maxLines: {
+		/*maxLines: {
+			type: "number",
+			min: 1,
+			max: 256,
+			unsafe: true
+		},*/
+		spacing: {
 			type: "number",
 			min: 1,
 			max: 256,
@@ -355,6 +356,12 @@ class LayerWandering extends Layer{
 			max: 1,
 			min: 0
 		}
+		/*thickness: {
+			type: "number",
+			min: 1,
+			max: 16,
+			unsafe: true
+		}*/
 	}
 	
 	generate(o) {
@@ -369,9 +376,10 @@ class LayerWandering extends Layer{
 			maxN = img.y;
 			inverseMaxN = img.x;
 		}
+		const maxLines = inverseMaxN / o.spacing;
 		
-		for(let i = 0; i < o.maxLines; i++) {
-			let pos = Math.round((i + 0.5) * (inverseMaxN / o.maxLines) + (Math.random() - 0.5) * o.variance);
+		for(let i = 0; i < maxLines; i++) {
+			let pos = Math.round((i + 0.5) * o.spacing + (Math.random() - 0.5) * o.variance);
 			for(let n = 0; n < maxN; n++) {
 				let x, y;
 				
@@ -382,8 +390,15 @@ class LayerWandering extends Layer{
 					x = pos;
 					y = n;
 				}
+				/*for(let s = 0; s < o.thickness; s++) {
+					if(o.go2X) {
+						img.plotPixel(o.color, x, y + s);
+					} else {
+						img.plotPixel(o.color, x + s, y);
+					}
+				}*/
 				
-				img.plotPixel(o.color, x, y);
+				img.plotPixel([255, 255, 255, 255], x, y);
 				
 				if(Math.random() < o.spread) {
 					if(Math.random() < o.bias) {
@@ -392,6 +407,10 @@ class LayerWandering extends Layer{
 						pos--;
 					}
 					pos %= inverseMaxN;
+					//wrap if negative
+					if(pos < 0) {
+						pos += inverseMaxN;
+					}
 				}
 			}
 		}

@@ -10,10 +10,20 @@ class Tether {
 	constructor() {
 		this.canvas = document.getElementById("render");
 		this.ctx = this.canvas.getContext("2d");
-		this.canvas.setAttribute("width", img.x);
-		this.canvas.setAttribute("height", img.y);
-		this.canvas.style.width = img.x * this.canvasScale + "px";
-		this.canvas.style.height = img.y * this.canvasScale + "px";
+		this.updateSize();
+	
+		const refreshImage = document.getElementById("img-refresh");
+
+		refreshImage.addEventListener("click", function (e) {
+			img.printImage();
+		});
+		//refresh warning
+		/*if(!DEBUG) {
+			window.addEventListener("beforeunload", function (e) {
+				event.preventDefault();
+				event.returnValue = true;
+			});
+		}*/
 	}
 	
 	generateLayerOptions(options, types, containerId) {
@@ -77,8 +87,7 @@ class Tether {
 					break;
 				case "boolean":
 					input.type = "checkbox";
-					//doesnt work with the "checked" atrribute.... janky
-					input.value = options[optionKeys[i]];
+					input.checked = options[optionKeys[i]];
 					input.addEventListener("input", function (e) {
 						options[optionKeys[i]] = input.checked;
 						img.printImage();
@@ -149,26 +158,6 @@ class Tether {
 	}
 	
 	generateLayerList() {
-		/*<div class="layer-container">
-			<div style="float:left;">
-				<button>^</button>
-				<br>
-				<button>V</button>
-			</div>
-			<img src="img/icon/xorFractal.png"></img>
-			<span>CLASS NAME</span>
-		</div>
-		
-		<div class="layer-container">
-			<div style="float:left; height: 100%;">
-				<button style="height: 50%;">^</button>
-				<br>
-				<button style="height: 50%;">V</button>
-			</div>
-			<img src="img/icon/xorFractal.png"></img>
-			<span>CLASS NAME</span>
-		</div>*/
-		
 		const listContainer = document.getElementById("layer-list-container");
 		this.killAllChildren("layer-list-container");
 		for(let i = 0; i < img.layers.length; i++) {
@@ -185,8 +174,7 @@ class Tether {
 			
 			const up = document.createElement("button");
 			up.dataset.idx = i;
-			up.appendChild(document.createTextNode("^"));
-			buttonContainer.appendChild(up);
+			up.classList.add("layer-icon-button", "icon-layer-up");
 			
 			up.addEventListener("click", function (e) {
 				const idx = Number(this.dataset.idx);
@@ -200,15 +188,18 @@ class Tether {
 					tempTether.updateLayerOptions();
 					tempTether.unhighlightLayer(tempTether.previousLayer);
 					tempTether.highlightLayer(tempTether.currentLayer);
+					img.printImage();
 				}
 			});
+			
+			buttonContainer.appendChild(up);
 			
 			const buttonBreak = document.createElement("br");
 			buttonContainer.appendChild(buttonBreak);
 			
 			const down = document.createElement("button");
 			down.dataset.idx = i;
-			down.appendChild(document.createTextNode("V"));
+			down.classList.add("layer-icon-button", "icon-layer-down");
 			
 			down.addEventListener("click", function (e) {
 				const idx = Number(this.dataset.idx);
@@ -222,6 +213,7 @@ class Tether {
 					tempTether.updateLayerOptions();
 					tempTether.unhighlightLayer(tempTether.previousLayer);
 					tempTether.highlightLayer(tempTether.currentLayer);
+					img.printImage();
 				}
 			});
 			
@@ -235,13 +227,13 @@ class Tether {
 			icon.src = "img/icon/" + layer.name + ".png";
 			
 			layerSelect.appendChild(icon);
-			
 			const name = document.createElement("span");
+			name.className = "layer-text-container";
 			const text = i + ". " + layer.name;
 			name.appendChild(document.createTextNode(text));
-			layerSelect.appendChild(name);
 			//store the layer's index in the element itself (never knew you could do that, neato)
 			layerSelect.dataset.idx = i;
+			layerSelect.appendChild(name);
 			
 			layerSelect.addEventListener("click", function (e) {
 				tempTether.setCurrentLayer(Number(this.dataset.idx));
@@ -249,10 +241,39 @@ class Tether {
 				tempTether.unhighlightLayer(tempTether.previousLayer);
 				tempTether.highlightLayer(tempTether.currentLayer);
 			});
+			const eyeContainer = document.createElement("div");
+			eyeContainer.className = "layer-eye-container";
+			
+			const eye = document.createElement("button");
+			//eye.dataset.idx = i;
+			let shown = layer.od.shown;
+			eye.classList.add("layer-icon-button");
+				
+			if(shown == true) {
+				eye.classList.add("icon-layer-shown");
+			} else {
+				eye.classList.add("icon-layer-hidden");
+			}
+			
+			eye.addEventListener("click", function (e) {
+				shown = !shown;
+				layer.od.shown = shown;
+				
+				if(shown == true) {
+					eye.classList.remove("icon-layer-hidden");
+					eye.classList.add("icon-layer-shown");
+				} else {
+					eye.classList.remove("icon-layer-shown");
+					eye.classList.add("icon-layer-hidden");
+				}
+				img.printImage();
+			});
+			
 			layerContainer.appendChild(layerSelect);
+			layerSelect.appendChild(eyeContainer);
+			eyeContainer.appendChild(eye);
 			listContainer.appendChild(layerContainer);
 		}
-		
 		this.unhighlightLayer(this.previousLayer);
 		this.highlightLayer(this.currentLayer);
 	}
@@ -265,12 +286,21 @@ class Tether {
 	highlightLayer(idx) {
 		//uhighlight current layer
 		const newLayer = document.getElementById("dyn-layer-" + idx);
+		if(newLayer == null) return;
 		newLayer.classList.add("layer-highlight");
 	}
 	
 	unhighlightLayer(idx) {
 		//unhighlight previous layerer
 		const oldLayer = document.getElementById("dyn-layer-" + idx);
+		if(oldLayer == null) return;
 		oldLayer.classList.remove("layer-highlight");
+	}
+	
+	updateSize() {
+		this.canvas.height = img.y;
+		this.canvas.style.height = img.y * this.canvasScale + "px";
+		this.canvas.width = img.x;
+		this.canvas.style.width = img.x * this.canvasScale + "px";
 	}
 }
