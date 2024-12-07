@@ -67,9 +67,11 @@ class Serialization {
 			//dont bother writing option data if there is none!!
 			if(fauxLayer.options != undefined) {
 				//clean up colors!
-				//TODO: account for a mismatch in option key count (like if a new option gets added)
 				let optionsNew = {};
+				//make sure the faux options have the correct amount of options (if an image from an old version gets loaded in a version w new options)
+				fauxLayer.options = Object.assign(newLayer.options, fauxLayer.options);
 				const optionKeys = Object.keys(fauxLayer.options);
+				
 				for(let o = 0; o < optionKeys.length; o++) {
 					const key = optionKeys[o];
 					const val = fauxLayer.options[key];

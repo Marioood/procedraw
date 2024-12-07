@@ -64,7 +64,7 @@ function setupInterop() {
 	classSelect.addEventListener("change", function (e) {
 		t.currentClass = img.layerClasses[classNames[this.selectedIndex]];
 	});
-
+	
 	const bgInput = document.getElementById("img-bg-color");
 	let oldTime;
 	//copied from tether.js
@@ -120,25 +120,57 @@ function setupInterop() {
 	loadImage.addEventListener("click", function (e) {
 		const loadInput = document.getElementById("img-load-data");
 		if(confirm("load image?")) {
-			s.load(loadInput.value);
-			t.generateLayerList();
-			img.updateSize();
-			t.updateSize();
-			img.printImage();
+			try {
+				s.load(loadInput.value);
+				t.generateLayerList();
+				img.updateSize();
+				t.updateSize();
+				img.printImage();
+				
+				bgInput.value = img.RGB2Hex(img.bg);
+			} catch(error) {
+				window.alert("couldn't parse data! \n\n" + error);
+				return;
+			}
+		}
+	});
+	//oldTime is already defined (near the background selection events)
+	let oldTimeR = 0
+	document.addEventListener("keydown", function(event) {
+		//intentionally lag the input so it doesnt print too fast
+		let curTime = Math.round(Date.now() / 100);
+		if(oldTimeR != curTime) {
+			if(event.key == "r" || event.key == "R") {
+				oldTimeR = curTime;
+				img.printImage();
+			}
 		}
 	});
 }
 //NEW goalz
+//hex codes in color input
+//option type for directions
+//layer names
+//image name
+//make sure that textures loop!!
+//shown option changes eye button
+//grout layer
+//take a break! work on the programmer art thing
+//overlap option (see wandering lines)
+//brightness tolerance
+
+
+//later
+//snap image editor
+//layer link
+//color ramp
+//tiled view
+//variables and math expressions
 //filters (?) they seem kinda slow.....
 	//layer tiling periods, layer offsets
 	//scale + normalized scale (like xor fractal)
 	//plot filters (only change the output of plotPixel()) dont seem like they'd be slow
-//hex codes in color input
-//option type for directions
-//cost (img.x * img.y * img.layers.length)
-//autocomplete
-//tiled view (maybe?)
-//layer names
-//r key to render
+//perlin noise
+
 
 //DONT SLAP MORE SHIT ONTO SHIT

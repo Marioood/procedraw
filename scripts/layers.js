@@ -20,7 +20,7 @@ class Layer {
 		//multiply the image by a color
 		tint: [255, 255, 255, 255],
 		shown: true
-		//maybe add "disolve"? like the coverage option for the noise filter
+		//maybe add "disolve"? like the coverage option from the noise filter
 	};
 	
 	typesDefault = {
@@ -41,10 +41,14 @@ class Layer {
 			]
 		},
 		tint: {
-			type: "color"
+			type: "color",
+			external: true,
+			brotherId: "dyn-icon-tint-"
 		},
 		shown: {
-			type: "boolean"
+			type: "boolean",
+			external: true,
+			brotherId: "dyn-layer-eye-"
 		}
 	};
 	
@@ -315,22 +319,15 @@ class LayerWandering extends Layer{
 	name = "wandering";
 	
 	options = {
-		//maxLines: 4,
 		spacing: 8,
 		go2X: true,
 		spread: 0.5,
 		variance: 2,
-		bias: 0.5
-		//thickness: 1
+		bias: 0.5,
+		thickness: 1
 	}
 	
 	types = {
-		/*maxLines: {
-			type: "number",
-			min: 1,
-			max: 256,
-			unsafe: true
-		},*/
 		spacing: {
 			type: "number",
 			min: 1,
@@ -355,13 +352,13 @@ class LayerWandering extends Layer{
 			step: 0.05,
 			max: 1,
 			min: 0
-		}
-		/*thickness: {
+		},
+		thickness: {
 			type: "number",
 			min: 1,
 			max: 16,
 			unsafe: true
-		}*/
+		}
 	}
 	
 	generate(o) {
@@ -390,15 +387,17 @@ class LayerWandering extends Layer{
 					x = pos;
 					y = n;
 				}
-				/*for(let s = 0; s < o.thickness; s++) {
-					if(o.go2X) {
-						img.plotPixel(o.color, x, y + s);
-					} else {
-						img.plotPixel(o.color, x + s, y);
+				if(o.thickness == 1) {
+					img.plotPixel([255, 255, 255, 255], x, y);
+				} else {
+					for(let s = 0; s < o.thickness; s++) {
+						if(o.go2X) {
+							img.plotPixel([255, 255, 255, 255], x, y + s);
+						} else {
+							img.plotPixel([255, 255, 255, 255], x + s, y);
+						}
 					}
-				}*/
-				
-				img.plotPixel([255, 255, 255, 255], x, y);
+				}
 				
 				if(Math.random() < o.spread) {
 					if(Math.random() < o.bias) {
@@ -447,6 +446,95 @@ class LayerCheckers extends Layer {
 			for(let x = 0; x < img.x; x++) {
 				let col = (Math.floor(x / o.scaleX) + Math.floor(y / o.scaleY)) % 2 == 0 ? o.evenColor : o.oddColor;
 				img.plotPixel(col, x, y);
+			}
+		}
+	}
+}
+	
+/*class LayerPerlin extends Layer {
+	name = "perlin";
+	
+	lerp(a, b, t) {
+		return a + t * (b - a);
+	}
+	//[Math.random(), Math.random()];
+	perlin(x, y) {
+		
+	}
+
+	generate(o) {
+		//fuck you wikipedia
+		//fuck you ken perlin
+		for(let y = 0; y < img.y; y++) {
+			for(let x = 0; x < img.x; x++) {
+				
+			}
+		}
+	}
+}*/
+
+class LayerBlobs extends Layer {
+	name = "blobs";
+	
+	options = {
+		spacing: 8,
+		minDiameter: 8,
+		maxDiameter: 8,
+		fade: false
+	};
+	
+	types = {
+		spacing: {
+			type: "number",
+			min: 2,
+			max: 256,
+			unsafe: true
+		},
+		minDiameter: {
+			type: "number",
+			min: 1,
+			max: 32,
+			unsafe: true
+		},
+		maxDiameter: {
+			type: "number",
+			min: 1,
+			max: 32,
+			unsafe: true
+		},
+		fade: {
+			type: "boolean"
+		}
+	};
+	
+	generate(o) {
+		const blobCount = (img.x / o.spacing) * (img.y / o.spacing);
+		
+		for(let i = 0; i < blobCount; i++) {
+			//random diameter
+			let d = Math.random() * (o.maxDiameter - o.minDiameter) + o.minDiameter;
+			//add 0.5 so the blobs arent 1 pixel smaller than they suppsoed to be
+			let r = d / 2 + 0.5;
+			let xStart = Math.floor(Math.random() * img.x);
+			let yStart = Math.floor(Math.random() * img.y);
+			
+			for(let yi = -r; yi < r; yi++) {
+				for(let xi = -r; xi < r; xi++) {
+					//subtract 0.5 to make the blobs rounder
+					const dist = Math.sqrt(xi * xi + yi * yi);
+					if(dist < r - 0.5) {
+						//wrap pixels around the edge (maybe make this a default option? or default in plotPixel??)
+						let x = Math.floor(xi + xStart) % img.x;
+						let y = Math.floor(yi + yStart) % img.y;
+						if(x < 0) x += img.x;
+						if(y < 0) y += img.y;
+						if(o.fade) {
+							img.plotPixel([255, 255, 255, ((r - dist) / r) * 255], x, y);
+						} else {
+							img.plotPixel([255, 255, 255, 255], x, y);
+						}
+					}
+				}
 			}
 		}
 	}

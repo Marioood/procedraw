@@ -13,10 +13,12 @@ class ImageManager {
 		border: LayerBorder,
 		liney: LayerLiney,
 		wandering: LayerWandering,
-		checkers: LayerCheckers
+		checkers: LayerCheckers,
+		blobs: LayerBlobs
 	};
 	
 	printImage() {
+		let startTime = Date.now();
 		//write the background color
 		for(let i = 0; i < this.x * this.y; i++) {
 			img.data[i * 4] = this.bg[0];
@@ -40,6 +42,9 @@ class ImageManager {
 		}
 		//insert new image data
 		t.ctx.putImageData(canvasImg, 0, 0);
+		let renderTime = Date.now() - startTime;
+		
+		document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
 	}
 	
 	updateSize() {
@@ -59,7 +64,7 @@ class ImageManager {
 		//drop the pixel if its out of bounds
 		if(x < 0 || x >= this.x || y < 0 || y >= this.y) return;
 		//get alpha n blend from global memory... its less to type
-		const alpha = this.layer.od.alpha;
+		const alpha = this.layer.od.alpha * (color[3] / 255);
 		const blend = this.layer.od.blend;
 		const tint = this.layer.od.tint;
 		//color is an array of 4 bytes
@@ -70,7 +75,7 @@ class ImageManager {
 		this.data[pos * 4 + 1] = this.combinePixel((color[1] / 255) * (tint[1] / 255), this.data[pos * 4 + 1], blend, alpha) * 255;
 		this.data[pos * 4 + 2] = this.combinePixel((color[2] / 255) * (tint[2] / 255), this.data[pos * 4 + 2], blend, alpha) * 255;
 		//add the alphas together
-		this.data[pos * 4 + 3] = color[3];//(color[3] * alpha) + this.data[pos * 4 + 3];
+		this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
 	}
 	
 	combinePixel(l, b, blend, strength) {

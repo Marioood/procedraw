@@ -46,16 +46,20 @@ class Tether {
 			const label = document.createElement("label");
 			const id = containerId + "dyn-param-" + i + "-";
 			label.for = id;
-			const text = optionKeys[i] + ": ";
+			let text = optionKeys[i] + ": ";
 			
+			//how the options are displayed (eg. color or number? decimal or integer?)
+			const limits = types[optionKeys[i]];
+			//tell the user that these options can cause LAG
+			if(limits.unsafe) {
+				text = "(!) " + text;
+			}
+
 			label.appendChild(document.createTextNode(text));
 			container.appendChild(label);
 			//input box
 			let input = document.createElement("input");
 			input.id = id;
-			
-			//how the options are displayed (eg. color or number? decimal or integer?)
-			const limits = types[optionKeys[i]];
 			
 			switch(limits.type) {
 				case "number":
@@ -79,7 +83,14 @@ class Tether {
 						//having unsafe options too high can crash or freeze the browser!!
 						if(limits.unsafe) {
 							val = Math.min(Math.max(val, limits.min), limits.max);
-							input.value = val;
+							//input.value = val;
+							//just dont update the number - cause it makes inputting small numbers a bitch
+							if(val != input.value) {
+								this.classList.add("input-invalid");
+								return;
+							} else {
+								this.classList.remove("input-invalid");
+							}
 						}
 						options[optionKeys[i]] = Number(input.value);
 						img.printImage();
@@ -98,6 +109,7 @@ class Tether {
 					input.value = img.RGB2Hex(options[optionKeys[i]]);
 					
 					let oldTime;
+					const tempTether = this;
 					
 					input.addEventListener("input", function (e) {
 						//intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
@@ -107,6 +119,10 @@ class Tether {
 							oldTime = curTime;
 							options[optionKeys[i]] = img.parseHex(input.value);
 							img.printImage();
+							if(limits.external) {
+								const brother = document.getElementById(limits.brotherId + t.currentLayer);
+								brother.style.backgroundColor = tempTether.limitDarkness(img.parseHex(input.value));
+							}
 						}
 					});
 					break;
@@ -223,10 +239,22 @@ class Tether {
 			const layerSelect = document.createElement("div");
 			layerSelect.className = "layer-select";
 			
+			const iconContainer = document.createElement("div");
+			iconContainer.className = "layer-icon-container";
+			
+			const iconTint = document.createElement("div");
+			iconTint.className = "layer-icon-tint";
+			iconTint.style.backgroundColor = tempTether.limitDarkness(layer.od.tint);
+			iconTint.id = "dyn-icon-tint-" + i;
+			
 			const icon = document.createElement("img");
 			icon.src = "img/icon/" + layer.name + ".png";
+			icon.className = "layer-icon";
 			
-			layerSelect.appendChild(icon);
+			iconTint.appendChild(icon);
+			iconContainer.appendChild(iconTint);
+			layerSelect.appendChild(iconContainer);
+			
 			const name = document.createElement("span");
 			name.className = "layer-text-container";
 			const text = i + ". " + layer.name;
@@ -254,6 +282,8 @@ class Tether {
 			} else {
 				eye.classList.add("icon-layer-hidden");
 			}
+			
+			eye.id = "dyn-layer-eye-" + i;
 			
 			eye.addEventListener("click", function (e) {
 				shown = !shown;
@@ -298,9 +328,28 @@ class Tether {
 	}
 	
 	updateSize() {
+		//update canvs width
 		this.canvas.height = img.y;
 		this.canvas.style.height = img.y * this.canvasScale + "px";
 		this.canvas.width = img.x;
 		this.canvas.style.width = img.x * this.canvasScale + "px";
+		//update width inpt
+		const widthInput = document.getElementById("img-width");
+		const heightInput = document.getElementById("img-height");
+		widthInput.value = img.x;
+		heightInput.value = img.y;
+	}
+	
+	limitDarkness(color) {
+		//dont become too dark so the ui is still legible
+		const darkLimit = 63;
+		const brightness = (color[0] + color[1] + color[2]) / 3;
+		if(brightness < darkLimit) {
+			color[0] = Math.max(color[0], darkLimit);
+			color[1] = Math.max(color[1], darkLimit);
+			color[2] = Math.max(color[2], darkLimit);
+		}
+		
+		return img.RGB2Hex(color);
 	}
 }
