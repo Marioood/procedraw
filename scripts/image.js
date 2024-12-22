@@ -14,8 +14,10 @@ class ImageManager {
 		liney: LayerLiney,
 		wandering: LayerWandering,
 		checkers: LayerCheckers,
-		blobs: LayerBlobs
+		blobs: LayerBlobs,
+		worley: LayerWorley
 	};
+	name = "our beauty";
 	
 	printImage() {
 		let startTime = Date.now();
@@ -61,14 +63,29 @@ class ImageManager {
 	}
 
 	plotPixel(color, x, y) {
+		//color is an array of 4 bytes
+		//[red, blue, green, alpha]
+		
 		//drop the pixel if its out of bounds
-		if(x < 0 || x >= this.x || y < 0 || y >= this.y) return;
+		//if(x < 0 || x >= this.x || y < 0 || y >= this.y) return;
+		//wrap around image
+		x %= img.x;
+		y %= img.y;
+		//wrap if negative
+		if(x < 0) x += img.x;
+		if(y < 0) y += img.y;
 		//get alpha n blend from global memory... its less to type
+		//getting stuff from global memory loses ~1 ms on a 256x256 image
 		const alpha = this.layer.od.alpha * (color[3] / 255);
 		const blend = this.layer.od.blend;
 		const tint = this.layer.od.tint;
-		//color is an array of 4 bytes
-		//[red, blue, green, alpha]
+		//const depth = this.layer.od.depth;
+		
+		/*if(this.layer.name == "noise") {
+			for(let i = 0; i < this.layer.filters.length; i++) {
+				color = this.layer.filters[i].edit(color[0], color[1], color[2], color[3]);
+			}
+		}*/
 		const pos = x + y * this.x;
 		//todo: actually have alpha CHANNEL affect (effect? idk) the color, not just the layer's alpha
 		this.data[pos * 4] = this.combinePixel((color[0] / 255) * (tint[0] / 255), this.data[pos * 4], blend, alpha) * 255;
@@ -76,6 +93,7 @@ class ImageManager {
 		this.data[pos * 4 + 2] = this.combinePixel((color[2] / 255) * (tint[2] / 255), this.data[pos * 4 + 2], blend, alpha) * 255;
 		//add the alphas together
 		this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
+			
 	}
 	
 	combinePixel(l, b, blend, strength) {
@@ -104,10 +122,11 @@ class ImageManager {
 	}
 	
 	parseRGB(hex) {
-		const r = (hex & 0xFF0000) >> 16;
-		const g = (hex & 0x00FF00) >> 8;
-		const b = hex & 0x0000FF;
-		return [r, g, b, 255];
+		const r = ((hex & 0xFF000000) >> 24) & 0xFF; //signed 2 unsigned
+		const g = (hex & 0x00FF0000) >> 16;
+		const b = (hex & 0x0000FF00) >> 8;
+		const a = hex & 0x000000FF;
+		return [r, g, b, a];
 	}
 	
 	RGB2Hex(arr) {
@@ -115,15 +134,34 @@ class ImageManager {
 		let r = arr[0].toString(16);
 		let g = arr[1].toString(16);
 		let b = arr[2].toString(16);
+		let a = arr[3].toString(16);
 		//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
 		if(r.length < 2) r = "0" + r;
 		if(g.length < 2) g = "0" + g;
 		if(b.length < 2) b = "0" + b;
+		if(a.length < 2) a = "0" + a;
 		return "#" + r + g + b;
 	}
 	
 	parseHex(hex) {
 		//convert #RRGGBB to 0xRRGGBB
-		return img.parseRGB(Number("0x" + hex.slice(1)));
+		//rgba or rgb depending on length
+		if(hex.length <= 7) {
+			//hack for versions that didnt support alpha input
+			return img.parseRGB(Number("0x" + hex.slice(1) + "ff"));
+		} else {
+			return img.parseRGB(Number("0x" + hex.slice(1)));
+		}
+	}
+	
+	blend(col0, col1, percent) {
+		//could be a "map" filter?
+		const a = col0[3] + percent * (col1[3] - col0[3]);
+		//do this so the transition between opaque and transparent colors doesnt look weird and muddy
+		percent /= a / 255;
+		const r = col0[0] + percent * (col1[0] - col0[0]);
+		const g = col0[1] + percent * (col1[1] - col0[1]);
+		const b = col0[2] + percent * (col1[2] - col0[2]);
+		return [r, g, b, a];
 	}
 }

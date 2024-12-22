@@ -5,7 +5,8 @@ class Serialization {
 			bg: img.RGB2Hex(img.bg),
 			x: img.x,
 			y: img.y,
-			version: "VOLATILE 0.1"
+			name: img.name,
+			version: "VOLATILE 0.2"
 		};
 		saved.layers = [];
 		
@@ -53,6 +54,11 @@ class Serialization {
 		img.bg = img.parseHex(saved.img.bg);
 		img.x = saved.img.x;
 		img.y = saved.img.y;
+		if(saved.img.name == undefined) {
+			img.name = "our ancient beauty";
+		} else {
+			img.name = saved.img.name;
+		}
 		//blank layers so we arent loading images on top of eachother
 		img.layers = [];
 

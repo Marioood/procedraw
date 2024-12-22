@@ -149,15 +149,15 @@ function setupInterop() {
 }
 //NEW goalz
 //hex codes in color input
-//option type for directions
 //layer names
-//image name
 //make sure that textures loop!!
 //shown option changes eye button
 //grout layer
 //take a break! work on the programmer art thing
 //overlap option (see wandering lines)
 //brightness tolerance
+
+//the set color function sucked it was like 4 times slower
 
 
 //later

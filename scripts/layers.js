@@ -19,9 +19,12 @@ class Layer {
 		blend: "plain",
 		//multiply the image by a color
 		tint: [255, 255, 255, 255],
+		//depth: 255,
 		shown: true
 		//maybe add "disolve"? like the coverage option from the noise filter
 	};
+	
+	//filters = [new FilterInvert()];
 	
 	typesDefault = {
 		alpha: {
@@ -153,7 +156,12 @@ class LayerBorder extends Layer {
 		y0: 0,
 		x1: 63,
 		y1: 63,
-		thickness: 1
+		thickness: 1,
+		tileX: false,
+		tileY: false,
+		paddingX: 1,
+		paddingY: 1
+		//alphaFalloff: 0
 	};
 	
 	types = {
@@ -198,7 +206,27 @@ class LayerBorder extends Layer {
 			min: 1,
 			max: 256,
 			unsafe: true
-		}
+		},
+		tileX: {
+			type: "boolean",
+			unsafe: true
+		},
+		tileY: {
+			type: "boolean",
+			unsafe: true
+		},
+		paddingX: {
+			type: "number"
+		},
+		paddingY: {
+			type: "number"
+		}/*,
+		alphaFalloff: {
+			type: "number",
+			step: 0.01,
+			min: 0,
+			max: 1
+		}*/
 	};
 	
 	generate(o) {
@@ -219,25 +247,63 @@ class LayerBorder extends Layer {
 			y0 = o.y1;
 			y1 = o.y0;
 		}
-		//just draw the border multiple times to do a thicker one
-		for(let i = 0; i < o.thickness; i++) {
-			for(let x = x0 + 1; x < x1; x++) {
-				img.plotPixel(o.colorTop, x, y0);
-				img.plotPixel(o.colorBottom, x, y1);
+		const width = x1 - x0 + o.paddingX;
+		const height = y1 - y0 + o.paddingY;
+		let xCopies = 1;
+		let yCopies = 1;
+		let x0Old = x0;
+		let x1Old = x1;
+		let y0Old = y0;
+		let y1Old = y1;
+		//if the pin coords are equal then the browser explodes (infinite loop)
+		if(o.tileX && x0 != x1) xCopies = Math.ceil(img.x / width);
+		if(o.tileY && y0 != y1) yCopies = Math.ceil(img.y / height);
+		//let oldAlpha = this.od.alpha;
+		
+		for(let yT = 0; yT < yCopies; yT++) {
+			for(let xT = 0; xT < xCopies; xT++) {
+				x0 = x0Old;
+				x1 = x1Old;
+				y0 = y0Old;
+				y1 = y1Old;
+				//just draw the border multiple times to do a thicker one
+				for(let i = 0; i < o.thickness; i++) {
+					for(let x = x0 + 1; x < x1; x++) {
+						img.plotPixel(o.colorTop, x, y0);
+						img.plotPixel(o.colorBottom, x, y1);
+					}
+					for(let y = y0 + 1; y < y1; y++) {
+						img.plotPixel(o.colorLeft, x0, y);
+						img.plotPixel(o.colorRight, x1, y);
+					}
+					//corners
+					img.plotPixel(this.blend(o.colorLeft, o.colorTop), x0, y0);
+					img.plotPixel(this.blend(o.colorRight, o.colorTop), x1, y0);
+					img.plotPixel(this.blend(o.colorLeft, o.colorBottom), x0, y1);
+					img.plotPixel(this.blend(o.colorRight, o.colorBottom), x1, y1);
+					x0++;
+					y0++;
+					x1--;
+					y1--;
+					//this.od.alpha -= o.alphaFalloff;
+				}
+				//jank but ehhhh it works
+				if(o.tileX) {
+					x0Old += width;
+					x1Old += width;
+				}
+				//disgusting hack to get alpha falloff to work (without having to fiddle with a bunch of arrays)
+				//this.od.alpha = oldAlpha;
 			}
-			for(let y = y0 + 1; y < y1; y++) {
-				img.plotPixel(o.colorLeft, x0, y);
-				img.plotPixel(o.colorRight, x1, y);
+			if(o.tileY) {
+				y0Old += height;
+				y1Old += height;
+				if(o.tileX) {
+					//shift back x pins
+					x0Old -= width * xCopies;
+					x1Old -= width * xCopies;
+				}
 			}
-			//corners
-			img.plotPixel(this.blend(o.colorLeft, o.colorTop), x0, y0);
-			img.plotPixel(this.blend(o.colorRight, o.colorTop), x1, y0);
-			img.plotPixel(this.blend(o.colorLeft, o.colorBottom), x0, y1);
-			img.plotPixel(this.blend(o.colorRight, o.colorBottom), x1, y1);
-			x0++;
-			y0++;
-			x1--;
-			y1--;
 		}
 	}
 	
@@ -255,7 +321,7 @@ class LayerLiney extends Layer {
 	
 	options = {
 		breaks: 0.5,
-		depth: 2,
+		depth: 3,
 		brightness: 1,
 		go2x: true
 	}
@@ -279,7 +345,8 @@ class LayerLiney extends Layer {
 			min: 0
 		},
 		go2x: {
-			type: "boolean"
+			type: "boolean",
+			direction: true
 		}
 	}
 	
@@ -322,7 +389,7 @@ class LayerWandering extends Layer{
 		spacing: 8,
 		go2X: true,
 		spread: 0.5,
-		variance: 2,
+		variance: 8,
 		bias: 0.5,
 		thickness: 1
 	}
@@ -335,7 +402,8 @@ class LayerWandering extends Layer{
 			unsafe: true
 		},
 		go2X: {
-			type: "boolean"
+			type: "boolean",
+			direction: true
 		},
 		spread: {
 			type: "number",
@@ -524,16 +592,128 @@ class LayerBlobs extends Layer {
 					const dist = Math.sqrt(xi * xi + yi * yi);
 					if(dist < r - 0.5) {
 						//wrap pixels around the edge (maybe make this a default option? or default in plotPixel??)
-						let x = Math.floor(xi + xStart) % img.x;
+						/*let x = Math.floor(xi + xStart) % img.x;
 						let y = Math.floor(yi + yStart) % img.y;
 						if(x < 0) x += img.x;
-						if(y < 0) y += img.y;
+						if(y < 0) y += img.y;*/
+						let x = Math.floor(xi + xStart);
+						let y = Math.floor(yi + yStart);
 						if(o.fade) {
 							img.plotPixel([255, 255, 255, ((r - dist) / r) * 255], x, y);
 						} else {
 							img.plotPixel([255, 255, 255, 255], x, y);
 						}
 					}
+				}
+			}
+		}
+	}
+}
+	
+class LayerWorley extends Layer {
+	name = "worley";
+	
+	options = {
+		xSpacing: 16,
+		ySpacing: 16,
+		closeColor: [0, 0, 0, 255],
+		farColor: [255, 255, 255, 255],
+		squareDistance: false,
+		voronoi: false
+	};
+	
+	types = {
+		xSpacing: {
+			type: "number",
+			min: 1,
+			max: 256,
+			unsafe: true
+		},
+		ySpacing: {
+			type: "number",
+			min: 1,
+			max: 256,
+			unsafe: true
+		},
+		closeColor: {
+			type: "color"
+		},
+		farColor: {
+			type: "color"
+		},
+		squareDistance: {
+			type: "boolean"
+		},
+		voronoi: {
+			type: "boolean"
+		}
+	};
+	
+	generate(o) {
+		//let xSpacing = 16;//img.x / xGrid;
+		//let ySpacing = 16;//img.y / yGrid;
+		let xGrid = Math.ceil(img.x / o.xSpacing);
+		let yGrid = Math.ceil(img.y / o.ySpacing);
+		let points = new Array(xGrid * yGrid);
+		let colors;
+		
+		for(let y = 0; y < yGrid; y++) {
+			for(let x = 0; x < xGrid; x++) {
+				//points[x + y * xGrid] = [x * o.xSpacing + Math.floor(Math.random() * o.xSpacing), y * o.ySpacing + Math.floor(Math.random() * o.ySpacing)];
+				points[x + y * xGrid] = [Math.random() * o.xSpacing, Math.random() * o.ySpacing];
+			}
+		}
+		if(o.voronoi) {
+			colors = new Array(xGrid * yGrid);
+			for(let y = 0; y < yGrid; y++) {
+				for(let x = 0; x < xGrid; x++) {
+					colors[x + y * xGrid] = img.blend(o.closeColor, o.farColor, Math.random());
+				}
+			}
+		}
+		for(let y = 0; y < img.y; y++) {
+			for(let x = 0; x < img.x; x++) {
+				//absurd number so that the distance gets overwritten
+				let closestDist = 999999999999999;
+				//iterate through 9 cells to compute the shortest distance
+				let printCol;
+				for(let yi = -1; yi <= 1; yi++) {
+					for(let xi = -1; xi <= 1; xi++) {
+						const xCell = Math.floor(x / o.xSpacing) + xi;
+						const yCell = Math.floor(y / o.ySpacing) + yi;
+						let xIdx = xCell % xGrid;
+						let yIdx = yCell % yGrid;
+						if(xIdx < 0) xIdx += xGrid;
+						if(yIdx < 0) yIdx += yGrid;
+						const pointIdx = xIdx + yIdx * xGrid;
+						const xSqr = (x - (points[pointIdx][0] + xCell * o.xSpacing));
+						const ySqr = (y - (points[pointIdx][1] + yCell * o.ySpacing));
+						let xScale = 1;
+						let yScale = 1;
+						//stretch out blobs if x spacing and y spacing arent equal (prevents some of the weird grid artifacts)
+						if(o.xSpacing < o.ySpacing) {
+							xScale = o.ySpacing / o.xSpacing;
+						} else {
+							yScale = o.xSpacing / o.ySpacing;
+						}
+						const dist = (xSqr * xSqr) * xScale + (ySqr * ySqr) * yScale;
+						if(dist < closestDist) {
+							closestDist = dist;
+							if(o.voronoi) printCol = colors[pointIdx];
+						}
+					}
+				}
+				if(o.voronoi) {
+					img.plotPixel(printCol, x, y);
+				} else {
+					//do the sqrt for only one of the distances
+					//let dist = Math.sqrt(closestDist) * (255 / ((o.xSpacing + o.ySpacing) / 2));
+					let dist = Math.sqrt(closestDist) / ((o.xSpacing + o.ySpacing) / 2);
+					if(o.squareDistance) {
+						dist *= dist;
+					}
+					
+					img.plotPixel(img.blend(o.closeColor, o.farColor, dist), x, y);
 				}
 			}
 		}

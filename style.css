@@ -14,7 +14,30 @@ div {
 	background-color: black;
 }
 input[type=number] {
-	width: 64px;
+	width: 52px;
+}
+input[type=range] {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 2px;
+	background: black;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  border: 1px solid white;
+  background: none;
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 4px;
+  height: 16px;
+  border-radius: 0;
+  border: 1px solid white;
+  background: black;
 }
 input, select, button, textarea {
 	background-color: black;
@@ -31,7 +54,7 @@ input, select, button, textarea {
 	top: 0px;
 	box-sizing: border-box;
 	height: 100vh;
-	width: 300px;
+	width: 340px;
 }
 .canvas-container {
 	border: white 1px solid;
@@ -52,7 +75,7 @@ input, select, button, textarea {
 	top: 0px;
 	box-sizing: border-box;
 	height: 100vh;
-	width: 300px;
+	width: 340px;
 }
 .setting-container {
 	border-top: white 1px solid;
@@ -156,4 +179,50 @@ input, select, button, textarea {
 	align-items: center;
 	float: left;
 	background: none;
+}
+
+.label-container {
+	display: inline-block;
+	margin-left: 4px;
+	width: 90px;
+}
+
+.layer-options {
+	line-height: 24px;
+}
+
+.option-unsafe {
+	text-decoration: underline;
+}
+
+.checkbox {
+	width: 16px;
+	height: 16px;
+	border: 1px black solid;
+	outline: 1px white solid;
+}
+.checkbox-true {
+	background-color: white;
+}
+
+.checkbox-false {
+	background-color: black;
+}
+
+.checkbox-x {
+	background-image: url("img/ui/dir-x.png");
+}
+
+.checkbox-y {
+	background-image: url("img/ui/dir-y.png");
+}
+
+.large-input {
+	border: none;
+	border-bottom: white 1px solid;
+	font-style: italic;
+	font-weight: bold;
+	font-family: serif;
+	font-size: 1.75em;
+	margin: 8px;
 }
