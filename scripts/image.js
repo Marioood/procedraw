@@ -18,20 +18,43 @@ class ImageManager {
 		worley: LayerWorley
 	};
 	name = "our beauty";
-	
-	printImage() {
-		//abort if render on update is turned on (anti-lag option)
-		if(!t.renderOnUpdate && !t.forceRender) return;
-		//reset the force render option so we dont force more renders
-		if(t.forceRender) t.forceRender = false;
-		let startTime = Date.now();
-		//write the background color
-		for(let i = 0; i < this.x * this.y; i++) {
-			img.data[i * 4] = this.bg[0];
-			img.data[i * 4 + 1] = this.bg[1];
-			img.data[i * 4 + 2] = this.bg[2];
-			img.data[i * 4 + 3] = this.bg[3];
+
+	busy = false;
+	scheduledRerender = false;
+	/** @type {Worker} */
+	worker = null;
+	drawCallback = null;
+
+	constructor() {
+		if (typeof importScripts !== 'function') {
+			const worker = new Worker("scripts/worker.js");
+			worker.postMessage({type: 'hello'});
+			worker.onerror = console.error;
+			worker.onmessage = event => {
+				const {type} = event.data;
+				switch (type) {
+					case 'hello':
+						this.worker = worker;
+						console.log("Loaded service worker");
+					break;
+					case 'draw':
+						if (event.data.x == this.x && event.data.y == this.y) {
+							this.data = [...event.data.buffer];
+							this.drawCallback();
+						} else {
+							this.busy = false;
+							if (this.scheduledRerender) {
+								this.scheduledRerender = false;
+								this.printImage();
+							}
+						}
+					break;
+				}
+			};
 		}
+	}
+
+	_processImageRaw() {
 		//layer the layers
 		for(let i = 0; i < this.layers.length; i++) {
 			if(this.layers[i].od.shown) {
@@ -40,17 +63,49 @@ class ImageManager {
 				this.layer.generate(this.layer.options);
 			}
 		}
-		//canvas stuff
-		let canvasImg = t.ctx.createImageData(this.x, this.y);
-		//write to canvas data
-		for(let i = 0; i < this.x * this.y * 4; i++) {
-			canvasImg.data[i] = this.data[i];
+	}
+	
+	printImage() {
+		if(this.busy) return void(this.scheduledRerender = true);
+		//abort if render on update is turned on (anti-lag option)
+		if(!t.renderOnUpdate && !t.forceRender) return;
+		//reset the force render option so we dont force more renders
+		if(t.forceRender) t.forceRender = false;
+		this.busy = true;
+		let startTime = Date.now();
+		//write the background color
+		for(let i = 0; i < this.x * this.y; i++) {
+			this.data[i * 4] = this.bg[0];
+			this.data[i * 4 + 1] = this.bg[1];
+			this.data[i * 4 + 2] = this.bg[2];
+			this.data[i * 4 + 3] = this.bg[3];
 		}
-		//insert new image data
-		t.ctx.putImageData(canvasImg, 0, 0);
-		let renderTime = Date.now() - startTime;
-		
-		document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
+		this.drawCallback = () => {
+			//canvas stuff
+			let canvasImg = t.ctx.createImageData(this.x, this.y);
+			//write to canvas data
+			for(let i = 0; i < this.x * this.y * 4; i++) {
+				canvasImg.data[i] = this.data[i];
+			}
+			//insert new image data
+			t.ctx.putImageData(canvasImg, 0, 0);
+			let renderTime = Date.now() - startTime;
+			
+			document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
+			this.busy = false;
+			if (this.scheduledRerender) {
+				this.scheduledRerender = false;
+				this.printImage();
+			}
+		}
+		//outsource rendering to china
+		if (this.worker) {
+			const settings = s.save();
+			this.worker.postMessage({type: 'draw', settings});
+		}
+		else {
+			this.drawCallback(this._processImageRaw());
+		}
 	}
 	
 	updateSize() {
