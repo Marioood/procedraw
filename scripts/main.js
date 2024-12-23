@@ -9,8 +9,8 @@ setupInterop();
 function setupInterop() {
 
 	const removeLayer = document.getElementById("remove-layer");
-
-	removeLayer.addEventListener("click", function (e) {img.layers.splice(t.currentLayer, 1);
+	removeLayer.addEventListener("click", function (e) {
+		img.layers.splice(t.currentLayer, 1);
 		//go down a layer if we're in the middle, stay in place if we're at the bottom
 		if(t.currentLayer > 0) {
 			 t.setCurrentLayer(t.currentLayer - 1);
@@ -20,8 +20,17 @@ function setupInterop() {
 		img.printImage();
 	});
 
-	const addLayer = document.getElementById("add-layer");
+	const clearLayer = document.getElementById("clear-layer");
+	clearLayer.addEventListener("click", function (e) {
+		//go down a layer if we're in the middle, stay in place if we're at the bottom
+		t.setCurrentLayer(0);
+		img.layers.splice();
+		t.updateLayerOptions();
+		t.generateLayerList();
+		img.printImage();
+	});
 
+	const addLayer = document.getElementById("add-layer");
 	addLayer.addEventListener("click", function (e) {
 		if(img.layers.length > 0) {
 			t.setCurrentLayer(t.currentLayer + 1);
