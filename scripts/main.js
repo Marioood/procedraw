@@ -36,8 +36,19 @@ function setupInterop() {
 	});
 
 	const dupeLayer = document.getElementById("dupe-layer");
+	let dupeRedTimer = null;
 	dupeLayer.addEventListener("click", function (e) {
 		const layer2Dupe = img.layers[t.currentLayer];
+		if (!layer2Dupe) {
+			if (dupeRedTimer !== null) clearTimeout(dupeRedTimer);
+			dupeRedTimer = setTimeout(() => {
+				dupeLayer.style.color = null;
+				dupeLayer.style.borderColor = null;
+			}, 150);
+			dupeLayer.style.color = 'red';
+			dupeLayer.style.borderColor = 'red';
+			return;
+		}
 		//fuck you stack overflow
 		const clone = new img.layerClasses[layer2Dupe.name];
 		//create copies - not references
@@ -48,6 +59,52 @@ function setupInterop() {
 		img.layers.splice(t.currentLayer, 0, clone);
 		img.layers[t.currentLayer].displayName = /*"copy of " + */img.layers[t.currentLayer - 1].displayName;
 		//fix that smearing!!
+		t.updateLayerOptions();
+		t.generateLayerList();
+		img.printImage();
+	});
+
+	const randomLayer = document.getElementById("random-layer");
+	randomLayer.addEventListener("click", function (e) {
+		if(img.layers.length > 0) {
+			t.setCurrentLayer(t.currentLayer + 1);
+		}
+		const choice = x => x[Math.floor(Math.random() * x.length)];
+		/** @type {Layer} */
+		const layer = new (choice(Object.values(img.layerClasses)));
+		function randomize(opts, desc) {
+			for(const key in opts) {
+				const d = desc[key];
+				switch (d.type) {
+					case 'number': {
+						const min = d.min === void 0 ? 0 : d.min;
+						const max = d.max === void 0 ? 100 : d.max;
+						const step = d.step === void 0 ? 1 : d.step;
+						opts[key] = Math.random() * (max - min) + min;
+						opts[key] /= step;
+						opts[key] = Math.floor(opts[key]) * step;
+					} break;
+					case 'boolean':
+						opts[key] = Math.random() > 0.5;
+					break;
+					case 'color':
+						opts[key] = Array(4).fill(255).map(m => Math.floor(Math.random() * m));
+					break;
+					case 'dropdown':
+						opts[key] = choice(d.items);
+					break;
+					default:
+						console.error(`Unsupported option type ${d.type}`);
+				}
+			}
+		}
+		randomize(layer.od, layer.typesDefault);
+		randomize(layer.options, layer.types);
+		layer.od.shown = true;
+		img.layers.splice(t.currentLayer, 0, layer);
+		img.layers[t.currentLayer].displayName = img.layers[t.currentLayer].name;
+		//fix that smearing!!
+		//later me here what the hell did i mean by that
 		t.updateLayerOptions();
 		t.generateLayerList();
 		img.printImage();
