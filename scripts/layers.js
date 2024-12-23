@@ -4,8 +4,10 @@ default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
 class Layer {
-	//class name - dont change this when naming layers is added, just call that one "displayName"
+	//class name
 	name;
+	//user defined name
+	displayName;
 	//layer options
 	options = {};
 	//setting types (for the editor input types)
@@ -160,7 +162,9 @@ class LayerBorder extends Layer {
 		tileX: false,
 		tileY: false,
 		paddingX: 1,
-		paddingY: 1
+		paddingY: 1,
+		shiftX: 0,
+		shiftY: 0
 		//alphaFalloff: 0
 	};
 	
@@ -219,6 +223,12 @@ class LayerBorder extends Layer {
 			type: "number"
 		},
 		paddingY: {
+			type: "number"
+		},
+		shiftX: {
+			type: "number"
+		},
+		shiftY: {
 			type: "number"
 		}/*,
 		alphaFalloff: {
@@ -291,13 +301,19 @@ class LayerBorder extends Layer {
 				if(o.tileX) {
 					x0Old += width;
 					x1Old += width;
+					y0Old += o.shiftY;
+					y1Old += o.shiftY;
 				}
 				//disgusting hack to get alpha falloff to work (without having to fiddle with a bunch of arrays)
 				//this.od.alpha = oldAlpha;
 			}
 			if(o.tileY) {
+				y0Old -= o.shiftY * height;
+				y1Old -= o.shiftY * height;
 				y0Old += height;
 				y1Old += height;
+				x0Old += o.shiftX;
+				x1Old += o.shiftX;
 				if(o.tileX) {
 					//shift back x pins
 					x0Old -= width * xCopies;
@@ -391,7 +407,8 @@ class LayerWandering extends Layer{
 		spread: 0.5,
 		variance: 8,
 		bias: 0.5,
-		thickness: 1
+		thickness: 1,
+		wrapFix: true
 	}
 	
 	types = {
@@ -424,14 +441,15 @@ class LayerWandering extends Layer{
 		thickness: {
 			type: "number",
 			min: 1,
-			max: 16,
+			max: 128,
 			unsafe: true
+		},
+		wrapFix: {
+			type: "boolean"
 		}
 	}
 	
 	generate(o) {
-		//variance is kinda funky
-		//lines are supposed to wrap around, they do not
 		let maxN, inverseMaxN;
 
 		if(o.go2X) {
@@ -445,6 +463,8 @@ class LayerWandering extends Layer{
 		
 		for(let i = 0; i < maxLines; i++) {
 			let pos = Math.round((i + 0.5) * o.spacing + (Math.random() - 0.5) * o.variance);
+			const start = pos;
+			const wrapBiasPivot = maxN * (Math.random() * 3 + 1);
 			for(let n = 0; n < maxN; n++) {
 				let x, y;
 				
@@ -468,15 +488,31 @@ class LayerWandering extends Layer{
 				}
 				
 				if(Math.random() < o.spread) {
-					if(Math.random() < o.bias) {
-						pos++;
+					//attempt to fix wrapping on the line direction (ex: if xDir is x then y would loop properly, but x wouldnt)
+					if(o.wrapFix) {
+						let wrapBias = Math.max(n / wrapBiasPivot, 0);
+						//if the line strays too far from it's start, begin to bias towards the start (make the texture seamless)
+						if(wrapBias > Math.random()) {
+							//compute difference
+							if(start > pos) {
+								pos++;
+							} else {
+								pos--;
+							}
+						} else {
+							if(Math.random() < o.bias) {
+								pos++;
+							} else {
+								pos--;
+							}
+						}
 					} else {
-						pos--;
-					}
-					pos %= inverseMaxN;
-					//wrap if negative
-					if(pos < 0) {
-						pos += inverseMaxN;
+						//ehhh copy and paste i dont care
+						if(Math.random() < o.bias) {
+							pos++;
+						} else {
+							pos--;
+						}
 					}
 				}
 			}
@@ -491,7 +527,9 @@ class LayerCheckers extends Layer {
 		evenColor: [255, 255, 255, 255],
 		oddColor: [0, 0, 0, 255],
 		scaleX: 1,
-		scaleY: 1
+		scaleY: 1,
+		shiftX: 0,
+		shiftY: 0
 	};
 	
 	types = {
@@ -506,13 +544,19 @@ class LayerCheckers extends Layer {
 		},
 		scaleY: {
 			type: "number"
+		},
+		shiftX: {
+			type: "number"
+		},
+		shiftY: {
+			type: "number"
 		}
 	};
 	
 	generate(o) {
 		for(let y = 0; y < img.y; y++) {
 			for(let x = 0; x < img.x; x++) {
-				let col = (Math.floor(x / o.scaleX) + Math.floor(y / o.scaleY)) % 2 == 0 ? o.evenColor : o.oddColor;
+				let col = (Math.floor((x - o.shiftX * (Math.floor(y / o.scaleY) % 2)) / o.scaleX) + Math.floor((y - o.shiftY * (Math.floor(x / o.scaleX) % 2)) / o.scaleY)) % 2 == 0 ? o.evenColor : o.oddColor;
 				img.plotPixel(col, x, y);
 			}
 		}
@@ -554,20 +598,20 @@ class LayerBlobs extends Layer {
 	types = {
 		spacing: {
 			type: "number",
-			min: 2,
+			min: 1,
 			max: 256,
 			unsafe: true
 		},
 		minDiameter: {
 			type: "number",
 			min: 1,
-			max: 32,
+			max: 128,
 			unsafe: true
 		},
 		maxDiameter: {
 			type: "number",
 			min: 1,
-			max: 32,
+			max: 128,
 			unsafe: true
 		},
 		fade: {

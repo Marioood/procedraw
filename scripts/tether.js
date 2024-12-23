@@ -6,23 +6,24 @@ class Tether {
 	previousLayer = 0;
 	currentClass = LayerXorFractal;
 	canvasScale = 4;
+	version = "VOLATILE 0.3";
+	renderOnUpdate = true;
+	forceRender = false;
 	
 	constructor() {
 		this.canvas = document.getElementById("render");
 		this.ctx = this.canvas.getContext("2d");
 		this.updateSize();
 	
-		const refreshImage = document.getElementById("img-refresh");
-
-		refreshImage.addEventListener("click", function (e) {
-			img.printImage();
-		});
-	
 		const nameInput = document.getElementById("name-input");
 		
 		nameInput.addEventListener("input", function (e) {
 			img.name = nameInput.value;
 		});
+		
+		const versionText = document.getElementById("version-text");
+		versionText.textContent = this.version;
+		
 		//refresh warning
 		/*if(!DEBUG) {
 			window.addEventListener("beforeunload", function (e) {
@@ -55,14 +56,16 @@ class Tether {
 			let text = optionKeys[i];
 			//how the options are displayed (eg. color or number? decimal or integer?)
 			const limits = types[optionKeys[i]];
+			
+			let labelContainer = document.createElement("span");
+			labelContainer.classList.add("label-container");
 			//tell the user that these options can cause LAG
 			if(limits.unsafe) {
 				//text = "!" + text;
 				label.className = "option-unsafe";
+				labelContainer.title = "This parameter controls a loop. Meaning it can cause lag (!)";
 			}
 
-			let labelContainer = document.createElement("span");
-			labelContainer.className = "label-container";
 			label.appendChild(document.createTextNode(text));
 			labelContainer.appendChild(label);
 			container.appendChild(labelContainer);
@@ -75,7 +78,6 @@ class Tether {
 					let input2 = document.createElement("input");
 					//slider
 					input.type = "range";
-					input.value = options[optionKeys[i]];
 					if(limits.step != undefined) {
 						input.step = limits.step;
 					}
@@ -86,6 +88,8 @@ class Tether {
 					if(limits.max != undefined) {
 						input.max = limits.max;
 					}
+					//doing this before setting the max and min makes the slider look all funky
+					input.value = options[optionKeys[i]];
 					
 					input.addEventListener("input", function (e) {
 						let val = input.value;
@@ -184,20 +188,19 @@ class Tether {
 					const tempTether = this;
 					
 					color.addEventListener("input", function (e) {
+						//append alpha to color
+						let alphaVal = Number(alpha.value).toString(16);
+						if(alphaVal.length < 2) alphaVal = "0" + alphaVal;
+						options[optionKeys[i]] = img.parseHex(color.value + alphaVal);
 						//intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
 						let curTime = Math.round(Date.now() / 100);
-						
 						if(oldTime != curTime) {
 							oldTime = curTime;
-							//append alpha to color
-							let alphaVal = Number(alpha.value).toString(16);
-							if(alphaVal.length < 2) alphaVal = "0" + alphaVal;
-							options[optionKeys[i]] = img.parseHex(color.value + alphaVal);
 							img.printImage();
-							if(limits.external) {
-								const brother = document.getElementById(limits.brotherId + t.currentLayer);
-								brother.style.backgroundColor = tempTether.limitDarkness(img.parseHex(color.value));
-							}
+						}
+						if(limits.external) {
+							const brother = document.getElementById(limits.brotherId + t.currentLayer);
+							brother.style.backgroundColor = tempTether.limitDarkness(img.parseHex(color.value));
 						}
 					});
 					//alpha box
@@ -205,23 +208,16 @@ class Tether {
 					//javascript is actually stupid
 					alpha.type = "number";
 					alpha.value = options[optionKeys[i]][3];
-					alpha.step = 1;
+					alpha.step = 4;
 					alpha.min = 0;
-					alpha.max = 255;
+					alpha.max = 256;
 					
 					alpha.addEventListener("input", function (e) {
 						let val = alpha.value;
-						val = Math.min(Math.max(val, alpha.min), alpha.max);
-						//input.value = val;
-						//just dont update the number - cause it makes inputting small numbers a bitch
-						if(val != alpha.value) {
-							this.classList.add("input-invalid");
-							return;
-						} else {
-							this.classList.remove("input-invalid");
-						}
-						options[optionKeys[i]][3] = Number(alpha.value);
-						img.printImage();
+						val = Math.min(Math.max(val, alpha.min), alpha.max - 1);
+						options[optionKeys[i]][3] = Number(val);
+						if(val == alpha.value) img.printImage();
+						alpha.value = val;
 						
 					});
 					container.appendChild(color);
@@ -358,11 +354,20 @@ class Tether {
 			
 			const name = document.createElement("span");
 			name.className = "layer-text-container";
-			const text = i + ". " + layer.name;
+			const text = i + ". ";
 			name.appendChild(document.createTextNode(text));
+			
+			const nameInput = document.createElement("input");
+			nameInput.type = "text";
+			nameInput.value = layer.displayName;
+			nameInput.classList.add("name-input");
+			nameInput.addEventListener("input", function (e) {
+				layer.displayName = nameInput.value;
+			});
 			//store the layer's index in the element itself (never knew you could do that, neato)
 			layerSelect.dataset.idx = i;
 			layerSelect.appendChild(name);
+			layerSelect.appendChild(nameInput)
 			
 			layerSelect.addEventListener("click", function (e) {
 				tempTether.setCurrentLayer(Number(this.dataset.idx));
@@ -445,14 +450,16 @@ class Tether {
 	
 	limitDarkness(color) {
 		//dont become too dark so the ui is still legible
+		//make a copy of the color. modifying the argument color messed with layer duping
+		let newCol = [color[0], color[1], color[2], color[3]];
 		const darkLimit = 63;
-		const brightness = (color[0] + color[1] + color[2]) / 3;
+		const brightness = (newCol[0] + newCol[1] + newCol[2]) / 3;
 		if(brightness < darkLimit) {
-			color[0] = Math.max(color[0], darkLimit);
-			color[1] = Math.max(color[1], darkLimit);
-			color[2] = Math.max(color[2], darkLimit);
+			newCol[0] = Math.max(newCol[0], darkLimit);
+			newCol[1] = Math.max(newCol[1], darkLimit);
+			newCol[2] = Math.max(newCol[2], darkLimit);
 		}
 		
-		return img.RGB2Hex(color);
+		return img.RGB2Hex(newCol);
 	}
 }

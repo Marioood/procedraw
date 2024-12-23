@@ -20,6 +20,10 @@ class ImageManager {
 	name = "our beauty";
 	
 	printImage() {
+		//abort if render on update is turned on (anti-lag option)
+		if(!t.renderOnUpdate && !t.forceRender) return;
+		//reset the force render option so we dont force more renders
+		if(t.forceRender) t.forceRender = false;
 		let startTime = Date.now();
 		//write the background color
 		for(let i = 0; i < this.x * this.y; i++) {
@@ -130,6 +134,18 @@ class ImageManager {
 	}
 	
 	RGB2Hex(arr) {
+		//[255, 255, 255, 255] to #ffffff (no alpha)
+		let r = arr[0].toString(16);
+		let g = arr[1].toString(16);
+		let b = arr[2].toString(16);
+		//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
+		if(r.length < 2) r = "0" + r;
+		if(g.length < 2) g = "0" + g;
+		if(b.length < 2) b = "0" + b;
+		return "#" + r + g + b;
+	}
+	
+	RGBA2Hex(arr) {
 		//[255, 255, 255, 255] to #ffffff (no alpha - do dat later)
 		let r = arr[0].toString(16);
 		let g = arr[1].toString(16);
@@ -140,7 +156,7 @@ class ImageManager {
 		if(g.length < 2) g = "0" + g;
 		if(b.length < 2) b = "0" + b;
 		if(a.length < 2) a = "0" + a;
-		return "#" + r + g + b;
+		return "#" + r + g + b + a;
 	}
 	
 	parseHex(hex) {
@@ -158,7 +174,17 @@ class ImageManager {
 		//could be a "map" filter?
 		const a = col0[3] + percent * (col1[3] - col0[3]);
 		//do this so the transition between opaque and transparent colors doesnt look weird and muddy
-		percent /= a / 255;
+		//if the second color's alpha is larger than the first colors then the colors will look all messed up. its better to leave it muddy for now until i figure out how to fix it
+		if(col0[3] < col1[3]) {
+			percent /= a / 255;
+		}
+		/*
+		if(percent < 0 || a < 0 || aBlend < 0) {
+			console.log(a);
+			console.log(aBlend);
+			console.log(percent);
+			console.log("---");
+		}*/
 		const r = col0[0] + percent * (col1[0] - col0[0]);
 		const g = col0[1] + percent * (col1[1] - col0[1]);
 		const b = col0[2] + percent * (col1[2] - col0[2]);

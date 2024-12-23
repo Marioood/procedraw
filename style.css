@@ -44,13 +44,19 @@ input, select, button, textarea {
 	color: white;
 	border: white 1px solid;
 }
+
+textarea {
+	/*IM SETTING THER FUCKING MAX WIDTH AND ITS NOT SETTING THE FUCKING MAX WIDTH FUCK ALL OF YOU IM GOUING TO MAIL EXPLOSIVES TO YOUR HEADQUARTERS FUCK YOU WEB # CONSORTIUM FUCK YOU JOHN CSS OR WHOEVER WDESIGNED THIS FUCKING AWFUL EXCUSE FOR FUCKING ANYTHING FUCK ALL OF YOU FUCK YOU FUCK YOU FUCK YOU*/
+	max-width: 96px;
+}
+
 .input-invalid {
 	border-color: red;
 }
 .right-container {
 	border: white 1px solid;
 	position: absolute;
-	left: 0px;
+	right: 0px;
 	top: 0px;
 	box-sizing: border-box;
 	height: 100vh;
@@ -71,11 +77,14 @@ input, select, button, textarea {
 .left-container {
 	border: white 1px solid;
 	position: absolute;
-	right: 0px;
+	left: 0px;
 	top: 0px;
 	box-sizing: border-box;
 	height: 100vh;
 	width: 340px;
+	/*tried having a scroll thing but css was being a little pussy bitch and wouldnt place the version text correctly (no i dont want to do fucking janky bullshit just to have a piece of text fixed at one position AT ALL TIMES FUCK YOU WEB3 CONSORTIUM)*/
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 .setting-container {
 	border-top: white 1px solid;
@@ -217,12 +226,29 @@ input, select, button, textarea {
 	background-image: url("img/ui/dir-y.png");
 }
 
-.large-input {
+input[type=text] {
 	border: none;
 	border-bottom: white 1px solid;
+	font-family: serif;
+	background: none;
+	text-overflow: ellipsis;
+}
+
+.large-input {
 	font-style: italic;
 	font-weight: bold;
-	font-family: serif;
 	font-size: 1.75em;
 	margin: 8px;
+}
+
+.name-input {
+	display: inline-block;
+	width: 144px;
+	font-size: 1em;
+}
+
+.version-text {
+	position: absolute;
+	bottom: 0;
+	left: 0;
 }

@@ -1,7 +1,6 @@
 const img = new ImageManager();
 const t = new Tether();
 const s = new Serialization();
-
 img.printImage();
 //do this so the variables used during setup aren't in global scope
 //also this stuff can't quite be moved to tether.js
@@ -28,6 +27,7 @@ function setupInterop() {
 			t.setCurrentLayer(t.currentLayer + 1);
 		}
 		img.layers.splice(t.currentLayer, 0, new t.currentClass);
+		img.layers[t.currentLayer].displayName = img.layers[t.currentLayer].name;
 		//fix that smearing!!
 		//later me here what the hell did i mean by that
 		t.updateLayerOptions();
@@ -46,6 +46,7 @@ function setupInterop() {
 		
 		t.setCurrentLayer(t.currentLayer + 1)
 		img.layers.splice(t.currentLayer, 0, clone);
+		img.layers[t.currentLayer].displayName = /*"copy of " + */img.layers[t.currentLayer - 1].displayName;
 		//fix that smearing!!
 		t.updateLayerOptions();
 		t.generateLayerList();
@@ -71,10 +72,10 @@ function setupInterop() {
 	bgInput.addEventListener("input", function (e) {
 		//intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
 		let curTime = Math.round(Date.now() / 100);
+		img.bg = img.parseHex(bgInput.value);
 		
 		if(oldTime != curTime) {
 			oldTime = curTime;
-			img.bg = img.parseHex(bgInput.value);
 			img.printImage();
 		}
 	});
@@ -86,6 +87,7 @@ function setupInterop() {
 		img.x = Number(this.value);
 		img.updateSize();
 		t.updateSize();
+		t.forceRender = true;
 		img.printImage();
 	});
 	
@@ -96,6 +98,7 @@ function setupInterop() {
 		img.y = Number(this.value);
 		img.updateSize();
 		t.updateSize();
+		t.forceRender = true;
 		img.printImage();
 	});
 	
@@ -142,20 +145,32 @@ function setupInterop() {
 		if(oldTimeR != curTime) {
 			if(event.key == "r" || event.key == "R") {
 				oldTimeR = curTime;
+				t.forceRender = true;
 				img.printImage();
 			}
 		}
 	});
+	
+	const refreshImage = document.getElementById("img-refresh");
+
+	refreshImage.addEventListener("click", function (e) {
+		t.forceRender = true;
+		img.printImage();
+	});
+		
+	const renderUpdateInput = document.getElementById("render-on-update");
+	renderUpdateInput.checked = true;
+	renderUpdateInput.addEventListener("input", function (e) {
+		t.renderOnUpdate = renderUpdateInput.checked;
+	});
 }
 //NEW goalz
 //hex codes in color input
-//layer names
-//make sure that textures loop!!
 //shown option changes eye button
-//grout layer
 //take a break! work on the programmer art thing
 //overlap option (see wandering lines)
 //brightness tolerance
+//img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
 
 //the set color function sucked it was like 4 times slower
 

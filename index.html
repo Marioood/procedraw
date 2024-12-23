@@ -10,41 +10,54 @@
 		<div class="canvas-container">
 			<canvas id="render" width="256" height="256"></canvas>
 		</div>
-		<div class="right-container">
+		<div class="left-container">
 			<input type="text" value="our beauty" class="large-input" id="name-input"></input>
-			<br>
-			<button id="img-save">save!</button>
-			<textarea id="img-save-data" readonly="true" class="save-box">data is saved here</textarea>
-			<br>
-			<button id="img-load-button">load!</button>
-			<textarea id="img-load-data" class="save-box"></textarea>
 			<br>
 			<div class="layer-options">
 				<div class="label-container">
-					<text for="img-bg-color">img.bg</text>
+					<button id="img-save">save!</button>
+				</div>
+				<textarea id="img-save-data" readonly="true" class="save-box">data is saved here</textarea>
+				<br>
+				<div class="label-container">
+					<button id="img-load-button">load!</button>
+				</div>
+				<textarea id="img-load-data" class="save-box" placeholder="you put data here"></textarea>
+				<br>
+				<div class="label-container">
+					<text>img.bg</text>
 				</div>
 				<input type="color" id="img-bg-color" value="#808080">
 				<br>
 				<div class="label-container">
-					<text for="img-width">img.x</text>
+					<text>img.x</text>
 				</div>
 				<input type="number" id="img-width" min="1" max="256">
 				<br>
 				<div class="label-container">
-					<text for="img-height">img.y</text>
+					<text>img.y</text>
 				</div>
 				<input type="number" id="img-height" min="1" max="256">
 				<br>
 				<div class="label-container">
-					<text for="canvas-scale">t.canvasScale</text>
+					<text>t.canvasScale</text>
 				</div>
-				<input type="number" id="canvas-scale" min="1" max="32" step="0.25">
+				<input type="number" id="canvas-scale" min="0" max="64" step="0.25">
 				<br>
-				<button id="img-refresh">R</button>
+				<div class="label-container">
+					<text>t.renderOnUpdate</text>
+				</div>
+				<input type="checkbox" id="render-on-update">
+				<br>
+				<button id="img-refresh">render</button>
 				<p id="render-time">render time goes here</p>
+				<br>
+				<br>
+				<br>
+				<text class="version-text" id="version-text">VERSION GOES HERE</text>
 			</div>
 		</div>
-		<div class="left-container">
+		<div class="right-container">
 			<div class="layer-control-container">
 				<div class="sticky-header">
 					<select id="layer-class-select"></select>

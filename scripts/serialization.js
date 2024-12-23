@@ -6,7 +6,7 @@ class Serialization {
 			x: img.x,
 			y: img.y,
 			name: img.name,
-			version: "VOLATILE 0.2"
+			version: t.version
 		};
 		saved.layers = [];
 		
@@ -17,29 +17,35 @@ class Serialization {
 			let newLayer = {};
 			let newOptionDefaults = Object.assign({}, layer.od);
 			newOptionDefaults.tint = img.RGB2Hex(newOptionDefaults.tint);
+			//factory fresh version of the layer, for parameter stripping
+			let refLayer = new img.layerClasses[layer.name];
 			//dont bother saving the options if they're empty
+			let optionCount = 0;
 			if(optionKeys.length > 0) {
 				//replace some options so theyre a little smaller (colors are arrays during runtime - but theyre smaller as hex strings)
 				for(let o = 0; o < optionKeys.length; o++) {
 					const key = optionKeys[o];
-					const val = layer.options[key];
-					
+					let val = layer.options[key];
+					let refVal = refLayer.options[key];
 					if(layer.types[key].type == "color") {
-						optionsNew[key] = img.RGB2Hex(val);
-					} else {
-						optionsNew[key] = val;
+						val = img.RGBA2Hex(val);
+						refVal = img.RGBA2Hex(refVal);
 					}
+					//dont save the parameter if its just the default value
+					if(refVal == val) continue;
+					optionCount++;
+					optionsNew[key] = val;
 				}
-				newLayer = {
-					name: layer.name,
-					od: newOptionDefaults,
-					options: optionsNew
-				};
-			} else {
-				newLayer = {
-					name: layer.name,
-					od: newOptionDefaults
-				};
+			}
+			newLayer["name"] = layer.name;
+				//dont bother saving the name if its unchanged
+			if(layer.name != layer.displayName) {
+				newLayer["displayName"] = layer.displayName;
+			}
+			newLayer["od"] = newOptionDefaults;
+			//dont save the options if all of them are default or there arent any
+			if(optionCount > 0 || optionKeys.length > 0) {
+				newLayer["options"] = optionsNew;
 			}
 			saved.layers.push(newLayer);
 		}
@@ -70,6 +76,12 @@ class Serialization {
 			if(fauxLayer.od.tint != undefined) {
 				newLayer.od.tint = img.parseHex(newLayer.od.tint);
 			}
+			//backwards compatability for pre-name layers
+			if(fauxLayer.displayName == undefined) {
+				newLayer.displayName = fauxLayer.name;
+			} else {
+				newLayer.displayName = fauxLayer.displayName;
+			}
 			//dont bother writing option data if there is none!!
 			if(fauxLayer.options != undefined) {
 				//clean up colors!
@@ -81,9 +93,13 @@ class Serialization {
 				for(let o = 0; o < optionKeys.length; o++) {
 					const key = optionKeys[o];
 					const val = fauxLayer.options[key];
-					
 					if(newLayer.types[key].type == "color") {
-						optionsNew[key] = img.parseHex(val);
+						//too lazy to parse colors that are from the default layer... just check if theyre an array and plop em in
+						if(typeof val == "object") {
+							optionsNew[key] = val;
+						} else {
+							optionsNew[key] = img.parseHex(val);
+						}
 					} else {
 						optionsNew[key] = val;
 					}
