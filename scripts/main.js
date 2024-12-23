@@ -92,6 +92,9 @@ function setupInterop() {
 						opts[key] = Math.random() * (max - min) + min;
 						opts[key] /= step;
 						opts[key] = Math.floor(opts[key]) * step;
+						opts[key] *= 1e10;
+						opts[key] = Math.floor(opts[key]);
+						opts[key] /= 1e10;
 					} break;
 					case 'boolean':
 						opts[key] = Math.random() > 0.5;
@@ -177,46 +180,28 @@ function setupInterop() {
 		t.canvas.style.height = img.y * t.canvasScale + "px";
 	});
 
-	async function generateSaveUrl(data) {
+	function generateSaveUrl(data) {
 		const url = new URL(location.href);
-
-		if (typeof CompressionStream !== 'undefined') {
-			try {
-				const blob = new Blob([new Uint8Array(new Array(data.length).fill().map((_, i) => data.charCodeAt(i)))]);
-				const compression = new CompressionStream('gzip');
-				const compressed = await new Response(blob.stream().pipeThrough(compression)).blob();
-				const base64 = await new Promise(res => {
-					const reader = new FileReader();
-					reader.onloadend = () => res(reader.result.split(',')[1]);
-					reader.readAsDataURL(compressed);
-				});
-				url.searchParams.set("save", base64);
-				return url.toString();
-			} catch (why) {
-				console.error("Failed to create gzipped url:", why);
-			}
-		}
-
 		url.searchParams.set("save", data);
 		return url.toString();
 	}
 
 	const saveImage = document.getElementById("img-save");
-	saveImage.addEventListener("click", function (e) {
+	saveImage.addEventListener("click", async function (e) {
 		const saveOutput = document.getElementById("img-save-data");
-		generateSaveUrl(saveOutput.value = s.save()).then(url => {
-			if (history.replaceState) {
-				history.replaceState({}, "", url);
-			}
-		});
+		const url = generateSaveUrl(saveOutput.value = await s.saveEnc());
+
+		if (history.replaceState) {
+			history.replaceState({}, "", url);
+		}
 	});
 	
 	const loadImage = document.getElementById("img-load-button");
-	loadImage.addEventListener("click", function (e) {
+	loadImage.addEventListener("click", async function (e) {
 		const loadInput = document.getElementById("img-load-data");
 		if(confirm("load image?")) {
 			try {
-				s.load(loadInput.value);
+				await s.loadEnc(loadInput.value);
 				t.generateLayerList();
 				img.updateSize();
 				t.updateSize();
@@ -224,12 +209,9 @@ function setupInterop() {
 				
 				bgInput.value = img.RGB2Hex(img.bg);
 
-				generateSaveUrl(loadImage.value)
-					.then(url => {
-						if (history.replaceState) {
-							history.replaceState({}, "", url);
-						}
-					});
+				if (history.replaceState) {
+					history.replaceState({}, "", generateSaveUrl(await s.saveEnc()));
+				}
 			} catch(error) {
 				window.alert("couldn't parse data! \n\n" + error);
 				return;
@@ -266,39 +248,19 @@ function setupInterop() {
 	const params = new URLSearchParams(window.location.search);
 
 	(async() => {
-		const save = params.get("save");
+		let save = params.get("save");
 		if (!save) return;
-
-		if (typeof DecompressionStream !== 'undefined') {
-			try {
-				const bytes = atob(save);
-				const blob = new Blob([new Uint8Array(new Array(bytes.length).fill().map((_, i) => bytes.charCodeAt(i)))]);
-				const compression = new DecompressionStream('gzip');
-				await new Response(blob.stream().pipeThrough(compression)).json().then(json => {
-					s.load(json);
-					t.generateLayerList();
-					img.updateSize();
-					t.updateSize();
-					img.printImage();
-					
-					bgInput.value = img.RGB2Hex(img.bg);
-					document.getElementById("img-save-data").value = JSON.stringify(json);
-				});
-				return;
-			} catch (why) {
-				console.error("Failed to load gzipped save:", why);
-			}
-		}
+		const o = save;
 
 		try {
-			s.load(save);
+			await s.loadEnc(save);
 			t.generateLayerList();
 			img.updateSize();
 			t.updateSize();
 			img.printImage();
 			
 			bgInput.value = img.RGB2Hex(img.bg);
-			document.getElementById("img-load-data").value = save;
+			document.getElementById("img-load-data").value = o;
 		} catch (why) {
 			console.error("Failed to load save");
 		}
