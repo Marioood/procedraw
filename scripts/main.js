@@ -24,7 +24,7 @@ function setupInterop() {
 	clearLayer.addEventListener("click", function (e) {
 		//go down a layer if we're in the middle, stay in place if we're at the bottom
 		t.setCurrentLayer(0);
-		img.layers.splice();
+		img.layers.splice(0);
 		t.updateLayerOptions();
 		t.generateLayerList();
 		img.printImage();
@@ -176,16 +176,42 @@ function setupInterop() {
 		t.canvas.style.width = img.x * t.canvasScale + "px";
 		t.canvas.style.height = img.y * t.canvasScale + "px";
 	});
-	
-	const saveImage = document.getElementById("img-save");
 
+	async function generateSaveUrl(data) {
+		const url = new URL(location.href);
+
+		if (typeof CompressionStream !== 'undefined') {
+			try {
+				const blob = new Blob([new Uint8Array(new Array(data.length).fill().map((_, i) => data.charCodeAt(i)))]);
+				const compression = new CompressionStream('gzip');
+				const compressed = await new Response(blob.stream().pipeThrough(compression)).blob();
+				const base64 = await new Promise(res => {
+					const reader = new FileReader();
+					reader.onloadend = () => res(reader.result.split(',')[1]);
+					reader.readAsDataURL(compressed);
+				});
+				url.searchParams.set("save", base64);
+				return url.toString();
+			} catch (why) {
+				console.error("Failed to create gzipped url:", why);
+			}
+		}
+
+		url.searchParams.set("save", data);
+		return url.toString();
+	}
+
+	const saveImage = document.getElementById("img-save");
 	saveImage.addEventListener("click", function (e) {
 		const saveOutput = document.getElementById("img-save-data");
-		saveOutput.value = s.save();
+		generateSaveUrl(saveOutput.value = s.save()).then(url => {
+			if (history.replaceState) {
+				history.replaceState({}, "", url);
+			}
+		});
 	});
 	
 	const loadImage = document.getElementById("img-load-button");
-
 	loadImage.addEventListener("click", function (e) {
 		const loadInput = document.getElementById("img-load-data");
 		if(confirm("load image?")) {
@@ -197,6 +223,13 @@ function setupInterop() {
 				img.printImage();
 				
 				bgInput.value = img.RGB2Hex(img.bg);
+
+				generateSaveUrl(loadImage.value)
+					.then(url => {
+						if (history.replaceState) {
+							history.replaceState({}, "", url);
+						}
+					});
 			} catch(error) {
 				window.alert("couldn't parse data! \n\n" + error);
 				return;
@@ -229,6 +262,47 @@ function setupInterop() {
 	renderUpdateInput.addEventListener("input", function (e) {
 		t.renderOnUpdate = renderUpdateInput.checked;
 	});
+
+	const params = new URLSearchParams(window.location.search);
+
+	(async() => {
+		const save = params.get("save");
+		if (!save) return;
+
+		if (typeof DecompressionStream !== 'undefined') {
+			try {
+				const bytes = atob(save);
+				const blob = new Blob([new Uint8Array(new Array(bytes.length).fill().map((_, i) => bytes.charCodeAt(i)))]);
+				const compression = new DecompressionStream('gzip');
+				await new Response(blob.stream().pipeThrough(compression)).json().then(json => {
+					s.load(json);
+					t.generateLayerList();
+					img.updateSize();
+					t.updateSize();
+					img.printImage();
+					
+					bgInput.value = img.RGB2Hex(img.bg);
+					document.getElementById("img-save-data").value = JSON.stringify(json);
+				});
+				return;
+			} catch (why) {
+				console.error("Failed to load gzipped save:", why);
+			}
+		}
+
+		try {
+			s.load(save);
+			t.generateLayerList();
+			img.updateSize();
+			t.updateSize();
+			img.printImage();
+			
+			bgInput.value = img.RGB2Hex(img.bg);
+			document.getElementById("img-load-data").value = save;
+		} catch (why) {
+			console.error("Failed to load save");
+		}
+	})();
 }
 //NEW goalz
 //hex codes in color input

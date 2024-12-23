@@ -26,31 +26,36 @@ class ImageManager {
 	drawCallback = null;
 
 	constructor() {
-		if (typeof importScripts !== 'function') {
-			const worker = new Worker("scripts/worker.js");
-			worker.postMessage({type: 'hello'});
-			worker.onerror = console.error;
-			worker.onmessage = event => {
-				const {type} = event.data;
-				switch (type) {
-					case 'hello':
-						this.worker = worker;
-						console.log("Loaded service worker");
-					break;
-					case 'draw':
-						if (event.data.x == this.x && event.data.y == this.y) {
-							this.data = [...event.data.buffer];
-							this.drawCallback();
-						} else {
-							this.busy = false;
-							if (this.scheduledRerender) {
-								this.scheduledRerender = false;
-								this.printImage();
+		try {
+			if (typeof importScripts !== 'function') {
+				const worker = new Worker("scripts/worker.js");
+				worker.postMessage({type: 'hello'});
+				worker.onerror = console.error;
+				worker.onmessage = event => {
+					const {type} = event.data;
+					switch (type) {
+						case 'hello':
+							this.worker = worker;
+							console.log("Rendering on worker");
+						break;
+						case 'draw':
+							if (event.data.x == this.x && event.data.y == this.y) {
+								this.data = [...event.data.buffer];
+								this.drawCallback();
+							} else {
+								this.busy = false;
+								if (this.scheduledRerender) {
+									this.scheduledRerender = false;
+									this.printImage();
+								}
 							}
-						}
-					break;
-				}
-			};
+						break;
+					}
+				};
+			}
+		} catch (why) {
+			console.error("Failed to load worker:", why);
+			console.log("Rendering on main thread");
 		}
 	}
 

@@ -55,7 +55,7 @@ class Serialization {
 	
 	load(savedText) {
 		//welcome to my hooker palace!
-		let saved = JSON.parse(savedText);
+		let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
 		
 		img.bg = img.parseHex(saved.img.bg);
 		img.x = saved.img.x;
