@@ -55,7 +55,7 @@ class Serialization {
 	
 	load(savedText) {
 		//welcome to my hooker palace!
-		let saved = JSON.parse(savedText);
+		let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
 		
 		img.bg = img.parseHex(saved.img.bg);
 		img.x = saved.img.x;
@@ -110,5 +110,47 @@ class Serialization {
 			
 			img.layers.push(newLayer);
 		}
+	}
+
+	async saveEnc() {
+		const data = this.save();
+
+		if (typeof CompressionStream !== 'undefined') {
+			try {
+				return await this.gzip(data);
+			} catch(why) {
+				console.error("Failed to gzip save:", why);
+			}
+		}
+
+		return data;
+	}
+	async loadEnc(savedText) {
+		if (typeof savedText == 'object') this.load(savedText);
+
+		if (typeof DecompressionStream !== 'undefined') {
+			try {
+				savedText = await this.ungzip(savedText);
+			} catch (_) {}
+		}
+
+		this.load(savedText);
+	}
+
+	async gzip(data) {
+		const blob = new Blob([new Uint8Array(new Array(data.length).fill().map((_, i) => data.charCodeAt(i)))]);
+		const compression = new CompressionStream('gzip');
+		const compressed = await new Response(blob.stream().pipeThrough(compression)).blob();
+		return await new Promise(res => {
+			const reader = new FileReader();
+			reader.onloadend = () => res(reader.result.split(',')[1]);
+			reader.readAsDataURL(compressed);
+		});
+	}
+	async ungzip(savedText) {
+		const bytes = atob(savedText);
+		const blob = new Blob([new Uint8Array(new Array(bytes.length).fill().map((_, i) => bytes.charCodeAt(i)))]);
+		const compression = new DecompressionStream('gzip');
+		return await new Response(blob.stream().pipeThrough(compression)).json();
 	}
 }

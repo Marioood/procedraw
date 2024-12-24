@@ -9,8 +9,8 @@ setupInterop();
 function setupInterop() {
 
 	const removeLayer = document.getElementById("remove-layer");
-
-	removeLayer.addEventListener("click", function (e) {img.layers.splice(t.currentLayer, 1);
+	removeLayer.addEventListener("click", function (e) {
+		img.layers.splice(t.currentLayer, 1);
 		//go down a layer if we're in the middle, stay in place if we're at the bottom
 		if(t.currentLayer > 0) {
 			 t.setCurrentLayer(t.currentLayer - 1);
@@ -20,8 +20,17 @@ function setupInterop() {
 		img.printImage();
 	});
 
-	const addLayer = document.getElementById("add-layer");
+	const clearLayer = document.getElementById("clear-layer");
+	clearLayer.addEventListener("click", function (e) {
+		//go down a layer if we're in the middle, stay in place if we're at the bottom
+		t.setCurrentLayer(0);
+		img.layers.splice(0);
+		t.updateLayerOptions();
+		t.generateLayerList();
+		img.printImage();
+	});
 
+	const addLayer = document.getElementById("add-layer");
 	addLayer.addEventListener("click", function (e) {
 		if(img.layers.length > 0) {
 			t.setCurrentLayer(t.currentLayer + 1);
@@ -36,8 +45,19 @@ function setupInterop() {
 	});
 
 	const dupeLayer = document.getElementById("dupe-layer");
+	let dupeRedTimer = null;
 	dupeLayer.addEventListener("click", function (e) {
 		const layer2Dupe = img.layers[t.currentLayer];
+		if (!layer2Dupe) {
+			if (dupeRedTimer !== null) clearTimeout(dupeRedTimer);
+			dupeRedTimer = setTimeout(() => {
+				dupeLayer.style.color = null;
+				dupeLayer.style.borderColor = null;
+			}, 150);
+			dupeLayer.style.color = 'red';
+			dupeLayer.style.borderColor = 'red';
+			return;
+		}
 		//fuck you stack overflow
 		const clone = new img.layerClasses[layer2Dupe.name];
 		//create copies - not references
@@ -48,6 +68,55 @@ function setupInterop() {
 		img.layers.splice(t.currentLayer, 0, clone);
 		img.layers[t.currentLayer].displayName = /*"copy of " + */img.layers[t.currentLayer - 1].displayName;
 		//fix that smearing!!
+		t.updateLayerOptions();
+		t.generateLayerList();
+		img.printImage();
+	});
+
+	const randomLayer = document.getElementById("random-layer");
+	randomLayer.addEventListener("click", function (e) {
+		if(img.layers.length > 0) {
+			t.setCurrentLayer(t.currentLayer + 1);
+		}
+		const choice = x => x[Math.floor(Math.random() * x.length)];
+		/** @type {Layer} */
+		const layer = new (choice(Object.values(img.layerClasses)));
+		function randomize(opts, desc) {
+			for(const key in opts) {
+				const d = desc[key];
+				switch (d.type) {
+					case 'number': {
+						const min = d.min === void 0 ? 0 : d.min;
+						const max = d.max === void 0 ? 100 : d.max;
+						const step = d.step === void 0 ? 1 : d.step;
+						opts[key] = Math.random() * (max - min) + min;
+						opts[key] /= step;
+						opts[key] = Math.floor(opts[key]) * step;
+						opts[key] *= 1e10;
+						opts[key] = Math.floor(opts[key]);
+						opts[key] /= 1e10;
+					} break;
+					case 'boolean':
+						opts[key] = Math.random() > 0.5;
+					break;
+					case 'color':
+						opts[key] = Array(4).fill(255).map(m => Math.floor(Math.random() * m));
+					break;
+					case 'dropdown':
+						opts[key] = choice(d.items);
+					break;
+					default:
+						console.error(`Unsupported option type ${d.type}`);
+				}
+			}
+		}
+		randomize(layer.od, layer.typesDefault);
+		randomize(layer.options, layer.types);
+		layer.od.shown = true;
+		img.layers.splice(t.currentLayer, 0, layer);
+		img.layers[t.currentLayer].displayName = img.layers[t.currentLayer].name;
+		//fix that smearing!!
+		//later me here what the hell did i mean by that
 		t.updateLayerOptions();
 		t.generateLayerList();
 		img.printImage();
@@ -110,27 +179,39 @@ function setupInterop() {
 		t.canvas.style.width = img.x * t.canvasScale + "px";
 		t.canvas.style.height = img.y * t.canvasScale + "px";
 	});
-	
-	const saveImage = document.getElementById("img-save");
 
-	saveImage.addEventListener("click", function (e) {
+	function generateSaveUrl(data) {
+		const url = new URL(location.href);
+		url.searchParams.set("save", data);
+		return url.toString();
+	}
+
+	const saveImage = document.getElementById("img-save");
+	saveImage.addEventListener("click", async function (e) {
 		const saveOutput = document.getElementById("img-save-data");
-		saveOutput.value = s.save();
+		const url = generateSaveUrl(saveOutput.value = await s.saveEnc());
+
+		if (history.replaceState) {
+			history.replaceState({}, "", url);
+		}
 	});
 	
 	const loadImage = document.getElementById("img-load-button");
-
-	loadImage.addEventListener("click", function (e) {
+	loadImage.addEventListener("click", async function (e) {
 		const loadInput = document.getElementById("img-load-data");
 		if(confirm("load image?")) {
 			try {
-				s.load(loadInput.value);
+				await s.loadEnc(loadInput.value);
 				t.generateLayerList();
 				img.updateSize();
 				t.updateSize();
 				img.printImage();
 				
 				bgInput.value = img.RGB2Hex(img.bg);
+
+				if (history.replaceState) {
+					history.replaceState({}, "", generateSaveUrl(await s.saveEnc()));
+				}
 			} catch(error) {
 				window.alert("couldn't parse data! \n\n" + error);
 				return;
@@ -163,6 +244,27 @@ function setupInterop() {
 	renderUpdateInput.addEventListener("input", function (e) {
 		t.renderOnUpdate = renderUpdateInput.checked;
 	});
+
+	const params = new URLSearchParams(window.location.search);
+
+	(async() => {
+		let save = params.get("save");
+		if (!save) return;
+		const o = save;
+
+		try {
+			await s.loadEnc(save);
+			t.generateLayerList();
+			img.updateSize();
+			t.updateSize();
+			img.printImage();
+			
+			bgInput.value = img.RGB2Hex(img.bg);
+			document.getElementById("img-load-data").value = o;
+		} catch (why) {
+			console.error("Failed to load save");
+		}
+	})();
 }
 //NEW goalz
 //hex codes in color input
