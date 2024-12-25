@@ -100,7 +100,7 @@ function setupInterop() {
 						opts[key] = Math.random() > 0.5;
 					break;
 					case 'color':
-						opts[key] = Array(4).fill(255).map(m => Math.floor(Math.random() * m));
+						opts[key] = Array(4).fill(1).map(m => Math.random() * m);
 					break;
 					case 'dropdown':
 						opts[key] = choice(d.items);
@@ -189,10 +189,13 @@ function setupInterop() {
 	const saveImage = document.getElementById("img-save");
 	saveImage.addEventListener("click", async function (e) {
 		const saveOutput = document.getElementById("img-save-data");
-		const url = generateSaveUrl(saveOutput.value = await s.saveEnc());
-
-		if (history.replaceState) {
-			history.replaceState({}, "", url);
+		if(t.compressSaves) {
+			const url = generateSaveUrl(saveOutput.value = await s.saveEnc());
+			if (history.replaceState && t.saveURL) {
+				history.replaceState({}, "", url);
+			}
+		} else {
+			saveOutput.value = s.save();
 		}
 	});
 	
@@ -209,7 +212,7 @@ function setupInterop() {
 				
 				bgInput.value = img.RGB2Hex(img.bg);
 
-				if (history.replaceState) {
+				if (history.replaceState && t.saveURL) {
 					history.replaceState({}, "", generateSaveUrl(await s.saveEnc()));
 				}
 			} catch(error) {
@@ -238,11 +241,29 @@ function setupInterop() {
 		t.forceRender = true;
 		img.printImage();
 	});
-		
+	
 	const renderUpdateInput = document.getElementById("render-on-update");
-	renderUpdateInput.checked = true;
+	renderUpdateInput.checked = t.renderOnUpdate;
 	renderUpdateInput.addEventListener("input", function (e) {
 		t.renderOnUpdate = renderUpdateInput.checked;
+	});
+		
+	const useRenderWorkerInput = document.getElementById("use-render-worker");
+	useRenderWorkerInput.checked = t.useRenderWorker;
+	useRenderWorkerInput.addEventListener("input", function (e) {
+		t.useRenderWorker = useRenderWorkerInput.checked;
+	});
+		
+	const compressSavesInput = document.getElementById("compress-saves");
+	compressSavesInput.checked = t.compressSaves;
+	compressSavesInput.addEventListener("input", function (e) {
+		t.compressSaves = compressSavesInput.checked;
+	});
+		
+	const saveURLInput = document.getElementById("save-url");
+	saveURLInput.checked = t.saveURL;
+	saveURLInput.addEventListener("input", function (e) {
+		t.saveURL = saveURLInput.checked;
 	});
 
 	const params = new URLSearchParams(window.location.search);

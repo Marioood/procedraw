@@ -4,7 +4,7 @@ class ImageManager {
 	y = 64;
 	data = [];
 	layer = undefined;
-	bg = [128, 128, 128, 255];
+	bg = [0.5, 0.5, 0.5, 1];
 	layers = [];
 	layerClasses = {
 		xorFractal: LayerXorFractal,
@@ -90,7 +90,8 @@ class ImageManager {
 			let canvasImg = t.ctx.createImageData(this.x, this.y);
 			//write to canvas data
 			for(let i = 0; i < this.x * this.y * 4; i++) {
-				canvasImg.data[i] = this.data[i];
+				//convert from 0 - 1 to 0 - 255
+				canvasImg.data[i] = this.data[i] * 255;
 			}
 			//insert new image data
 			t.ctx.putImageData(canvasImg, 0, 0);
@@ -104,7 +105,7 @@ class ImageManager {
 			}
 		}
 		//outsource rendering to china
-		if (this.worker) {
+		if (this.worker && t.useRenderWorker) {
 			const settings = s.save();
 			this.worker.postMessage({type: 'draw', settings});
 		}
@@ -140,7 +141,7 @@ class ImageManager {
 		if(y < 0) y += img.y;
 		//get alpha n blend from global memory... its less to type
 		//getting stuff from global memory loses ~1 ms on a 256x256 image
-		const alpha = this.layer.od.alpha * (color[3] / 255);
+		const alpha = this.layer.od.alpha * color[3];
 		const blend = this.layer.od.blend;
 		const tint = this.layer.od.tint;
 		//const depth = this.layer.od.depth;
@@ -152,9 +153,9 @@ class ImageManager {
 		}*/
 		const pos = x + y * this.x;
 		//todo: actually have alpha CHANNEL affect (effect? idk) the color, not just the layer's alpha
-		this.data[pos * 4] = this.combinePixel((color[0] / 255) * (tint[0] / 255), this.data[pos * 4], blend, alpha) * 255;
-		this.data[pos * 4 + 1] = this.combinePixel((color[1] / 255) * (tint[1] / 255), this.data[pos * 4 + 1], blend, alpha) * 255;
-		this.data[pos * 4 + 2] = this.combinePixel((color[2] / 255) * (tint[2] / 255), this.data[pos * 4 + 2], blend, alpha) * 255;
+		this.data[pos * 4] = this.combinePixel(color[0] * tint[0], this.data[pos * 4], blend, alpha);
+		this.data[pos * 4 + 1] = this.combinePixel(color[1] * tint[1], this.data[pos * 4 + 1], blend, alpha);
+		this.data[pos * 4 + 2] = this.combinePixel(color[2] * tint[2], this.data[pos * 4 + 2], blend, alpha);
 		//add the alphas together
 		this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
 			
@@ -162,8 +163,6 @@ class ImageManager {
 	
 	combinePixel(l, b, blend, strength) {
 		//values are normalized (0 through 1)
-		//l /= 255;
-		b /= 255;
 
 		switch(blend) {
 			case "add":
@@ -190,14 +189,14 @@ class ImageManager {
 		const g = (hex & 0x00FF0000) >> 16;
 		const b = (hex & 0x0000FF00) >> 8;
 		const a = hex & 0x000000FF;
-		return [r, g, b, a];
+		return [r / 255, g / 255, b / 255, a / 255];
 	}
 	
 	RGB2Hex(arr) {
-		//[255, 255, 255, 255] to #ffffff (no alpha)
-		let r = arr[0].toString(16);
-		let g = arr[1].toString(16);
-		let b = arr[2].toString(16);
+		//[1, 1, 1, 1] to #ffffff
+		let r = Math.floor(arr[0] * 255).toString(16);
+		let g = Math.floor(arr[1] * 255).toString(16);
+		let b = Math.floor(arr[2] * 255).toString(16);
 		//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
 		if(r.length < 2) r = "0" + r;
 		if(g.length < 2) g = "0" + g;
@@ -206,11 +205,11 @@ class ImageManager {
 	}
 	
 	RGBA2Hex(arr) {
-		//[255, 255, 255, 255] to #ffffff (no alpha - do dat later)
-		let r = arr[0].toString(16);
-		let g = arr[1].toString(16);
-		let b = arr[2].toString(16);
-		let a = arr[3].toString(16);
+		//[1, 1, 1, 1] to #ffffffff
+		let r = Math.floor(arr[0] * 255).toString(16);
+		let g = Math.floor(arr[1] * 255).toString(16);
+		let b = Math.floor(arr[2] * 255).toString(16);
+		let a = Math.floor(arr[3] * 255).toString(16);
 		//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
 		if(r.length < 2) r = "0" + r;
 		if(g.length < 2) g = "0" + g;
@@ -236,7 +235,7 @@ class ImageManager {
 		//do this so the transition between opaque and transparent colors doesnt look weird and muddy
 		//if the second color's alpha is larger than the first colors then the colors will look all messed up. its better to leave it muddy for now until i figure out how to fix it
 		if(col0[3] < col1[3]) {
-			percent /= a / 255;
+			percent /= a;
 		}
 		/*
 		if(percent < 0 || a < 0 || aBlend < 0) {

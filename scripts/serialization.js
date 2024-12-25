@@ -38,7 +38,7 @@ class Serialization {
 				}
 			}
 			newLayer["name"] = layer.name;
-				//dont bother saving the name if its unchanged
+			//dont bother saving the name if its unchanged
 			if(layer.name != layer.displayName) {
 				newLayer["displayName"] = layer.displayName;
 			}

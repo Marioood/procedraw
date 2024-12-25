@@ -1,17 +1,22 @@
+:root {
+	--bg: #101010;
+}
+
 body {
-	background-color: black;
+	background-color: var(--bg);
 	color: white;
 	margin: 0;
 	image-rendering: pixelated;
 }
 canvas {
 	pointer-events: auto;
+	outline: 2px solid black;
 }
 h2 {
 	font-style: italic;
 }
 div {
-	background-color: black;
+	background-color: var(--bg);
 }
 input[type=number] {
 	width: 52px;
@@ -20,7 +25,7 @@ input[type=range] {
 	-webkit-appearance: none;
 	appearance: none;
 	height: 2px;
-	background: black;
+	background: var(--bg);
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -37,10 +42,10 @@ input[type=range]::-moz-range-thumb {
   height: 16px;
   border-radius: 0;
   border: 1px solid white;
-  background: black;
+  background: var(--bg);
 }
 input, select, button, textarea {
-	background-color: black;
+	background-color: var(--bg);
 	color: white;
 	border: white 1px solid;
 }
@@ -61,6 +66,7 @@ textarea {
 	box-sizing: border-box;
 	height: 100vh;
 	width: 340px;
+	outline: 2px solid black;
 }
 .canvas-container {
 	border: white 1px solid;
@@ -83,8 +89,9 @@ textarea {
 	height: 100vh;
 	width: 340px;
 	/*tried having a scroll thing but css was being a little pussy bitch and wouldnt place the version text correctly (no i dont want to do fucking janky bullshit just to have a piece of text fixed at one position AT ALL TIMES FUCK YOU WEB3 CONSORTIUM)*/
-	overflow-y: scroll;
+	overflow-y: auto;
 	overflow-x: hidden;
+	outline: 2px solid black;
 }
 .setting-container {
 	border-top: white 1px solid;
@@ -114,6 +121,8 @@ textarea {
 	position: sticky;
 	top: 0;
 	z-index: 1; /*prevent layer icons from overlapping this*/
+	border-bottom: 1px solid white;
+	height: 16px;
 }
 .save-box {
 	max-width: 256px;
@@ -205,18 +214,20 @@ textarea {
 	text-decoration: underline;
 }
 
-.checkbox {
+.box-16 {
 	width: 16px;
 	height: 16px;
-	border: 1px black solid;
+	border: 1px var(--bg) solid;
 	outline: 1px white solid;
+	background-color: var(--bg);
+	color: transparent;
 }
 .checkbox-true {
 	background-color: white;
 }
 
 .checkbox-false {
-	background-color: black;
+	background-color: var(--bg);
 }
 
 .checkbox-x {
@@ -254,7 +265,37 @@ input[type=text] {
 	left: 0;
 }
 
+#layer-class-select {
+	/*WHOEVER MADE CSS CAN FUCKING HANG THEMSELVES FUCK YOU*/
+	height: 18px;
+	position: relative;
+	top: -1px;
+	left: -1px;
+	margin: none;
+	margin-right: -2px;
+}
+
+.layer-button {
+	margin-left: -1px;
+}
+
 #clear-layer {
 	float: right;
-	margin-right: 8pt;
+	background-image: url("img/ui/clear.png");
+}
+
+#add-layer {
+	background-image: url("img/ui/add.png");
+}
+
+#remove-layer {
+	background-image: url("img/ui/remove.png");
+}
+
+#dupe-layer {
+	background-image: url("img/ui/dupe.png");
+}
+
+#random-layer {
+	background-image: url("img/ui/random.png");
 }

@@ -6,9 +6,12 @@ class Tether {
 	previousLayer = 0;
 	currentClass = LayerXorFractal;
 	canvasScale = 4;
-	version = "VOLATILE 0.3";
+	version = "VOLATILE 0.4";
 	renderOnUpdate = true;
 	forceRender = false;
+	useRenderWorker = false;
+	compressSaves = true;
+	saveURL = false;
 	
 	constructor() {
 		this.canvas = document.getElementById("render");
@@ -149,7 +152,7 @@ class Tether {
 					let box = document.createElement("button");
 					let on = options[optionKeys[i]];
 					
-					box.classList.add("checkbox");
+					box.classList.add("box-16");
 					let trueClass = "checkbox-true";
 					let falseClass = "checkbox-false";
 					if(limits.direction) {
@@ -207,7 +210,7 @@ class Tether {
 					//said "input2" was already declared.... in the number case
 					//javascript is actually stupid
 					alpha.type = "number";
-					alpha.value = options[optionKeys[i]][3];
+					alpha.value = options[optionKeys[i]][3] * 255;
 					alpha.step = 4;
 					alpha.min = 0;
 					alpha.max = 256;
@@ -215,7 +218,7 @@ class Tether {
 					alpha.addEventListener("input", function (e) {
 						let val = alpha.value;
 						val = Math.min(Math.max(val, alpha.min), alpha.max - 1);
-						options[optionKeys[i]][3] = Number(val);
+						options[optionKeys[i]][3] = val / 255;
 						if(val == alpha.value) img.printImage();
 						alpha.value = val;
 						
@@ -451,7 +454,7 @@ class Tether {
 	limitDarkness(color) {
 		//dont become too dark so the ui is still legible
 		//make a copy of the color. modifying the argument color messed with layer duping
-		let newCol = [color[0], color[1], color[2], color[3]];
+		let newCol = [color[0] * 255, color[1] * 255, color[2] * 255, color[3] * 255];
 		const darkLimit = 63;
 		const brightness = (newCol[0] + newCol[1] + newCol[2]) / 3;
 		if(brightness < darkLimit) {

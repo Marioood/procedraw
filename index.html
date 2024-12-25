@@ -47,10 +47,31 @@
 				<div class="label-container">
 					<text>t.renderOnUpdate</text>
 				</div>
+				</text>&emsp;&emsp;<text>
 				<input type="checkbox" id="render-on-update">
 				<br>
-				<button id="img-refresh">render</button>
-				<p id="render-time">render time goes here</p>
+				<div class="label-container">
+					<text>t.useRenderWorker</text>
+				</div>
+				</text>&emsp;&emsp;<text>
+				<input type="checkbox" id="use-render-worker">
+				<br>
+				<div class="label-container">
+					<text>t.compresseSaves</text>
+				</div>
+				</text>&emsp;&emsp;<text>
+				<input type="checkbox" id="compress-saves">
+				<br>
+				<div class="label-container">
+					<text>t.saveURL</text>
+				</div>
+				</text>&emsp;&emsp;<text>
+				<input type="checkbox" id="save-url">
+				<br>
+				<div class="label-container">
+					<button id="img-refresh">render</button>
+				</div>
+					<p id="render-time">render time goes here</p>
 				<br>
 				<br>
 				<br>
@@ -61,11 +82,12 @@
 			<div class="layer-control-container">
 				<div class="sticky-header">
 					<select id="layer-class-select"></select>
-					<button id="add-layer">+</button>
-					<button id="remove-layer">−</button>
-					<button id="dupe-layer">D</button>
-					<button id="random-layer">R</button>
-					<button id="clear-layer">C</button>
+					<!-- vertical margins are weird when theres no text in th ebuttons -->
+					<button id="add-layer" class="box-16 layer-button">+</button>
+					<button id="remove-layer" class="box-16 layer-button">-</button>
+					<button id="dupe-layer" class="box-16 layer-button">D</button>
+					<button id="random-layer" class="box-16 layer-button">R</button>
+					<button id="clear-layer" class="box-16 layer-button">C</button>
 				</div>
 				<div id="layer-list-container">
 					<!-- layers go here -->
