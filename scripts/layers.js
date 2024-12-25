@@ -381,7 +381,7 @@ class LayerLiney extends Layer {
 			let col = 0.5;
 			for(let l = 0; l < maxL; l++) {
 				if(Math.random() < o.breaks || l == 0) {
-					col = Math.round((Math.random() * o.brightness) * o.depth) / o.depth * 255;
+					col = Math.round((Math.random() * o.brightness) * o.depth) / o.depth;
 				}
 				let x, y;
 				if(o.go2x) {

@@ -454,15 +454,14 @@ class Tether {
 	limitDarkness(color) {
 		//dont become too dark so the ui is still legible
 		//make a copy of the color. modifying the argument color messed with layer duping
-		let newCol = [color[0] * 255, color[1] * 255, color[2] * 255, color[3] * 255];
-		const darkLimit = 63;
+		let newCol = [color[0], color[1], color[2], color[3]];
+		const darkLimit = 0.25;
 		const brightness = (newCol[0] + newCol[1] + newCol[2]) / 3;
 		if(brightness < darkLimit) {
 			newCol[0] = Math.max(newCol[0], darkLimit);
 			newCol[1] = Math.max(newCol[1], darkLimit);
 			newCol[2] = Math.max(newCol[2], darkLimit);
 		}
-		
 		return img.RGB2Hex(newCol);
 	}
 }

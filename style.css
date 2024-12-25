@@ -1,10 +1,12 @@
 :root {
 	--bg: #101010;
+	--otln: #808080;
+	--txt: #ffffff;
 }
 
 body {
 	background-color: var(--bg);
-	color: white;
+	color: var(--txt);
 	margin: 0;
 	image-rendering: pixelated;
 }
@@ -33,7 +35,7 @@ input[type=range]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 0;
-  border: 1px solid white;
+  border: 1px solid var(--txt);
   background: none;
 }
 
@@ -41,17 +43,16 @@ input[type=range]::-moz-range-thumb {
   width: 4px;
   height: 16px;
   border-radius: 0;
-  border: 1px solid white;
+  border: 1px solid var(--txt);
   background: var(--bg);
 }
 input, select, button, textarea {
 	background-color: var(--bg);
-	color: white;
-	border: white 1px solid;
+	color: var(--txt);
+	border: var(--otln) 1px solid;
 }
 
 textarea {
-	/*IM SETTING THER FUCKING MAX WIDTH AND ITS NOT SETTING THE FUCKING MAX WIDTH FUCK ALL OF YOU IM GOUING TO MAIL EXPLOSIVES TO YOUR HEADQUARTERS FUCK YOU WEB # CONSORTIUM FUCK YOU JOHN CSS OR WHOEVER WDESIGNED THIS FUCKING AWFUL EXCUSE FOR FUCKING ANYTHING FUCK ALL OF YOU FUCK YOU FUCK YOU FUCK YOU*/
 	max-width: 96px;
 }
 
@@ -59,7 +60,7 @@ textarea {
 	border-color: red;
 }
 .right-container {
-	border: white 1px solid;
+	border: var(--otln) 1px solid;
 	position: absolute;
 	right: 0px;
 	top: 0px;
@@ -69,7 +70,7 @@ textarea {
 	outline: 2px solid black;
 }
 .canvas-container {
-	border: white 1px solid;
+	border: var(--otln) 1px solid;
 	position: absolute;
 	box-sizing: border-box;
 	height: 100vh;
@@ -81,20 +82,19 @@ textarea {
 	overflow: hidden;
 }
 .left-container {
-	border: white 1px solid;
+	border: var(--otln) 1px solid;
 	position: absolute;
 	left: 0px;
 	top: 0px;
 	box-sizing: border-box;
 	height: 100vh;
 	width: 340px;
-	/*tried having a scroll thing but css was being a little pussy bitch and wouldnt place the version text correctly (no i dont want to do fucking janky bullshit just to have a piece of text fixed at one position AT ALL TIMES FUCK YOU WEB3 CONSORTIUM)*/
 	overflow-y: auto;
 	overflow-x: hidden;
 	outline: 2px solid black;
 }
 .setting-container {
-	border-top: white 1px solid;
+	border-top: var(--otln) 1px solid;
 	height: 50%;
 	width: 100%;
 	box-sizing: border-box;
@@ -107,7 +107,7 @@ textarea {
 	overflow: auto;
 }
 .layer-container {
-	border: white 1px solid;
+	border: var(--otln) 1px solid;
 	height: 66px;
 	width: auto;
 	box-sizing: border-box;
@@ -121,7 +121,7 @@ textarea {
 	position: sticky;
 	top: 0;
 	z-index: 1; /*prevent layer icons from overlapping this*/
-	border-bottom: 1px solid white;
+	border-bottom: 1px solid var(--otln);
 	height: 16px;
 }
 .save-box {
@@ -185,8 +185,8 @@ textarea {
 .layer-icon-tint {
 	width: 64px;
 	height: 64px;
-	outline: white 1px solid;
-	background-color: white;
+	outline: var(--otln) 1px solid;
+	background-color: var(--otln);
 	display: inline-block;
 }
 
@@ -218,12 +218,12 @@ textarea {
 	width: 16px;
 	height: 16px;
 	border: 1px var(--bg) solid;
-	outline: 1px white solid;
+	outline: 1px var(--otln) solid;
 	background-color: var(--bg);
 	color: transparent;
 }
 .checkbox-true {
-	background-color: white;
+	background-color: var(--txt);
 }
 
 .checkbox-false {
@@ -240,7 +240,7 @@ textarea {
 
 input[type=text] {
 	border: none;
-	border-bottom: white 1px solid;
+	border-bottom: var(--otln) 1px solid;
 	font-family: serif;
 	background: none;
 	text-overflow: ellipsis;
@@ -266,7 +266,6 @@ input[type=text] {
 }
 
 #layer-class-select {
-	/*WHOEVER MADE CSS CAN FUCKING HANG THEMSELVES FUCK YOU*/
 	height: 18px;
 	position: relative;
 	top: -1px;
@@ -298,4 +297,8 @@ input[type=text] {
 
 #random-layer {
 	background-image: url("img/ui/random.png");
+}
+
+.outline-invalid {
+	outline: red 1px solid;
 }

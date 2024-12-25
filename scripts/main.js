@@ -19,15 +19,34 @@ function setupInterop() {
 		t.generateLayerList();
 		img.printImage();
 	});
+	//warning that you cant remove right now!
+	removeLayer.addEventListener("mousedown", function (e) {
+		if(img.layers.length == 0) removeLayer.classList.add("outline-invalid");
+	});
+	
+	removeLayer.addEventListener("mouseup", function (e) {
+		if(img.layers.length == 0) removeLayer.classList.remove("outline-invalid");
+	});
 
 	const clearLayer = document.getElementById("clear-layer");
 	clearLayer.addEventListener("click", function (e) {
-		//go down a layer if we're in the middle, stay in place if we're at the bottom
-		t.setCurrentLayer(0);
-		img.layers.splice(0);
-		t.updateLayerOptions();
-		t.generateLayerList();
-		img.printImage();
+		if(img.layers.length == 0) return;
+		if(confirm("clear all layers?")) {
+			//go down a layer if we're in the middle, stay in place if we're at the bottom
+			t.setCurrentLayer(0);
+			img.layers.splice(0);
+			t.updateLayerOptions();
+			t.generateLayerList();
+			img.printImage();
+		}
+	});
+	//warning that you cant remove right now!
+	clearLayer.addEventListener("mousedown", function (e) {
+		if(img.layers.length == 0) clearLayer.classList.add("outline-invalid");
+	});
+	
+	clearLayer.addEventListener("mouseup", function (e) {
+		if(img.layers.length == 0) clearLayer.classList.remove("outline-invalid");
 	});
 
 	const addLayer = document.getElementById("add-layer");
@@ -45,17 +64,9 @@ function setupInterop() {
 	});
 
 	const dupeLayer = document.getElementById("dupe-layer");
-	let dupeRedTimer = null;
 	dupeLayer.addEventListener("click", function (e) {
 		const layer2Dupe = img.layers[t.currentLayer];
-		if (!layer2Dupe) {
-			if (dupeRedTimer !== null) clearTimeout(dupeRedTimer);
-			dupeRedTimer = setTimeout(() => {
-				dupeLayer.style.color = null;
-				dupeLayer.style.borderColor = null;
-			}, 150);
-			dupeLayer.style.color = 'red';
-			dupeLayer.style.borderColor = 'red';
+		if(!layer2Dupe) {
 			return;
 		}
 		//fuck you stack overflow
@@ -71,6 +82,20 @@ function setupInterop() {
 		t.updateLayerOptions();
 		t.generateLayerList();
 		img.printImage();
+	});
+	//warning that you cant dupe right now!
+	dupeLayer.addEventListener("mousedown", function (e) {
+		const layer2Dupe = img.layers[t.currentLayer];
+		if(!layer2Dupe) {
+			dupeLayer.classList.add("outline-invalid");
+		}
+	});
+	
+	dupeLayer.addEventListener("mouseup", function (e) {
+		const layer2Dupe = img.layers[t.currentLayer];
+		if(!layer2Dupe) {
+			dupeLayer.classList.remove("outline-invalid");
+		}
 	});
 
 	const randomLayer = document.getElementById("random-layer");
@@ -252,6 +277,7 @@ function setupInterop() {
 	useRenderWorkerInput.checked = t.useRenderWorker;
 	useRenderWorkerInput.addEventListener("input", function (e) {
 		t.useRenderWorker = useRenderWorkerInput.checked;
+		img.printImage();
 	});
 		
 	const compressSavesInput = document.getElementById("compress-saves");
