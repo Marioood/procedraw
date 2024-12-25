@@ -17,12 +17,6 @@ class Tether {
 		this.canvas = document.getElementById("render");
 		this.ctx = this.canvas.getContext("2d");
 		this.updateSize();
-	
-		const nameInput = document.getElementById("name-input");
-		
-		nameInput.addEventListener("input", function (e) {
-			img.name = nameInput.value;
-		});
 		
 		const versionText = document.getElementById("version-text");
 		versionText.textContent = this.version;
@@ -463,5 +457,10 @@ class Tether {
 			newCol[2] = Math.max(newCol[2], darkLimit);
 		}
 		return img.RGB2Hex(newCol);
+	}
+	
+	setTitle(text) {
+		const title = document.getElementsByTagName("title")[0];
+		title.textContent = "procedraw | " + text;
 	}
 }

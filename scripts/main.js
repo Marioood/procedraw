@@ -234,6 +234,7 @@ function setupInterop() {
 				img.updateSize();
 				t.updateSize();
 				img.printImage();
+				t.setTitle(img.name);
 				
 				bgInput.value = img.RGB2Hex(img.bg);
 
@@ -291,6 +292,44 @@ function setupInterop() {
 	saveURLInput.addEventListener("input", function (e) {
 		t.saveURL = saveURLInput.checked;
 	});
+	
+	const nameInput = document.getElementById("name-input");
+	t.setTitle(img.name);
+	
+	nameInput.addEventListener("input", function (e) {
+		img.name = nameInput.value;
+		t.setTitle(img.name);
+	});
+	
+	const credits = document.getElementById("credits");
+	let showCredits = false;
+	const creditBox = document.getElementById("credits-container");
+	creditBox.style.display = "none";
+	credits.addEventListener("click", function (e) {
+		/*const creditList = [
+			"marioood: programmer, designer",
+			"Buj: programmer",
+			"void◆sprite discord: feedback",
+			"Kit: moral support",
+			"Netscape: the worst programming language ever",
+			"Tim Berners-Lee: the internet",
+			"",
+			"GitHub repo: https://github.com/Marioood/procedraw"
+		];
+		let tex = "";
+		
+		for(let i = 0; i < creditList.length; i++) {
+			tex = tex + "\n" + creditList[i];
+		}
+		alert(tex);*/
+		showCredits = !showCredits;
+		
+		if(showCredits) {
+			creditBox.style.display = "initial";
+		} else {
+			creditBox.style.display = "none";
+		}
+	});
 
 	const params = new URLSearchParams(window.location.search);
 
@@ -305,6 +344,7 @@ function setupInterop() {
 			img.updateSize();
 			t.updateSize();
 			img.printImage();
+			t.setTitle(img.name);
 			
 			bgInput.value = img.RGB2Hex(img.bg);
 			document.getElementById("img-load-data").value = o;

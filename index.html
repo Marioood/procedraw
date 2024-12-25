@@ -4,20 +4,20 @@
 		<title>procedraw</title>
 		<meta charset="UTF-8">
 		<link rel="icon" type="image/x-icon" href="img/favicon.ico">
-		<link rel="stylesheet" href="style.css"></link>
+		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
 		<div class="canvas-container">
 			<canvas id="render" width="256" height="256"></canvas>
 		</div>
 		<div class="left-container">
-			<input type="text" value="our beauty" class="large-input" id="name-input"></input>
+			<input type="text" value="our beauty" class="large-input" id="name-input">
 			<br>
 			<div class="layer-options">
 				<div class="label-container">
 					<button id="img-save">save!</button>
 				</div>
-				<textarea id="img-save-data" readonly="true" class="save-box">data is saved here</textarea>
+				<textarea id="img-save-data" readonly class="save-box">data is saved here</textarea>
 				<br>
 				<div class="label-container">
 					<button id="img-load-button">load!</button>
@@ -25,57 +25,55 @@
 				<textarea id="img-load-data" class="save-box" placeholder="you put data here"></textarea>
 				<br>
 				<div class="label-container">
-					<text>img.bg</text>
+					<span>img.bg</span>
 				</div>
 				<input type="color" id="img-bg-color" value="#808080">
 				<br>
 				<div class="label-container">
-					<text>img.x</text>
+					<span>img.x</span>
 				</div>
 				<input type="number" id="img-width" min="1" max="256">
 				<br>
 				<div class="label-container">
-					<text>img.y</text>
+					<span>img.y</span>
 				</div>
 				<input type="number" id="img-height" min="1" max="256">
 				<br>
 				<div class="label-container">
-					<text>t.canvasScale</text>
+					<span>t.canvasScale</span>
 				</div>
 				<input type="number" id="canvas-scale" min="0" max="64" step="0.25">
 				<br>
 				<div class="label-container">
-					<text>t.renderOnUpdate</text>
+					<span>t.renderOnUpdate</span>
 				</div>
-				</text>&emsp;&emsp;<text>
+				<span>&emsp;&emsp;</span>
 				<input type="checkbox" id="render-on-update">
 				<br>
 				<div class="label-container">
-					<text>t.useRenderWorker</text>
+					<span>t.useRenderWorker</span>
 				</div>
-				</text>&emsp;&emsp;<text>
+				<span>&emsp;&emsp;</span>
 				<input type="checkbox" id="use-render-worker">
 				<br>
 				<div class="label-container">
-					<text>t.compresseSaves</text>
+					<span>t.compresseSaves</span>
 				</div>
-				</text>&emsp;&emsp;<text>
+				<span>&emsp;&emsp;</span>
 				<input type="checkbox" id="compress-saves">
 				<br>
 				<div class="label-container">
-					<text>t.saveURL</text>
+					<span>t.saveURL</span>
 				</div>
-				</text>&emsp;&emsp;<text>
+				<span>&emsp;&emsp;</span>
 				<input type="checkbox" id="save-url">
 				<br>
 				<div class="label-container">
 					<button id="img-refresh">render</button>
 				</div>
-					<p id="render-time">render time goes here</p>
-				<br>
-				<br>
-				<br>
-				<text class="version-text" id="version-text">VERSION GOES HERE</text>
+				<p id="render-time">render time goes here</p>
+				<button id="credits">credits</button>
+				<span id="version-text">VERSION GOES HERE</span>
 			</div>
 		</div>
 		<div class="right-container">
@@ -102,6 +100,33 @@
 				<div id="layer-options" class="layer-options">
 					<!-- layer parameters go here -->
 				</div>
+			</div>
+		</div>
+		<div class="credits-container" id="credits-container">
+			<div class="credits-header">
+				<h2>credits</h2>
+			</div>
+			<ol>
+				<li>marioood: programmer, designer</li>
+				<li>Buj: programmer</li>
+				<li>void◆sprite discord: feedback</li>
+				<li>Kit: moral support</li>
+				<li>Netscape: the worst programming language ever</li>
+				<li>Tim Berners-Lee: the internet</li>
+			</ol>
+			<div class="github-icon-container">
+				<a href="https://github.com/Marioood/procedraw">
+					<!-- icon from https://github.com/logos -->
+					<img src="img/github.png" alt="GitHub repo"></img>
+				</a>
+			</div>
+			<div class="valid-icon-container">
+				<a href="https://validator.w3.org/nu/?doc=https%3A%2F%2Fmarioood.github.io%2Fprocedraw%2Findex.html">
+					<img src="img/html-5.png" alt="Valid HTML 5" height="31" width="88">
+				</a>
+				<a href="https://jigsaw.w3.org/css-validator/validator?uri=https%3A%2F%2Fmarioood.github.io%2Fprocedraw%2Fstyle.css">
+					<img height="31" width="88" src="http://jigsaw.w3.org/css-validator/images/vcss-blue" alt="Valid CSS!">
+				</a>
 			</div>
 		</div>
 		<script src="scripts/tether.js"></script>
