@@ -3,7 +3,6 @@
 	--otln: #808080;
 	--txt: #ffffff;
 }
-
 body {
 	background-color: var(--bg);
 	color: var(--txt);
@@ -26,19 +25,17 @@ input[type=number] {
 input[type=range] {
 	-webkit-appearance: none;
 	appearance: none;
-	height: 2px;
-	background: var(--bg);
+	height: 16px;
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
+  width: 6px;
   height: 16px;
   border-radius: 0;
   border: 1px solid var(--txt);
-  background: none;
+  background: var(--bg);
 }
-
 input[type=range]::-moz-range-thumb {
   width: 4px;
   height: 16px;
@@ -51,11 +48,43 @@ input, select, button, textarea {
 	color: var(--txt);
 	border: var(--otln) 1px solid;
 }
-
+.woke-bg {
+	background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
+}
+.colp-input {
+	width: 32px;
+	height: 32px;
+	border: 1px solid var(--bg);
+	outline: 1px solid var(--otln);
+	display: inline-block;
+}
+.colp-label {
+	width: 32px;
+	display: inline-block;
+}
+.colp-x {
+	float: right;
+	width: 16px;
+	height: 16px;
+}
+.colp-container {
+	padding: 4px;
+	outline: 1px solid var(--otln);
+}
+.colp-x-container {
+	width: 100%;
+	height: 18px;
+	background-color: var(--otln);
+}
+.colp-slider-container {
+	width: inherit; /*dpesmt work*/
+}
+.colp-header {
+	width: inherit;
+}
 textarea {
 	max-width: 96px;
 }
-
 .input-invalid {
 	border-color: red;
 }
@@ -161,7 +190,6 @@ textarea {
 .icon-layer-hidden {
 	background-image: url("img/ui/eye-hidden.png");
 }
-
 .layer-eye-container {
 	float: right;
 	width: 40px;
@@ -177,11 +205,9 @@ textarea {
 	height: 100%;
 	vertical-align: top;
 }
-
 .layer-icon {
 	mix-blend-mode: multiply;
 }
-
 .layer-icon-tint {
 	width: 64px;
 	height: 64px;
@@ -189,7 +215,6 @@ textarea {
 	background-color: var(--otln);
 	display: inline-block;
 }
-
 .layer-icon-container {
 	height: 100%;
 	width: auto;
@@ -199,21 +224,17 @@ textarea {
 	float: left;
 	background: none;
 }
-
 .label-container {
 	display: inline-block;
 	margin-left: 4px;
 	width: 90px;
 }
-
 .layer-options {
 	line-height: 24px;
 }
-
 .option-unsafe {
 	text-decoration: underline;
 }
-
 .box-16 {
 	width: 16px;
 	height: 16px;
@@ -225,19 +246,15 @@ textarea {
 .checkbox-true {
 	background-color: var(--txt);
 }
-
 .checkbox-false {
 	background-color: var(--bg);
 }
-
 .checkbox-x {
 	background-image: url("img/ui/dir-x.png");
 }
-
 .checkbox-y {
 	background-image: url("img/ui/dir-y.png");
 }
-
 input[type=text] {
 	border: none;
 	border-bottom: var(--otln) 1px solid;
@@ -245,32 +262,27 @@ input[type=text] {
 	background: none;
 	text-overflow: ellipsis;
 }
-
 .large-input {
 	font-style: italic;
 	font-weight: bold;
 	font-size: 1.75em;
 	margin: 8px;
 }
-
 .name-input {
 	display: inline-block;
 	width: 144px;
 	font-size: 1em;
 }
-
 #version-text {
 	position: absolute;
 	bottom: 0;
 	left: 0;
 }
-
 #credits {
 	position: absolute;
 	bottom: 2px;
 	right: 2px;
 }
-
 #layer-class-select {
 	height: 18px;
 	position: relative;
@@ -279,36 +291,28 @@ input[type=text] {
 	margin: 0;
 	margin-right: -2px;
 }
-
 .layer-button {
 	margin-left: -1px;
 }
-
 #clear-layer {
 	float: right;
 	background-image: url("img/ui/clear.png");
 }
-
 #add-layer {
 	background-image: url("img/ui/add.png");
 }
-
 #remove-layer {
 	background-image: url("img/ui/remove.png");
 }
-
 #dupe-layer {
 	background-image: url("img/ui/dupe.png");
 }
-
 #random-layer {
 	background-image: url("img/ui/random.png");
 }
-
 .outline-invalid {
 	outline: red 1px solid;
 }
-
 .credits-container {
 	position: absolute;
 	width: 512px;
@@ -319,7 +323,6 @@ input[type=text] {
 	padding: 4px;
 	box-sizing: border-box;
 }
-
 .valid-icon-container {
 	position: absolute;
 	bottom: 0;
@@ -330,7 +333,6 @@ input[type=text] {
 	bottom: 0;
 	left: 2px;
 }
-
 .credits-header {
 	width: 100%;
 	text-align: center;

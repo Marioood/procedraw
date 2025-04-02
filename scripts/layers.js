@@ -339,7 +339,9 @@ class LayerLiney extends Layer {
 		breaks: 0.5,
 		depth: 3,
 		brightness: 1,
-		go2x: true
+		go2x: true,
+		lowColor: [0, 0, 0, 1],
+		highColor: [1, 1, 1, 1]
 	}
 	
 	types = {
@@ -357,12 +359,18 @@ class LayerLiney extends Layer {
 		brightness: {
 			type: "number",
 			step: 0.05,
-			max: 1,
+			max: 2,
 			min: 0
 		},
 		go2x: {
 			type: "boolean",
 			direction: true
+		},
+		lowColor: {
+			type: "color"
+		},
+		highColor: {
+			type: "color"
 		}
 	}
 	
@@ -392,7 +400,8 @@ class LayerLiney extends Layer {
 					y = l;
 				}
 				
-				img.plotPixel([col, col, col, 1], x, y);
+				img.plotPixel(img.blend(o.lowColor, o.highColor, col), x, y);
+				//img.plotPixel([col, col, col, 1], x, y);
 			}
 		}
 	}

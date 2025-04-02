@@ -267,19 +267,6 @@ function setupInterop() {
 		t.forceRender = true;
 		img.printImage();
 	});
-	
-	const renderUpdateInput = document.getElementById("render-on-update");
-	renderUpdateInput.checked = t.renderOnUpdate;
-	renderUpdateInput.addEventListener("input", function (e) {
-		t.renderOnUpdate = renderUpdateInput.checked;
-	});
-		
-	const useRenderWorkerInput = document.getElementById("use-render-worker");
-	useRenderWorkerInput.checked = t.useRenderWorker;
-	useRenderWorkerInput.addEventListener("input", function (e) {
-		t.useRenderWorker = useRenderWorkerInput.checked;
-		img.printImage();
-	});
 		
 	const compressSavesInput = document.getElementById("compress-saves");
 	compressSavesInput.checked = t.compressSaves;
