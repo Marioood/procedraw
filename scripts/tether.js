@@ -592,6 +592,23 @@ class Tether {
           });
           container.appendChild(input);
           break;
+        case "keyvalues":
+          input = document.createElement("select");
+          input.id = id;
+          
+          for(let i = 0; i < limits.keys.length; i++) {
+            const option = document.createElement("option");
+            option.text = limits.keys[i];
+            input.add(option);
+          }
+          input.selectedIndex = limits.values.indexOf(options[optionKeys[i]]);
+          
+          input.addEventListener("change", function (e) {
+            options[optionKeys[i]] = limits.values[input.selectedIndex];
+            img.printImage();
+          });
+          container.appendChild(input);
+          break;
       }
       //spacing
       const lineBreak = document.createElement("br");

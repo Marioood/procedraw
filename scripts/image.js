@@ -23,6 +23,13 @@ class ImageManager {
     blobs: LayerBlobs,
     worley: LayerWorley
   };
+	blendNames = {
+		add: BLEND_ADD,
+		multiply: BLEND_MULTIPLY,
+		plain: BLEND_PLAIN,
+		screen: BLEND_SCREEN,
+		overlay: BLEND_OVERLAY
+	};
   name = "our beauty";
   
   printImage() {
@@ -72,9 +79,7 @@ class ImageManager {
   plotPixel(color, x, y) {
     //color is an array of 4 bytes
     //[red, blue, green, alpha]
-    
-    //drop the pixel if its out of bounds
-    //if(x < 0 || x >= this.x || y < 0 || y >= this.y) return;
+		
     //wrap around image
     x %= img.x;
     y %= img.y;
@@ -86,13 +91,6 @@ class ImageManager {
     const alpha = this.layer.od.alpha * color[3];
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
-    //const depth = this.layer.od.depth;
-    
-    /*if(this.layer.name == "noise") {
-      for(let i = 0; i < this.layer.filters.length; i++) {
-        color = this.layer.filters[i].edit(color[0], color[1], color[2], color[3]);
-      }
-    }*/
     const pos = x + y * this.x;
     //todo: actually have alpha CHANNEL affect (effect? idk) the color, not just the layer's alpha
     this.data[pos * 4] = this.combinePixel(color[0] * tint[0], this.data[pos * 4], blend, alpha);
@@ -106,12 +104,12 @@ class ImageManager {
   combinePixel(l, b, blend, strength) {
     //values are normalized (0 through 1)
 		//TODO: use constants instead of strings and test performance
-    /*switch(blend) {
+    switch(blend) {
       case BLEND_ADD:
         return (l * strength) + b;
       case BLEND_MULTIPLY:
         return ((l * strength) + 1 - strength) * b;
-      case BLEND_PLAIN":
+      case BLEND_PLAIN:
         //lerp
         return b + strength * (l - b);
       case BLEND_SCREEN:
@@ -123,8 +121,8 @@ class ImageManager {
         } else {
           return 1 - (1 - l * strength) * ((strength + 1) * (1 - b));
         }
-    }*/
-		switch(blend) {
+    }
+		/*switch(blend) {
 			case "add":
 				return (l * strength) + b;
 			case "multiply":
@@ -141,7 +139,7 @@ class ImageManager {
 				} else {
 					return 1 - (1 - l * strength) * ((strength + 1) * (1 - b));
 				}
-		}
+		}*/
   }
   
   parseRGB(hex) {

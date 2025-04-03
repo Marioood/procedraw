@@ -28,7 +28,7 @@ TODO's:
 
 unorganized todos
  
-blend types for layer interpolation (e.g. border corners, vornoi noise)
+blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
 link layer that copies another layer's pixels and modifies them
 filter layer that modifies the current cavnas' pixels
 value noise layer
@@ -37,8 +37,6 @@ give the solid layer similar options to border layer
 save as file
 image layer that has is an embedded image
 remove external dependencies
-new color picker
-make ImageManager.combinePixel use CONSTANTS instead of "strings" and test performance
 move RGB2Hex() and other similar functions to a global helper.js file -- no external libraries are ever gonna be used so it shouldnt matter
 make killAllChildren() and other similar functions global in tether.js, and make tether.js just be html--js interaction functions
 ctrl + scroll to zoom in and out
@@ -52,6 +50,8 @@ god layer
 future me here. what the fuck is a god layer?
 test browser support (and provide appropriate taxes)
 add title bar
+gzip'd saves can be LARGER than uncompressed ones!!! sleect the smallest
+option limit skeletons (for documentation)
 
 //NEW goalz
 //hex codes in color input

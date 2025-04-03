@@ -3,6 +3,7 @@
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
+"use strict"
 class Layer {
 	//class name
 	name;
@@ -18,7 +19,7 @@ class Layer {
 		//the translucency of the layer (0 is transparent, 1 is opaque)
 		alpha: 1,
 		//blend mode
-		blend: "plain",
+		blend: BLEND_PLAIN,
 		//multiply the image by a color
 		tint: [1, 1, 1, 1],
 		//depth: 255,
@@ -36,13 +37,20 @@ class Layer {
 			max: 1
 		},
 		blend: {
-			type: "dropdown",
-			items: [
+			type: "keyvalues",
+			keys: [
 				"plain",
 				"add",
 				"multiply",
 				"screen",
 				"overlay"
+			],
+			values: [
+				BLEND_PLAIN,
+				BLEND_ADD,
+				BLEND_MULTIPLY,
+				BLEND_SCREEN,
+				BLEND_OVERLAY
 			]
 		},
 		tint: {

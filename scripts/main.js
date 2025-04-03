@@ -130,6 +130,9 @@ function setupInterop() {
 					case 'dropdown':
 						opts[key] = choice(d.items);
 					break;
+					case 'keyvalues':
+						opts[key] = choice(d.values);
+					break;
 					default:
 						console.error(`Unsupported option type ${d.type}`);
 				}
