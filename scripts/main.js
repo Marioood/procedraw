@@ -235,7 +235,7 @@ function main() {
 				img.printImage();
 				t.setTitle(img.name);
 				
-				bgInput.value = img.RGB2Hex(img.bg);
+				bgInput.value = '#' + RGB2Hex(img.bg);
 
 				if (history.replaceState && t.saveURL) {
 					history.replaceState({}, "", generateSaveUrl(await s.saveEnc()));
@@ -332,7 +332,7 @@ function main() {
 			img.printImage();
 			t.setTitle(img.name);
 			
-			bgInput.value = RGB2Hex(img.bg);
+			bgInput.value = '#' + RGB2Hex(img.bg);
 			document.getElementById("img-load-data").value = o;
 		} catch (why) {
 			console.error("Failed to load save");

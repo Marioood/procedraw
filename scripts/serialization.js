@@ -4,7 +4,7 @@ class Serialization {
 	save() {
 		let saved = {};
 		saved.img = {
-			bg: img.RGB2Hex(img.bg),
+			bg: RGB2Hex(img.bg),
 			x: img.x,
 			y: img.y,
 			name: img.name,
@@ -18,7 +18,7 @@ class Serialization {
 			const optionKeys = Object.keys(layer.options);
 			let newLayer = {};
 			let newOptionDefaults = Object.assign({}, layer.od);
-			newOptionDefaults.tint = img.RGB2Hex(newOptionDefaults.tint);
+			newOptionDefaults.tint = RGB2Hex(newOptionDefaults.tint);
 			//factory fresh version of the layer, for parameter stripping
 			let refLayer = new img.layerClasses[layer.name];
 			//dont bother saving the options if they're empty
@@ -30,8 +30,8 @@ class Serialization {
 					let val = layer.options[key];
 					let refVal = refLayer.options[key];
 					if(layer.types[key].type == "color") {
-						val = img.RGBA2Hex(val);
-						refVal = img.RGBA2Hex(refVal);
+						val = RGBA2Hex(val);
+						refVal = RGBA2Hex(refVal);
 					}
 					//dont save the parameter if its just the default value
 					if(refVal == val) continue;
@@ -59,14 +59,10 @@ class Serialization {
 		//welcome to my hooker palace!
 		let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
 		
-		img.bg = img.parseHex(saved.img.bg);
+		img.bg = intRGB2RGB("0x" + saved.img.bg);
 		img.x = saved.img.x;
 		img.y = saved.img.y;
-		if(saved.img.name == undefined) {
-			img.name = "our ancient beauty";
-		} else {
-			img.name = saved.img.name;
-		}
+		img.name = saved.img.name;
 		//blank layers so we arent loading images on top of eachother
 		img.layers = [];
 
@@ -76,7 +72,7 @@ class Serialization {
 			
 			newLayer.od = Object.assign(newLayer.od, fauxLayer.od);
 			if(fauxLayer.od.tint != undefined) {
-				newLayer.od.tint = img.parseHex(newLayer.od.tint);
+				newLayer.od.tint = intRGB2RGB("0x" + newLayer.od.tint);
 			}
 			//backwards compatability for pre-name layers
 			if(fauxLayer.displayName == undefined) {
@@ -101,7 +97,7 @@ class Serialization {
 						if(typeof val == "object") {
 							optionsNew[key] = val;
 						} else {
-							optionsNew[key] = img.parseHex(val);
+							optionsNew[key] = intRGB2RGB("0x" + val);
 						}
 					} else {
 						optionsNew[key] = val;
@@ -120,7 +116,13 @@ class Serialization {
 
 		if (typeof CompressionStream !== 'undefined') {
 			try {
-				return await this.gzip(data);
+				const zipped = await this.gzip(data);
+				//the zipped data can SOMETIMES be longer than the unzipped data
+				if(zipped.length > data.length) {
+					return data;
+				} else {
+					return zipped;
+				}
 			} catch(why) {
 				console.error("Failed to gzip save:", why);
 			}

@@ -35,26 +35,26 @@ class ImageManager {
       this.data[i * 4 + 2] = this.bg[2];
       this.data[i * 4 + 3] = this.bg[3];
     }
-      //layer the layers
-      for(let i = 0; i < this.layers.length; i++) {
-        if(this.layers[i].od.shown) {
-          this.layer = this.layers[i];
-          //this.layer.options = this.layer.defaults;
-          this.layer.generate(this.layer.options);
-        }
+    //layer the layers
+    for(let i = 0; i < this.layers.length; i++) {
+      if(this.layers[i].od.shown) {
+        this.layer = this.layers[i];
+        //this.layer.options = this.layer.defaults;
+        this.layer.generate(this.layer.options);
       }
-      //canvas stuff
-      let canvasImg = t.ctx.createImageData(this.x, this.y);
-      //write to canvas data
-      for(let i = 0; i < this.x * this.y * 4; i++) {
-        //convert from 0 - 1 to 0 - 255
-        canvasImg.data[i] = this.data[i] * 255;
-      }
-      //insert new image data
-      t.ctx.putImageData(canvasImg, 0, 0);
-      let renderTime = Date.now() - startTime;
-      
-      document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
+    }
+    //canvas stuff
+    let canvasImg = t.ctx.createImageData(this.x, this.y);
+    //write to canvas data
+    for(let i = 0; i < this.x * this.y * 4; i++) {
+      //convert from 0 - 1 to 0 - 255
+      canvasImg.data[i] = this.data[i] * 255;
+    }
+    //insert new image data
+    t.ctx.putImageData(canvasImg, 0, 0);
+    let renderTime = Date.now() - startTime;
+    
+    document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
   }
   
   updateSize() {
@@ -73,7 +73,7 @@ class ImageManager {
   plotPixel(color, x, y) {
     //color is an array of 4 bytes
     //[red, blue, green, alpha]
-		
+    
     //wrap around image
     x = mod(x, img.x);
     y = mod(y, img.y);
@@ -89,7 +89,6 @@ class ImageManager {
     this.data[pos * 4 + 2] = this.combinePixel(color[2] * tint[2], this.data[pos * 4 + 2], blend, alpha);
     //add the alphas together
     this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
-      
   }
   
   combinePixel(l, b, blend, strength) {
@@ -106,7 +105,7 @@ class ImageManager {
         return 1 - (1 - l * strength) * (1 - b);
       case BLEND_OVERLAY:
         //fuck you wikipedia
-				//TODO: this is wonky with alpha
+        //TODO: this is wonky with alpha
         if(l < 0.5) {
           return (2 * (l * strength) + 1 - strength) * b;
         } else {

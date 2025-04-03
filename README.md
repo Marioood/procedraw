@@ -37,7 +37,6 @@ give the solid layer similar options to border layer
 save as file
 image layer that has is an embedded image
 remove external dependencies
-move RGB2Hex() and other similar functions to a global helper.js file -- no external libraries are ever gonna be used so it shouldnt matter
 make killAllChildren() and other similar functions global in tether.js, and make tether.js just be html--js interaction functions
 ctrl + scroll to zoom in and out
 scroll to move up and down
@@ -50,7 +49,7 @@ god layer
 future me here. what the fuck is a god layer?
 test browser support (and provide appropriate taxes)
 add title bar
-gzip'd saves can be LARGER than uncompressed ones!!! sleect the smallest
+save authors
 option limit skeletons (for documentation)
 //could be a "map" filter?
 color picker sometimes doesnt reprint the image when youre done changing it
@@ -61,11 +60,7 @@ color picker sometimes doesnt reprint the image when youre done changing it
 //overlap option (see wandering lines)
 //brightness tolerance
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
-
 //the set color function sucked it was like 4 times slower
-
-main function
-
 //later
 //snap image editor
 //layer link
@@ -77,6 +72,4 @@ main function
 	//scale + normalized scale (like xor fractal)
 	//plot filters (only change the output of plotPixel()) dont seem like they'd be slow
 //perlin noise
-
-
 //DONT SLAP MORE SHIT ONTO SHIT

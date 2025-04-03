@@ -827,7 +827,7 @@ class Tether {
       newCol[1] = Math.max(newCol[1], darkLimit);
       newCol[2] = Math.max(newCol[2], darkLimit);
     }
-    return RGB2Hex(newCol);
+    return '#' + RGB2Hex(newCol);
   }
   
   setTitle(text) {
