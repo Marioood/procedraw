@@ -19,7 +19,6 @@ Guide for layers:
 	* Also make sure parameters don't cause infinite loops (set proper mins and maxes)
     
 TODO's:
-* New color picker
 * Rewrite tether.js using color picker style code (custom framework)
 * "outsource rendering to china" once again after most of the code is refactored (add back web worker rendering)
     * Doesn't work properly and throws a bunch of errors when testing offline
@@ -49,8 +48,34 @@ frutiger aero ui -- stuff can look crappy as long as it's also interesting
 save stuff in cookies (?)
 "use strict" can help clean up sloppy code
 better width and height customization (set limit, with warning)
-remove bitwise functions -- faster
-only have one color picker -- having a bunch of them per color input isn't ideal (DO LATER)
 god layer
 future me here. what the fuck is a god layer?
 test browser support (and provide appropriate taxes)
+add title bar
+
+//NEW goalz
+//hex codes in color input
+//shown option changes eye button
+//take a break! work on the programmer art thing
+//overlap option (see wandering lines)
+//brightness tolerance
+//img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
+
+//the set color function sucked it was like 4 times slower
+
+main function
+
+//later
+//snap image editor
+//layer link
+//color ramp
+//tiled view
+//variables and math expressions
+//filters (?) they seem kinda slow.....
+	//layer tiling periods, layer offsets
+	//scale + normalized scale (like xor fractal)
+	//plot filters (only change the output of plotPixel()) dont seem like they'd be slow
+//perlin noise
+
+
+//DONT SLAP MORE SHIT ONTO SHIT

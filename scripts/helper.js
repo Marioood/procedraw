@@ -5,6 +5,7 @@ function mod(dividend, divisor) {
     //thanks https://stackoverflow.com/a/17323608
     return ((dividend % divisor) + divisor) % divisor;
 }
+//todo: replace img.RGB2Hex with this
 function RGB2Hex(arr) {
 	//[1, 1, 1, 1] to #ffffff
 	let r = Math.floor(arr[0] * 255).toString(16);
@@ -14,7 +15,7 @@ function RGB2Hex(arr) {
 	if(r.length < 2) r = "0" + r;
 	if(g.length < 2) g = "0" + g;
 	if(b.length < 2) b = "0" + b;
-	return "#" + r + g + b;
+	return r + g + b;
 }
 //vv weirdly specific code vv
 function byteRGB2Hex(arr) {
@@ -70,11 +71,14 @@ function HSV2RGB(col) { //[H, S, V] array
     b += m;
     return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
 }
+function byteRGB2HSV(col) {
+	return RGB2HSV([col[0] / 255, col[1] / 255, col[2] / 255]);
+}
 function RGB2HSV(col) { //[R, G, B] array
     //https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
-    const r = col[0] / 255;
-    const g = col[1] / 255;
-    const b = col[2] / 255;
+    const r = col[0];
+    const g = col[1];
+    const b = col[2];
     let value = Math.max(Math.max(r, g), b);
     let min = Math.min(Math.min(r, g), b);
     let chroma = value - min;
@@ -92,4 +96,21 @@ function RGB2HSV(col) { //[R, G, B] array
     if(satty != satty) satty = 0; //nan check
 
     return [Math.floor(hue), Math.floor(satty * 100), Math.floor(value * 100)];
+}
+function intRGB2RGB(hex) {
+	const r = ((hex & 0xFF000000) >> 24) & 0xFF; //signed 2 unsigned
+	const g = (hex & 0x00FF0000) >> 16;
+	const b = (hex & 0x0000FF00) >> 8;
+	const a = hex & 0x000000FF;
+	return [r / 255, g / 255, b / 255, a / 255];
+}
+function hex2RGB(hex) {
+	//convert #RRGGBB to 0xRRGGBB and then [R, G, B] from 0...1
+	//rgba or rgb depending on length
+	if(hex.length <= 7) {
+		//hack for versions that didnt support alpha input
+		return img.parseRGB(Number("0x" + hex.slice(1) + "ff"));
+	} else {
+		return img.parseRGB(Number("0x" + hex.slice(1)));
+	}
 }

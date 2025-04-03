@@ -76,11 +76,14 @@ input, select, button, textarea {
 	height: 18px;
 	background-color: var(--otln);
 }
-.colp-slider-container {
-	width: inherit; /*dpesmt work*/
-}
 .colp-header {
 	width: inherit;
+}
+.colp-display {
+	height: 32px;
+	width: 100%;
+	border: 1px solid var(--bg);
+	outline: 1px solid var(--otln);
 }
 textarea {
 	max-width: 96px;

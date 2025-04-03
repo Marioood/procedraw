@@ -333,35 +333,20 @@ function setupInterop() {
 			img.printImage();
 			t.setTitle(img.name);
 			
-			bgInput.value = img.RGB2Hex(img.bg);
+			bgInput.value = RGB2Hex(img.bg);
 			document.getElementById("img-load-data").value = o;
 		} catch (why) {
 			console.error("Failed to load save");
 		}
 	})();
 }
-//NEW goalz
-//hex codes in color input
-//shown option changes eye button
-//take a break! work on the programmer art thing
-//overlap option (see wandering lines)
-//brightness tolerance
-//img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
 
-//the set color function sucked it was like 4 times slower
-
-
-//later
-//snap image editor
-//layer link
-//color ramp
-//tiled view
-//variables and math expressions
-//filters (?) they seem kinda slow.....
-	//layer tiling periods, layer offsets
-	//scale + normalized scale (like xor fractal)
-	//plot filters (only change the output of plotPixel()) dont seem like they'd be slow
-//perlin noise
-
-
-//DONT SLAP MORE SHIT ONTO SHIT
+/*
+function killPeople(arr) {
+	//arr = [1, 2, 3];
+	arr[0] = 1;
+}
+let myArr = ["a", "b", "c"];
+console.log(myArr);
+killPeople(myArr);
+console.log(myArr);*/
