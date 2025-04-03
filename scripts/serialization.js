@@ -1,3 +1,5 @@
+"use strict"
+
 class Serialization {
 	save() {
 		let saved = {};
@@ -93,7 +95,8 @@ class Serialization {
 				for(let o = 0; o < optionKeys.length; o++) {
 					const key = optionKeys[o];
 					const val = fauxLayer.options[key];
-					if(newLayer.types[key].type == "color") {
+					const type = newLayer.types[key].type;
+					if(type == "color") {
 						//too lazy to parse colors that are from the default layer... just check if theyre an array and plop em in
 						if(typeof val == "object") {
 							optionsNew[key] = val;

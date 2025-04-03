@@ -52,7 +52,8 @@ test browser support (and provide appropriate taxes)
 add title bar
 gzip'd saves can be LARGER than uncompressed ones!!! sleect the smallest
 option limit skeletons (for documentation)
-
+//could be a "map" filter?
+color picker sometimes doesnt reprint the image when youre done changing it
 //NEW goalz
 //hex codes in color input
 //shown option changes eye button

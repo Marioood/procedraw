@@ -2,12 +2,8 @@ const img = new ImageManager();
 const t = new Tether();
 const s = new Serialization();
 img.printImage();
-//do this so the variables used during setup aren't in global scope
-//also this stuff can't quite be moved to tether.js
-setupInterop();
 
-function setupInterop() {
-
+function main() {
 	const removeLayer = document.getElementById("remove-layer");
 	removeLayer.addEventListener("click", function (e) {
 		img.layers.splice(t.currentLayer, 1);
@@ -343,13 +339,6 @@ function setupInterop() {
 		}
 	})();
 }
-
-/*
-function killPeople(arr) {
-	//arr = [1, 2, 3];
-	arr[0] = 1;
-}
-let myArr = ["a", "b", "c"];
-console.log(myArr);
-killPeople(myArr);
-console.log(myArr);*/
+//do this so the variables used during setup aren't in global scope
+//also this stuff can't quite be moved to tether.js
+main();

@@ -5,19 +5,22 @@ function mod(dividend, divisor) {
     //thanks https://stackoverflow.com/a/17323608
     return ((dividend % divisor) + divisor) % divisor;
 }
-//todo: replace img.RGB2Hex with this
 function RGB2Hex(arr) {
-	//[1, 1, 1, 1] to #ffffff
+	return byteRGB2Hex([Math.floor(arr[0] * 255), Math.floor(arr[1] * 255), Math.floor(arr[2] * 255)]);
+}
+function RGBA2Hex(arr) {
+	//[1, 1, 1, 1] to #ffffffff
 	let r = Math.floor(arr[0] * 255).toString(16);
 	let g = Math.floor(arr[1] * 255).toString(16);
 	let b = Math.floor(arr[2] * 255).toString(16);
+	let a = Math.floor(arr[3] * 255).toString(16);
 	//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
 	if(r.length < 2) r = "0" + r;
 	if(g.length < 2) g = "0" + g;
 	if(b.length < 2) b = "0" + b;
-	return r + g + b;
+	if(a.length < 2) a = "0" + a;
+	return r + g + b + a;
 }
-//vv weirdly specific code vv
 function byteRGB2Hex(arr) {
 	//[255, 255, 255, 255] to #ffffff
 	let r = arr[0].toString(16);
@@ -109,8 +112,8 @@ function hex2RGB(hex) {
 	//rgba or rgb depending on length
 	if(hex.length <= 7) {
 		//hack for versions that didnt support alpha input
-		return img.parseRGB(Number("0x" + hex.slice(1) + "ff"));
+		return intRGB2RGB(Number("0x" + hex.slice(1) + "ff"));
 	} else {
-		return img.parseRGB(Number("0x" + hex.slice(1)));
+		return intRGB2RGB(Number("0x" + hex.slice(1)));
 	}
 }

@@ -342,7 +342,6 @@ class InputColorControl {
 }
 //TODO: put somewhere else
 const colp = new InputColorControl();
-		console.log("charge headphones!!");
 //intermingling of html and js - scary!! (data output n input)
 //TODO: gut this and move most of it to main.js
 class Tether {
@@ -352,7 +351,7 @@ class Tether {
   previousLayer = 0;
   currentClass = LayerXorFractal;
   canvasScale = 4;
-  version = "VOLATILE 0.4";
+  version = "VOLATILE 0.5";
   renderOnUpdate = true;
   forceRender = false;
   compressSaves = true;
@@ -828,7 +827,7 @@ class Tether {
       newCol[1] = Math.max(newCol[1], darkLimit);
       newCol[2] = Math.max(newCol[2], darkLimit);
     }
-    return img.RGB2Hex(newCol);
+    return RGB2Hex(newCol);
   }
   
   setTitle(text) {
