@@ -4,7 +4,7 @@ class Serialization {
 	save() {
 		let saved = {};
 		saved.img = {
-			bg: RGB2Hex(img.bg),
+			bg: RGBA2Hex(img.bg),
 			x: img.x,
 			y: img.y,
 			name: img.name,
@@ -59,7 +59,7 @@ class Serialization {
 		//welcome to my hooker palace!
 		let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
 		
-		img.bg = intRGB2RGB("0x" + saved.img.bg);
+		img.bg = hex2RGB('#' + saved.img.bg);
 		img.x = saved.img.x;
 		img.y = saved.img.y;
 		img.name = saved.img.name;
@@ -72,7 +72,7 @@ class Serialization {
 			
 			newLayer.od = Object.assign(newLayer.od, fauxLayer.od);
 			if(fauxLayer.od.tint != undefined) {
-				newLayer.od.tint = intRGB2RGB("0x" + newLayer.od.tint);
+				newLayer.od.tint = hex2RGB('#' + newLayer.od.tint);
 			}
 			//backwards compatability for pre-name layers
 			if(fauxLayer.displayName == undefined) {
@@ -97,7 +97,7 @@ class Serialization {
 						if(typeof val == "object") {
 							optionsNew[key] = val;
 						} else {
-							optionsNew[key] = intRGB2RGB("0x" + val);
+							optionsNew[key] = hex2RGB('#' + val);
 						}
 					} else {
 						optionsNew[key] = val;

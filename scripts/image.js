@@ -1,3 +1,4 @@
+"use strict";
 //global layer management (data funnelling n processing)
 //NEVER change these values!
 const BLEND_ADD = 0;

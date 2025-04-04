@@ -2,12 +2,16 @@
 	--bg: #101010;
 	--otln: #808080;
 	--txt: #ffffff;
+	--fnt: sans-serif;
+	--main-tit-h: 24px;
+	--main-cont-h: calc(100vh - var(--main-tit-h));
 }
 body {
 	background-color: var(--bg);
 	color: var(--txt);
 	margin: 0;
 	image-rendering: pixelated;
+	font-family: var(--fnt);
 }
 canvas {
 	pointer-events: auto;
@@ -91,21 +95,28 @@ textarea {
 .input-invalid {
 	border-color: red;
 }
+.top-container {
+	position: absolute;
+	top: 0;
+	width: 100%;
+	height: var(--main-tit-h);
+}
 .right-container {
 	border: var(--otln) 1px solid;
 	position: absolute;
-	right: 0px;
-	top: 0px;
+	right: 0;
+	bottom: 0;
 	box-sizing: border-box;
-	height: 100vh;
+	height: var(--main-cont-h);
 	width: 340px;
 	outline: 2px solid black;
 }
 .canvas-container {
 	border: var(--otln) 1px solid;
 	position: absolute;
+	bottom: 0;
 	box-sizing: border-box;
-	height: 100vh;
+	height: var(--main-cont-h);
 	width: 100vw;
 	display: flex;
 	justify-content: center;
@@ -117,9 +128,9 @@ textarea {
 	border: var(--otln) 1px solid;
 	position: absolute;
 	left: 0px;
-	top: 0px;
+	bottom: 0px;
 	box-sizing: border-box;
-	height: 100vh;
+	height: var(--main-cont-h);
 	width: 340px;
 	overflow-y: auto;
 	overflow-x: hidden;
@@ -275,6 +286,16 @@ input[type=text] {
 	display: inline-block;
 	width: 144px;
 	font-size: 1em;
+}
+.header-dropdown {
+	height: var(--main-tit-h);
+	border: none;
+	width: 64px;
+	border-right: 1px solid var(--otln);
+}
+.header-items {
+	border: 1px solid var(--otln);
+	position: absolute;
 }
 #version-text {
 	position: absolute;

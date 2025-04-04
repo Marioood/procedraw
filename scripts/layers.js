@@ -347,7 +347,7 @@ class LayerLiney extends Layer {
 		breaks: 0.5,
 		depth: 3,
 		brightness: 1,
-		go2x: true,
+		dir: true,
 		lowColor: [0, 0, 0, 1],
 		highColor: [1, 1, 1, 1]
 	}
@@ -370,7 +370,7 @@ class LayerLiney extends Layer {
 			max: 2,
 			min: 0
 		},
-		go2x: {
+		dir: {
 			type: "boolean",
 			direction: true
 		},
@@ -385,7 +385,7 @@ class LayerLiney extends Layer {
 	generate(o) {
 		let maxL, maxI;
 
-		if(o.go2x) {
+		if(o.dir) {
 			maxL = img.x;
 			maxI = img.y;
 		} else {
@@ -400,7 +400,7 @@ class LayerLiney extends Layer {
 					col = Math.round((Math.random() * o.brightness) * o.depth) / o.depth;
 				}
 				let x, y;
-				if(o.go2x) {
+				if(o.dir) {
 					x = l;
 					y = i;
 				} else {
@@ -420,7 +420,7 @@ class LayerWandering extends Layer{
 	
 	options = {
 		spacing: 8,
-		go2X: true,
+		dir: true,
 		spread: 0.5,
 		variance: 8,
 		bias: 0.5,
@@ -435,7 +435,7 @@ class LayerWandering extends Layer{
 			max: 256,
 			unsafe: true
 		},
-		go2X: {
+		dir: {
 			type: "boolean",
 			direction: true
 		},
@@ -469,23 +469,24 @@ class LayerWandering extends Layer{
 	generate(o) {
 		let maxN, inverseMaxN;
 
-		if(o.go2X) {
+		if(o.dir) {
 			maxN = img.x;
 			inverseMaxN = img.y;
 		} else {
 			maxN = img.y;
 			inverseMaxN = img.x;
 		}
-		const maxLines = inverseMaxN / o.spacing;
+		const spacing = Math.sqrt(o.spacing);
+		const maxLines = inverseMaxN / spacing;
 		
 		for(let i = 0; i < maxLines; i++) {
-			let pos = Math.round((i + 0.5) * o.spacing + (Math.random() - 0.5) * o.variance);
+			let pos = Math.round((i + 0.5) * spacing + (Math.random() - 0.5) * o.variance);
 			const start = pos;
 			const wrapBiasPivot = maxN * (Math.random() * 3 + 1);
 			for(let n = 0; n < maxN; n++) {
 				let x, y;
 				
-				if(o.go2X) {
+				if(o.dir) {
 					x = n;
 					y = pos;
 				} else {
@@ -496,7 +497,7 @@ class LayerWandering extends Layer{
 					img.plotPixel([1, 1, 1, 1], x, y);
 				} else {
 					for(let s = 0; s < o.thickness; s++) {
-						if(o.go2X) {
+						if(o.dir) {
 							img.plotPixel([1, 1, 1, 1], x, y + s);
 						} else {
 							img.plotPixel([1, 1, 1, 1], x + s, y);

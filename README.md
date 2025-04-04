@@ -54,7 +54,6 @@ option limit skeletons (for documentation)
 //could be a "map" filter?
 color picker sometimes doesnt reprint the image when youre done changing it
 //NEW goalz
-//hex codes in color input
 //shown option changes eye button
 //take a break! work on the programmer art thing
 //overlap option (see wandering lines)
@@ -73,3 +72,9 @@ color picker sometimes doesnt reprint the image when youre done changing it
 	//plot filters (only change the output of plotPixel()) dont seem like they'd be slow
 //perlin noise
 //DONT SLAP MORE SHIT ONTO SHIT
+
+sqrt spacing
+save bg alpha
+hex update color diplay
+
+color picker alpha boug

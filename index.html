@@ -7,13 +7,12 @@
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
+		<div class="top-container" id="top-container"></div>
 		<div class="canvas-container">
 			<canvas id="render" width="256" height="256"></canvas>
 		</div>
 		<div class="left-container">
-			<input type="text" value="our beauty" class="large-input" id="name-input">
-			<br>
-			<div class="layer-options">
+			<div class="layer-options" id="image-options">
 				<div class="label-container">
 					<button id="img-save">save!</button>
 				</div>
@@ -57,20 +56,11 @@
 				<input type="checkbox" id="use-render-worker">
 				<br>
 				<div class="label-container">
-					<span>t.compresseSaves</span>
-				</div>
-				<span>&emsp;&emsp;</span>
-				<input type="checkbox" id="compress-saves">
-				<br>
-				<div class="label-container">
 					<span>t.saveURL</span>
 				</div>
 				<span>&emsp;&emsp;</span>
 				<input type="checkbox" id="save-url">
 				<br>
-				<div class="label-container">
-					<button id="img-refresh">render</button>
-				</div>
 				<p id="render-time">render time goes here</p>
 				<button id="credits">credits</button>
 				<span id="version-text">VERSION GOES HERE</span>

@@ -111,9 +111,21 @@ function hex2RGB(hex) {
 	//convert #RRGGBB to 0xRRGGBB and then [R, G, B] from 0...1
 	//rgba or rgb depending on length
 	if(hex.length <= 7) {
-		//hack for versions that didnt support alpha input
 		return intRGB2RGB(Number("0x" + hex.slice(1) + "ff"));
 	} else {
 		return intRGB2RGB(Number("0x" + hex.slice(1)));
 	}
+}
+function limitDarkness(color) {
+	//dont become too dark so the ui is still legible
+	//make a copy of the color. modifying the argument color messed with layer duping
+	let newCol = [color[0], color[1], color[2], color[3]];
+	const darkLimit = 0.25;
+	const brightness = (newCol[0] + newCol[1] + newCol[2]) / 3;
+	if(brightness < darkLimit) {
+		newCol[0] = Math.max(newCol[0], darkLimit);
+		newCol[1] = Math.max(newCol[1], darkLimit);
+		newCol[2] = Math.max(newCol[2], darkLimit);
+	}
+	return '#' + RGB2Hex(newCol);
 }
