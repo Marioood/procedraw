@@ -15,11 +15,8 @@ make killAllChildren() and other similar functions global in tether.js, and make
 ctrl + scroll to zoom in and out
 scroll to move up and down
 shift + scroll to move left and right
-frutiger aero ui -- stuff can look crappy as long as it's also interesting
 save stuff in cookies (?)
-"use strict" can help clean up sloppy code
 better width and height customization (set limit, with warning)
-god images (random names and layers)
 test browser support (and provide appropriate taxes)
 save authors
 option limit skeletons (for documentation)
@@ -44,6 +41,6 @@ color picker sometimes doesnt reprint the image when youre done changing it
 //perlin noise
 //DONT SLAP MORE SHIT ONTO SHIT
 
-sqrt spacing
-
 colp and option consistent sliders
+
+move up color picker

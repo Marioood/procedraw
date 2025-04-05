@@ -95,50 +95,14 @@ function main() {
       dupeLayer.classList.remove("outline-invalid");
     }
   });
-
+	
   const randomLayer = document.getElementById("random-layer");
   randomLayer.addEventListener("click", function (e) {
     if(img.layers.length > 0) {
       t.setCurrentLayer(t.currentLayer + 1);
     }
-    const choice = x => x[Math.floor(Math.random() * x.length)];
-    /** @type {Layer} */
-    const layer = new (choice(Object.values(img.layerClasses)));
-    function randomize(opts, desc) {
-      for(const key in opts) {
-        const d = desc[key];
-        switch (d.type) {
-          case 'number': {
-            const min = d.min === void 0 ? 0 : d.min;
-            const max = d.max === void 0 ? 100 : d.max;
-            const step = d.step === void 0 ? 1 : d.step;
-            opts[key] = Math.random() * (max - min) + min;
-            opts[key] /= step;
-            opts[key] = Math.floor(opts[key]) * step;
-            opts[key] *= 1e10;
-            opts[key] = Math.floor(opts[key]);
-            opts[key] /= 1e10;
-          } break;
-          case 'boolean':
-            opts[key] = Math.random() > 0.5;
-          break;
-          case 'color':
-            opts[key] = Array(4).fill(1).map(m => Math.random() * m);
-          break;
-          case 'dropdown':
-            opts[key] = choice(d.items);
-          break;
-          case 'keyvalues':
-            opts[key] = choice(d.values);
-          break;
-          default:
-            console.error(`Unsupported option type ${d.type}`);
-        }
-      }
-    }
-    randomize(layer.od, layer.typesDefault);
-    randomize(layer.options, layer.types);
-    layer.od.shown = true;
+		const layer = img.godLayer();
+		
     img.layers.splice(t.currentLayer, 0, layer);
     img.layers[t.currentLayer].displayName = img.layers[t.currentLayer].name;
     //fix that smearing!!
@@ -327,6 +291,45 @@ function main() {
       creditBox.style.display = "none";
     }
   });
+  const godButton = Button("create god image", (e) => {
+		const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham"];
+		
+		function randName() {
+			let text = "";
+			let wordCount = Math.ceil(Math.random() * 8);
+			if(Math.random() > 0.99) wordCount *= 2;
+			for(let i = 0; i <= wordCount; i++) {
+				text = text + words[Math.floor(Math.random() * words.length)] + ' ';
+			}
+			return text;
+		}
+		
+		img.name = randName();
+		//clear layers
+		if(img.layers.length > 0) {
+			//go down a layer if we're in the middle, stay in place if we're at the bottom
+			t.setCurrentLayer(0);
+			img.layers.splice(0);
+			t.updateLayerOptions();
+			t.generateLayerList();
+			img.printImage();
+		}
+		let layerCount = Math.ceil(Math.random() * 24);
+		
+		for(let i = 0; i < layerCount; i++) {
+			const curLayer = img.godLayer();
+			curLayer.displayName = randName();
+			img.layers.push(curLayer);
+			t.currentLayer++;
+		}
+		t.currentLayer--;
+		t.setCurrentLayer(t.currentLayer);
+		//fix that smearing!!
+		//later me here what the hell did i mean by that
+		t.updateLayerOptions();
+		t.generateLayerList();
+		img.printImage();
+	});
 	
   topContainer.appendChild(
     Div(
@@ -339,7 +342,7 @@ function main() {
           Br(),
           Button("share"),
           Br(),
-          Button("create god image"),
+					godButton,
           Br(),
 					Label("compressSaves", "header-label"),
 					InputCheckbox(t.compressSaves, (checked, e) => {

@@ -1,3 +1,4 @@
+"use strict";
 //very simple "framework" (ew...) to make intermingling js with html slightly more bearable
 //this is basically just a ripoff of gretcha.js by Tsoding (https://github.com/tsoding/grecha.js)
 function Tag(tagName, className) {
@@ -111,7 +112,7 @@ function InputCheckbox(value, oninput) {
 	return input;
 }
 function Textarea(hint, oninput, className) {
-	textarea = Tag("textarea", className);
+	const textarea = Tag("textarea", className);
 	textarea.placeholder = hint;
 	textarea.oninput = oninput;
 	return textarea;

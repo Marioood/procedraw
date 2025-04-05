@@ -1,5 +1,5 @@
+"use strict";
 //helpful functions that are used everywhere in the code
-
 function mod(dividend, divisor) {
     //% is remainder and there's no built in mod function...
     //thanks https://stackoverflow.com/a/17323608

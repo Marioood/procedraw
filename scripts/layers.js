@@ -1,9 +1,9 @@
+"use strict";
 //layer classes (data processing)
 /*
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
-"use strict"
 class Layer {
 	//class name
 	name;
@@ -580,28 +580,6 @@ class LayerCheckers extends Layer {
 		}
 	}
 }
-	
-/*class LayerPerlin extends Layer {
-	name = "perlin";
-	
-	lerp(a, b, t) {
-		return a + t * (b - a);
-	}
-	//[Math.random(), Math.random()];
-	perlin(x, y) {
-		
-	}
-
-	generate(o) {
-		//fuck you wikipedia
-		//fuck you ken perlin
-		for(let y = 0; y < img.y; y++) {
-			for(let x = 0; x < img.x; x++) {
-				
-			}
-		}
-	}
-}*/
 
 class LayerBlobs extends Layer {
 	name = "blobs";
@@ -638,6 +616,8 @@ class LayerBlobs extends Layer {
 	};
 	
 	generate(o) {
+		//const spacing = Math.sqrt(o.spacing);
+		//const blobCount = (img.x / spacing) * (img.y / spacing);
 		const blobCount = (img.x / o.spacing) * (img.y / o.spacing);
 		
 		for(let i = 0; i < blobCount; i++) {
@@ -739,6 +719,7 @@ class LayerWorley extends Layer {
 				let closestDist = 999999999999999;
 				//iterate through 9 cells to compute the shortest distance
 				let printCol;
+				
 				for(let yi = -1; yi <= 1; yi++) {
 					for(let xi = -1; xi <= 1; xi++) {
 						const xCell = Math.floor(x / o.xSpacing) + xi;
@@ -765,6 +746,7 @@ class LayerWorley extends Layer {
 						}
 					}
 				}
+				
 				if(o.voronoi) {
 					img.plotPixel(printCol, x, y);
 				} else {

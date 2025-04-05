@@ -134,4 +134,47 @@ class ImageManager {
     const b = col0[2] + percent * (col1[2] - col0[2]);
     return [r, g, b, a];
   }
+	
+	godLayer() {
+		const choice = x => x[Math.floor(Math.random() * x.length)];
+    /** @type {Layer} */
+    const layer = new (choice(Object.values(img.layerClasses)));
+    function randomize(opts, desc) {
+      for(const key in opts) {
+        const d = desc[key];
+        switch (d.type) {
+          case 'number': {
+            const min = d.min === void 0 ? 0 : d.min;
+            const max = d.max === void 0 ? 100 : d.max;
+            const step = d.step === void 0 ? 1 : d.step;
+            opts[key] = Math.random() * (max - min) + min;
+            opts[key] /= step;
+            opts[key] = Math.floor(opts[key]) * step;
+            opts[key] *= 1e10;
+            opts[key] = Math.floor(opts[key]);
+            opts[key] /= 1e10;
+          } break;
+          case 'boolean':
+            opts[key] = Math.random() > 0.5;
+          break;
+          case 'color':
+            opts[key] = Array(4).fill(1).map(m => Math.random() * m);
+          break;
+          case 'dropdown':
+            opts[key] = choice(d.items);
+          break;
+          case 'keyvalues':
+            opts[key] = choice(d.values);
+          break;
+          default:
+            console.error(`Unsupported option type ${d.type}`);
+        }
+      }
+    }
+    randomize(layer.od, layer.typesDefault);
+    randomize(layer.options, layer.types);
+    layer.od.shown = true;
+		
+		return layer;
+	}
 }
