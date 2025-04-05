@@ -5,6 +5,8 @@
 	--fnt: sans-serif;
 	--main-tit-h: 24px;
 	--main-cont-h: calc(100vh - var(--main-tit-h));
+	--bg-cont: linear-gradient(180deg, #101010 0, #202020 100%);
+	--bg-trans: linear-gradient(180deg, #101010 0, #202020b0 100%);
 }
 body {
 	background-color: var(--bg);
@@ -20,8 +22,9 @@ canvas {
 h2 {
 	font-style: italic;
 }
-div {
-	background-color: var(--bg);
+label {
+	width: 64px;
+	display: inline-block;
 }
 input[type=number] {
 	width: 52px;
@@ -30,28 +33,66 @@ input[type=range] {
 	-webkit-appearance: none;
 	appearance: none;
 	height: 16px;
+  outline: none;
 }
 input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
   appearance: none;
-  width: 6px;
-  height: 16px;
-  border-radius: 0;
-  border: 1px solid var(--txt);
-  background: var(--bg);
+  background: linear-gradient(180deg, #808080 0, white 100%);
+  border-bottom: 1px solid black;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #606060;
+  border-right: 1px solid #202020;
+  outline: 1px solid #404040;
+  border-radius: 2px;
+  margin: 1px;
+  height: 24px;
+  width: 4px;
 }
 input[type=range]::-moz-range-thumb {
+  background: linear-gradient(180deg, #808080 0, white 100%);
+  border-bottom: 1px solid black;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #606060;
+  border-right: 1px solid #202020;
+  outline: 1px solid #404040;
+  border-radius: 2px;
+  margin: 1px;
+  height: 24px;
   width: 4px;
-  height: 16px;
-  border-radius: 0;
-  border: 1px solid var(--txt);
-  background: var(--bg);
 }
 input, select, button, textarea {
-	background-color: var(--bg);
-	color: var(--txt);
-	border: var(--otln) 1px solid;
+  color: white;
+  background: linear-gradient(180deg, black 0, #404040 100%);
+  border-bottom: 1px solid black;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #606060;
+  border-right: 1px solid #202020;
+  outline: 1px solid #404040;
+  border-radius: 2px;
+  margin: 1px;
+  height: 24px;
 }
+textarea {
+  background: var(--bg-cont);
+}
+select {
+	background-color: var(--bg);
+}
+option:onhover {
+	background-color: red;
+}
+button {
+  cursor: pointer;
+}
+button:active {
+  border-top: 1px solid black;
+  border-bottom: 1px solid #808080;
+  border-right: 1px solid #606060;
+  border-left: 1px solid #202020;
+  color: transparent;
+  text-shadow: 1px 1px #aaaaaa;
+}
+/******** COLOR PICKER ********/
 .woke-bg {
 	background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
 }
@@ -61,10 +102,7 @@ input, select, button, textarea {
 	border: 1px solid var(--bg);
 	outline: 1px solid var(--otln);
 	display: inline-block;
-}
-.colp-label {
-	width: 32px;
-	display: inline-block;
+	background: none; /*hide button gradient*/
 }
 .colp-x {
 	float: right;
@@ -74,6 +112,10 @@ input, select, button, textarea {
 .colp-container {
 	padding: 4px;
 	outline: 1px solid var(--otln);
+	background: var(--bg-cont);
+	width: 100%;
+	position: absolute;
+	bottom: 0;
 }
 .colp-x-container {
 	width: 100%;
@@ -101,15 +143,22 @@ textarea {
 	width: 100%;
 	height: var(--main-tit-h);
 }
-.right-container {
-	border: var(--otln) 1px solid;
+.left-container {
 	position: absolute;
-	right: 0;
-	bottom: 0;
+	left: 0px;
+	bottom: 0px;
 	box-sizing: border-box;
 	height: var(--main-cont-h);
 	width: 340px;
-	outline: 2px solid black;
+	overflow-y: auto;
+	overflow-x: hidden;
+  background: var(--bg-cont);
+  border-bottom: 1px solid black;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #606060;
+  border-right: 1px solid #202020;
+  outline: 1px solid #404040;
+	box-shadow: 0 0 16px black;
 }
 .canvas-container {
 	border: var(--otln) 1px solid;
@@ -124,17 +173,16 @@ textarea {
 	pointer-events: none;
 	overflow: hidden;
 }
-.left-container {
+.right-container {
 	border: var(--otln) 1px solid;
 	position: absolute;
-	left: 0px;
-	bottom: 0px;
+	right: 0;
+	bottom: 0;
 	box-sizing: border-box;
 	height: var(--main-cont-h);
 	width: 340px;
-	overflow-y: auto;
-	overflow-x: hidden;
 	outline: 2px solid black;
+  background: var(--bg-cont);
 }
 .setting-container {
 	border-top: var(--otln) 1px solid;
@@ -241,7 +289,7 @@ textarea {
 .label-container {
 	display: inline-block;
 	margin-left: 4px;
-	width: 90px;
+	width: 96px;
 }
 .layer-options {
 	line-height: 24px;
@@ -257,11 +305,15 @@ textarea {
 	background-color: var(--bg);
 	color: transparent;
 }
+/******** INPUT ********/
 .checkbox-true {
-	background-color: var(--txt);
+	width: 16px;
+	height: 16px;
+  background: linear-gradient(180deg, #808080 0, white 100%);
 }
 .checkbox-false {
-	background-color: var(--bg);
+	width: 16px;
+	height: 16px;
 }
 .checkbox-x {
 	background-image: url("img/ui/dir-x.png");
@@ -287,20 +339,26 @@ input[type=text] {
 	width: 144px;
 	font-size: 1em;
 }
+/******** HEADER ********/
 .header-dropdown {
 	height: var(--main-tit-h);
 	border: none;
-	width: 64px;
+	width: 128px;
 	border-right: 1px solid var(--otln);
+	outline: none;
 }
 .header-items {
 	border: 1px solid var(--otln);
+	border-top: none;
 	position: absolute;
+	background: var(--bg-trans);
 }
-#version-text {
-	position: absolute;
-	bottom: 0;
-	left: 0;
+.header-label {
+	width: 128px;
+}
+/******** MISC ********/
+.version-text {
+	float: right;
 }
 #credits {
 	position: absolute;
@@ -346,6 +404,7 @@ input[type=text] {
 	border: 1px solid var(--otln);
 	padding: 4px;
 	box-sizing: border-box;
+  background: var(--bg-cont);
 }
 .valid-icon-container {
 	position: absolute;

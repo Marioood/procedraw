@@ -17,6 +17,21 @@ function Text(text, className) {
   span.innerText = text;
   return span;
 }
+function H2(text, className) {
+  let head = Tag("h2", className);
+  head.innerText = text;
+  return head;
+}
+function H3(text, className) {
+  let head = Tag("h3", className);
+  head.innerText = text;
+  return head;
+}
+function H4(text, className) {
+  let head = Tag("h4", className);
+  head.innerText = text;
+  return head;
+}
 function Div(...tags) {
   let div = Tag("div");
   let i = 0;
@@ -49,17 +64,17 @@ function Button(text, onclick, className) {
   button.onclick = onclick;
   return button;
 }
-function Input(type, oninput, className) {
+function Input(type, value, oninput, className) {
   let input = Tag("input", className);
   input.type = type;
   input.oninput = oninput;
+  input.value = value;
   return input;
 }
 function InputRange(min, max, value, oninput, className) {
-  let range = Input("range", oninput, className);
+  let range = Input("range", value, oninput, className);
   range.min = min;
   range.max = max;
-  range.value = value;
   return range;
 }
 function Br(className) { //diamonds...
@@ -71,15 +86,13 @@ function Label(text, className) {
   return label;
 }
 function InputNumber(min, max, value, oninput, className) {
-  let input = Input("number", oninput, className);
+  let input = Input("number", value, oninput, className);
   input.min = min;
   input.max = max;
-  input.value = value;
   return input;
 }
 function InputText(value, oninput, className) {
-  let input = Input("text", oninput, className);
-  input.value = value;
+  let input = Input("text", value, oninput, className);
   return input;
 }
 function InputCheckbox(value, oninput) {
@@ -88,9 +101,20 @@ function InputCheckbox(value, oninput) {
 	
 	const input = Button("", (e) => {
 		checked = !checked;
+		if(checked) {
+			e.target.classList = "checkbox-true";
+		} else {
+			e.target.classList = "checkbox-false";
+		}
 		oninput(checked, e);
-	});
+	}, (checked) ? "checkbox-true" : "checkbox-false");
 	return input;
+}
+function Textarea(hint, oninput, className) {
+	textarea = Tag("textarea", className);
+	textarea.placeholder = hint;
+	textarea.oninput = oninput;
+	return textarea;
 }
 function getElem(id) {//shorthand because this function is always a pain in the ass to write out
 	return document.getElementById(id);
@@ -291,34 +315,34 @@ class InputColorControl {
       "colp-container",
       this.localDisplay,
       Br(),
-      Label("red", "colp-label"),
+      Label("red"),
       this.redSlider,
       this.redBox,
       Br(),
-      Label("green", "colp-label"),
+      Label("green"),
       this.greenSlider,
       this.greenBox,
       Br(),
-      Label("blue", "colp-label"),
+      Label("blue"),
       this.blueSlider,
       this.blueBox,
       Br(),
-      Label("hex", "colp-label"),
+      Label("hex"),
       this.hexBox,
       Br(),
-      Label("hue", "colp-label"),
+      Label("hue"),
       this.hueSlider,
       this.hueBox,
       Br(),
-      Label("satty", "colp-label"),
+      Label("satty"),
       this.sattySlider,
       this.sattyBox,
       Br(),
-      Label("value", "colp-label"),
+      Label("value"),
       this.valueSlider,
       this.valueBox,
       Br(),
-      Label("alpha", "colp-label"),
+      Label("alpha"),
       this.alphaSlider,
       this.alphaBox
     );
@@ -418,14 +442,11 @@ class Tether {
   constructor() {
     this.canvas = document.getElementById("render");
     this.ctx = this.canvas.getContext("2d");
-    //this.updateSize();
-    
-    const versionText = document.getElementById("version-text");
-    versionText.textContent = this.version;
     
     const colpContainer = document.getElementById("colp-container")
     colpContainer.appendChild(colp.target);
-    const paletteContainer = Div(
+		//this will get added back later but right now it looks really shitty and i dont feel like styling it right now
+    /*const paletteContainer = Div(
       InputColor(hex2RGB("#F26F80")),
       InputColor(hex2RGB("#E8BFA4")),
       InputColor(hex2RGB("#E0D091")),
@@ -462,7 +483,7 @@ class Tether {
       InputColor(hex2RGB("#0A0323")),
       InputColor(hex2RGB("#300256"))
     );
-    colpContainer.appendChild(paletteContainer);
+    colpContainer.appendChild(paletteContainer);*/
     
     //refresh warning
     /*if(!DEBUG) {

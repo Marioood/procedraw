@@ -161,38 +161,20 @@ function main() {
     t.currentClass = img.layerClasses[classNames[this.selectedIndex]];
   });
 	
+	
+  let oldTimeR = 0;
+  document.addEventListener("keydown", function(event) {
+    //intentionally lag the input so it doesnt print too fast
+    let curTime = Math.round(Date.now() / 100);
+    if(oldTimeR != curTime) {
+      if(event.key == "r" || event.key == "R") {
+        oldTimeR = curTime;
+        t.forceRender = true;
+        img.printImage();
+      }
+    }
+  });
 	//////// IMAGE OPTIONS ////////
-  
-  const widthInput = document.getElementById("img-width");
-  widthInput.value = img.x;
-
-  widthInput.addEventListener("input", function (e) {
-    img.x = Number(this.value);
-    img.updateSize();
-    updateSize();
-    t.forceRender = true;
-    img.printImage();
-  });
-  
-  const heightInput = document.getElementById("img-height");
-  heightInput.value = img.y;
-  
-  heightInput.addEventListener("input", function (e) {
-    img.y = Number(this.value);
-    img.updateSize();
-    updateSize();
-    t.forceRender = true;
-    img.printImage();
-  });
-  
-  const scaleInput = document.getElementById("canvas-scale");
-  scaleInput.value = t.canvasScale;
-  
-  scaleInput.addEventListener("input", function (e) {
-    t.canvasScale = scaleInput.value;
-    t.canvas.style.width = img.x * t.canvasScale + "px";
-    t.canvas.style.height = img.y * t.canvasScale + "px";
-  });
 
   function generateSaveUrl(data) {
     const url = new URL(location.href);
@@ -200,25 +182,25 @@ function main() {
     return url.toString();
   }
 
-  const saveImage = document.getElementById("img-save");
-  saveImage.addEventListener("click", async function (e) {
-    const saveOutput = document.getElementById("img-save-data");
+  const saveImageText = Textarea("data is saved here", null, "save-box");
+	saveImageText.readOnly = true;
+	
+  const saveImageButton = Button("save!", async (e) => {
     if(t.compressSaves) {
-      const url = generateSaveUrl(saveOutput.value = await s.saveEnc());
+      const url = generateSaveUrl(saveImageText.value = await s.saveEnc());
       if (history.replaceState && t.saveURL) {
         history.replaceState({}, "", url);
       }
     } else {
-      saveOutput.value = s.save();
+      saveImageText.value = s.save();
     }
   });
-  
-  const loadImage = document.getElementById("img-load-button");
-  loadImage.addEventListener("click", async function (e) {
-    const loadInput = document.getElementById("img-load-data");
+  const loadImageText = Textarea("you put data here", null, "save-box");
+	
+  const loadImageButton = Button("load!", async (e) => {
     if(confirm("load image?")) {
       try {
-        await s.loadEnc(loadInput.value);
+        await s.loadEnc(loadImageText.value);
         t.generateLayerList();
         img.updateSize();
         updateSize();
@@ -236,19 +218,6 @@ function main() {
       }
     }
   });
-	
-  let oldTimeR = 0;
-  document.addEventListener("keydown", function(event) {
-    //intentionally lag the input so it doesnt print too fast
-    let curTime = Math.round(Date.now() / 100);
-    if(oldTimeR != curTime) {
-      if(event.key == "r" || event.key == "R") {
-        oldTimeR = curTime;
-        t.forceRender = true;
-        img.printImage();
-      }
-    }
-  });
     
   const imageOptions = getElem("image-options");
 	
@@ -256,7 +225,20 @@ function main() {
 		img.name = e.target.value;
 		t.setTitle(img.name);
 	}, "name-input");
-	
+	const widthInput = InputNumber(1, 512, img.y, (e) => {
+		img.x = Number(e.target.value);
+		img.updateSize();
+		updateSize();
+		t.forceRender = true;
+		img.printImage();
+	});
+	const heightInput = InputNumber(1, 512, img.x, (e) => {
+		img.y = Number(e.target.value);
+		img.updateSize();
+		updateSize();
+		t.forceRender = true;
+		img.printImage();
+	});
 	function updateSize() {
     //update canvs width
     t.canvas.height = img.y;
@@ -264,8 +246,6 @@ function main() {
     t.canvas.width = img.x;
     t.canvas.style.width = img.x * t.canvasScale + "px";
     //update width inpt
-    const widthInput = document.getElementById("img-width");
-    const heightInput = document.getElementById("img-height");
     widthInput.value = img.x;
     heightInput.value = img.y;
     nameInput.value = img.name;
@@ -275,52 +255,46 @@ function main() {
 	}, () => {
 		img.printImage();
 	});
+  const scaleInput = InputNumber(0, 64, t.canvasScale, (e) => {
+    t.canvasScale = e.target.value;
+    t.canvas.style.width = img.x * t.canvasScale + "px";
+    t.canvas.style.height = img.y * t.canvasScale + "px";
+  });
+	scaleInput.step = 0.25;
 	
   imageOptions.appendChild(Div(
+		nameInput,
+		Br(),
+		Div(
+			"label-container",
+			saveImageButton
+		),
+		saveImageText,
+		Br(),
+		Div(
+			"label-container",
+			loadImageButton
+		),
+		loadImageText,
+		Br(),
+		Label("img.bg"),
 		bgInput,
+		Br(),
+		Label("img.x"),
+		widthInput,
+		Br(),
+		Label("img.y"),
+		heightInput,
+		Br(),
+		Label("t.canvasScale"),
+		scaleInput,
+		Br(),
     Button("render", (e) => {
       t.forceRender = true;
       img.printImage();
     })
   ));
-	
-  const saveURLInput = document.getElementById("save-url");
-  saveURLInput.checked = t.saveURL;
-  saveURLInput.addEventListener("input", function (e) {
-    t.saveURL = saveURLInput.checked;
-  });
-  
-  const credits = document.getElementById("credits");
-  let showCredits = false;
-  const creditBox = document.getElementById("credits-container");
-  creditBox.style.display = "none";
-  credits.addEventListener("click", function (e) {
-    /*const creditList = [
-      "marioood: programmer, designer",
-      "Buj: programmer",
-      "void◆sprite discord: feedback",
-      "Kit: moral support",
-      "Netscape: the worst programming language ever",
-      "Tim Berners-Lee: the internet",
-      "",
-      "GitHub repo: https://github.com/Marioood/procedraw"
-    ];
-    let tex = "";
-    
-    for(let i = 0; i < creditList.length; i++) {
-      tex = tex + "\n" + creditList[i];
-    }
-    alert(tex);*/
-    showCredits = !showCredits;
-    
-    if(showCredits) {
-      creditBox.style.display = "initial";
-    } else {
-      creditBox.style.display = "none";
-    }
-  });
   //////// HEADER MENU ////////
-	
   const topContainer = document.getElementById("top-container");
   let curIdx = -1;
   const makeItems = (e, idx, thetan) => {
@@ -339,22 +313,43 @@ function main() {
     thetan.id = "tom-cruise";
     document.body.appendChild(thetan);
   };
+  
+  let showCredits = false;
+  const creditBox = getElem("credits-container");
+  creditBox.style.display = "none";
+	
+  const creditButton = Button("credits", (e) => {
+    showCredits = !showCredits;
+    
+    if(showCredits) {
+      creditBox.style.display = "initial";
+    } else {
+      creditBox.style.display = "none";
+    }
+  });
+	
   topContainer.appendChild(
     Div(
       Button("file", (e) => {
         makeItems(e, 0, Div(
           "header-items",
-					Label("compressSaves"),
-					InputCheckbox(t.compressSaves, (checked, e) => {
-						t.compressSaves = checked;
-						console.log(t.compressSaves);
-					}),
+          Button("save as file"),
+          Br(),
+          Button("load from file"),
           Br(),
           Button("share"),
           Br(),
-          Button("save as file"),
+          Button("create god image"),
           Br(),
-          Button("load from file")
+					Label("compressSaves", "header-label"),
+					InputCheckbox(t.compressSaves, (checked, e) => {
+						t.compressSaves = checked;
+					}),
+					Br(),
+					Label("saveURL", "header-label"),
+					InputCheckbox(t.saveURL, (checked, e) => {
+						t.saveURL = checked;
+					})
         ));
       }, "header-dropdown"),
       Button("edit", (e) => {
@@ -367,7 +362,15 @@ function main() {
       Button("view", (e) => {
         makeItems(e, 2, Div(
           "header-items",
-          Button("use render worker? [x]"),
+					Label("renderOnUpdate", "header-label"),
+					InputCheckbox(t.renderOnUpdate, (checked, e) => {
+						t.renderOnUpdate = checked;
+					}),
+          Br(),
+					Label("useRenderWorker", "header-label"),
+					InputCheckbox(t.useRenderWorker, (checked, e) => {
+						t.useRenderWorker = checked;
+					}),
           Br(),
           Button("reset view"),
           Br(),
@@ -377,9 +380,10 @@ function main() {
       Button("????", (e) => {
         makeItems(e, 3, Div(
           "header-items",
-          Button("credits")
+          creditButton
         ));
-      }, "header-dropdown")
+      }, "header-dropdown"),
+			Text(t.version, "version-text")
     )
   );
 	
