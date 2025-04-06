@@ -8,8 +8,8 @@ const BLEND_SCREEN = 3;
 const BLEND_OVERLAY = 4;
 
 class ImageManager {
-  x = 64;
-  y = 64;
+  w = 64;
+  h = 64;
   data = [];
   layer = undefined;
   bg = [0.5, 0.5, 0.5, 1];
@@ -30,7 +30,7 @@ class ImageManager {
   printImage() {
     let startTime = Date.now();
     //write the background color
-    for(let i = 0; i < this.x * this.y; i++) {
+    for(let i = 0; i < this.w * this.h; i++) {
       this.data[i * 4] = this.bg[0];
       this.data[i * 4 + 1] = this.bg[1];
       this.data[i * 4 + 2] = this.bg[2];
@@ -45,9 +45,9 @@ class ImageManager {
       }
     }
     //canvas stuff
-    let canvasImg = t.ctx.createImageData(this.x, this.y);
+    let canvasImg = t.ctx.createImageData(this.w, this.h);
     //write to canvas data
-    for(let i = 0; i < this.x * this.y * 4; i++) {
+    for(let i = 0; i < this.w * this.h * 4; i++) {
       //convert from 0 - 1 to 0 - 255
       canvasImg.data[i] = this.data[i] * 255;
     }
@@ -60,15 +60,15 @@ class ImageManager {
   
   updateSize() {
     //if the width or height is too big then i predict that everything will expode
-    if(this.x > 512) {
-      this.x = 512;
+    if(this.w > 512) {
+      this.w = 512;
       console.log("hey, quit doing that!");
     }
-    if(this.y > 512) {
-      this.y = 512;
+    if(this.h > 512) {
+      this.h = 512;
       console.log("hey, quit doing that!");
     }
-    this.data = new Array(this.x * this.y * 4);
+    this.data = new Array(this.w * this.h * 4);
   }
 
   plotPixel(color, x, y) {
@@ -76,14 +76,14 @@ class ImageManager {
     //[red, blue, green, alpha]
     
     //wrap around image
-    x = mod(x, img.x);
-    y = mod(y, img.y);
+    x = mod(x, this.w);
+    y = mod(y, this.h);
     //get alpha n blend from global memory... its less to type
     //getting stuff from global memory loses ~1 ms on a 256x256 image
     const alpha = this.layer.od.alpha * color[3];
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
-    const pos = x + y * this.x;
+    const pos = x + y * this.w;
     //todo: actually have alpha CHANNEL affect (effect? idk) the color, not just the layer's alpha
     this.data[pos * 4] = this.combinePixel(color[0] * tint[0], this.data[pos * 4], blend, alpha);
     this.data[pos * 4 + 1] = this.combinePixel(color[1] * tint[1], this.data[pos * 4 + 1], blend, alpha);

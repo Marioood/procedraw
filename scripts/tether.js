@@ -518,6 +518,8 @@ class Tether {
       let text = optionKeys[i];
       //how the options are displayed (eg. color or number? decimal or integer?)
       const limits = types[optionKeys[i]];
+			//skip hidden parameters
+			if(limits.hidden) continue;
       
       let labelContainer = document.createElement("span");
       labelContainer.classList.add("label-container");
@@ -817,7 +819,6 @@ class Tether {
       eyeContainer.className = "layer-eye-container";
       
       const eye = document.createElement("button");
-      //eye.dataset.idx = i;
       let shown = layer.od.shown;
       eye.classList.add("layer-icon-button");
         
@@ -827,9 +828,7 @@ class Tether {
         eye.classList.add("icon-layer-hidden");
       }
       
-      eye.id = "dyn-layer-eye-" + i;
-      
-      eye.addEventListener("click", function (e) {
+      eye.onclick = (e) => {
         shown = !shown;
         layer.od.shown = shown;
         
@@ -841,7 +840,7 @@ class Tether {
           eye.classList.add("icon-layer-hidden");
         }
         img.printImage();
-      });
+      };
       
       layerContainer.appendChild(layerSelect);
       layerSelect.appendChild(eyeContainer);

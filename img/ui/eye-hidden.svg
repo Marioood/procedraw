@@ -1,0 +1,11 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="lash-bot-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#404040"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+	</defs>
+	<path d="M 0 16Q 16 28 32 16" stroke="url(#lash-bot-grad)" stroke-width="1" fill="none"/>
+</svg>

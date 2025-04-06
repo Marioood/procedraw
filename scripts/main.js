@@ -189,15 +189,15 @@ function main() {
 		img.name = e.target.value;
 		t.setTitle(img.name);
 	}, "name-input");
-	const widthInput = InputNumber(1, 512, img.y, (e) => {
-		img.x = Number(e.target.value);
+	const widthInput = InputNumber(1, 512, img.h, (e) => {
+		img.w = Number(e.target.value);
 		img.updateSize();
 		updateSize();
 		t.forceRender = true;
 		img.printImage();
 	});
-	const heightInput = InputNumber(1, 512, img.x, (e) => {
-		img.y = Number(e.target.value);
+	const heightInput = InputNumber(1, 512, img.w, (e) => {
+		img.h = Number(e.target.value);
 		img.updateSize();
 		updateSize();
 		t.forceRender = true;
@@ -205,13 +205,13 @@ function main() {
 	});
 	function updateSize() {
     //update canvs width
-    t.canvas.height = img.y;
-    t.canvas.style.height = img.y * t.canvasScale + "px";
-    t.canvas.width = img.x;
-    t.canvas.style.width = img.x * t.canvasScale + "px";
+    t.canvas.height = img.h;
+    t.canvas.style.height = img.h * t.canvasScale + "px";
+    t.canvas.width = img.w;
+    t.canvas.style.width = img.w * t.canvasScale + "px";
     //update width inpt
-    widthInput.value = img.x;
-    heightInput.value = img.y;
+    widthInput.value = img.w;
+    heightInput.value = img.h;
     nameInput.value = img.name;
   }
 	const bgInput = InputColor([0.5, 0.5, 0.5, 1], (newCol) => {
@@ -221,8 +221,8 @@ function main() {
 	});
   const scaleInput = InputNumber(0, 64, t.canvasScale, (e) => {
     t.canvasScale = e.target.value;
-    t.canvas.style.width = img.x * t.canvasScale + "px";
-    t.canvas.style.height = img.y * t.canvasScale + "px";
+    t.canvas.style.width = img.w * t.canvasScale + "px";
+    t.canvas.style.height = img.h * t.canvasScale + "px";
   });
 	scaleInput.step = 0.25;
 	
@@ -244,10 +244,10 @@ function main() {
 		Label("img.bg"),
 		bgInput,
 		Br(),
-		Label("img.x"),
+		Label("img.w"),
 		widthInput,
 		Br(),
-		Label("img.y"),
+		Label("img.h"),
 		heightInput,
 		Br(),
 		Label("t.canvasScale"),
@@ -292,9 +292,9 @@ function main() {
     }
   });
   const godButton = Button("create god image", (e) => {
-		const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham"];
+		const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham","angel","theology","cloud","edges","edge","blobs","border","noise"];
 		
-		function randName() {
+		function randName(max) {
 			let text = "";
 			let wordCount = Math.ceil(Math.random() * 8);
 			if(Math.random() > 0.99) wordCount *= 2;
@@ -304,7 +304,7 @@ function main() {
 			return text;
 		}
 		
-		img.name = randName();
+		img.name = randName(8);
 		//clear layers
 		if(img.layers.length > 0) {
 			//go down a layer if we're in the middle, stay in place if we're at the bottom
@@ -318,7 +318,7 @@ function main() {
 		
 		for(let i = 0; i < layerCount; i++) {
 			const curLayer = img.godLayer();
-			curLayer.displayName = randName();
+			curLayer.displayName = randName(4);
 			img.layers.push(curLayer);
 			t.currentLayer++;
 		}

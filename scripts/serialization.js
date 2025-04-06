@@ -1,14 +1,17 @@
 "use strict";
 
 class Serialization {
+	format = 1;
+	
 	save() {
 		let saved = {};
 		saved.img = {
 			bg: RGBA2Hex(img.bg),
-			x: img.x,
-			y: img.y,
+			w: img.w,
+			h: img.h,
 			name: img.name,
-			version: t.version
+			version: t.version,
+			format: this.format
 		};
 		saved.layers = [];
 		
@@ -60,9 +63,16 @@ class Serialization {
 		let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
 		
 		img.bg = hex2RGB('#' + saved.img.bg);
-		img.x = saved.img.x;
-		img.y = saved.img.y;
+		img.w = saved.img.w;
+		img.h = saved.img.h;
 		img.name = saved.img.name;
+		if(saved.img.format == undefined) {
+			alert(`this image was saved in an ancient version of procedraw (before VOLATILE 0.5), it will not work with out repair\n\nthe image is from version ${saved.img.version}\n\n...sorry!`);
+		} else if(saved.img.format < this.format) {
+			alert(`this image was saved in an earlier version of procedraw\n\nthe image uses format ${saved.img.format}, while the current save format is ${this.format}\n\nthe image is also from version ${saved.img.version}\n\ntherefore, it may not load in properly (!)`);
+		} else if(saved.img.format > this.format) {
+			alert(`either you are from the future or are using an old version of procedraw\n\nthe image uses format ${saved.img.format}, while this version's save format is ${this.format}\n\nthe image is also from version ${saved.img.version}\n\ntherefore, it may not load in properly (!)`);
+		}
 		//blank layers so we arent loading images on top of eachother
 		img.layers = [];
 

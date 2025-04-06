@@ -1,0 +1,25 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="sclera-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="grey"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+		<linearGradient id="lash-bot-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="transparent"/>
+			<stop offset="100%" stop-color="#404040"/>
+		</linearGradient>
+		<linearGradient id="lash-top-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#404040"/>
+			<stop offset="100%" stop-color="#808080"/>
+		</linearGradient>
+		<radialGradient id="pupil-grad" cx="50%" cy="50%" r="50%" fx="25%" fy="25%">
+			<stop offset="0" stop-color="grey"/>
+			<stop offset="100%" stop-color="black"/>
+		</radialGradient>
+	</defs>
+	<path d="M 0 16 Q 16 0 32 16 Q 16 28 0 16" fill="url(#sclera-grad)"/>
+	<circle r="6" cx="16" cy="14" stroke="#404040" stroke-width="1" fill="url(#pupil-grad)"/>
+	<path d="M 0 16 Q 16 0 32 16" stroke="url(#lash-top-grad)" stroke-width="1" fill="none"/>
+</svg>

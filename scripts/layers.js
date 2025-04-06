@@ -60,8 +60,7 @@ class Layer {
 		},
 		shown: {
 			type: "boolean",
-			external: true,
-			brotherId: "dyn-layer-eye-"
+			hidden: true
 		}
 	};
 	
@@ -98,15 +97,15 @@ class LayerXorFractal extends Layer {
 	generate(o) {
 		let scaleX, scaleY;
 		if(o.normalized) {
-			scaleX = 256 / img.x;
-			scaleY = 256 / img.y;
+			scaleX = 256 / img.w;
+			scaleY = 256 / img.h;
 		} else {
 			scaleX = o.scaleX;
 			scaleY = o.scaleY;
 		}
 		
-		for(let y = 0; y < img.y; y++) {
-			for(let x = 0; x < img.x; x++) {
+		for(let y = 0; y < img.h; y++) {
+			for(let x = 0; x < img.w; x++) {
 				let col = ((x * scaleX) ^ (y * scaleY)) / 255;
 				img.plotPixel([col, col, col, 1], x, y);
 			}
@@ -118,8 +117,8 @@ class LayerSolid extends Layer {
 	name = "solid";
 	
 	generate(o) {
-		for(let y = 0; y < img.y; y++) {
-			for(let x = 0; x < img.x; x++) {
+		for(let y = 0; y < img.h; y++) {
+			for(let x = 0; x < img.w; x++) {
 				img.plotPixel([1, 1, 1, 1], x, y);
 			}
 		}
@@ -143,8 +142,8 @@ class LayerNoise extends Layer {
 	};
 	
 	generate(o) {
-		for(let y = 0; y < img.y; y++) {
-			for(let x = 0; x < img.x; x++) {
+		for(let y = 0; y < img.h; y++) {
+			for(let x = 0; x < img.w; x++) {
 				if(o.coverage > Math.random()) {
 					let col = Math.random();
 					img.plotPixel([col, col, col, 1], x, y);
@@ -274,8 +273,8 @@ class LayerBorder extends Layer {
 		let y0Old = y0;
 		let y1Old = y1;
 		//if the pin coords are equal then the browser explodes (infinite loop)
-		if(o.tileX && x0 != x1) xCopies = Math.ceil(img.x / width);
-		if(o.tileY && y0 != y1) yCopies = Math.ceil(img.y / height);
+		if(o.tileX && x0 != x1) xCopies = Math.ceil(img.w / width);
+		if(o.tileY && y0 != y1) yCopies = Math.ceil(img.h / height);
 		//let oldAlpha = this.od.alpha;
 		
 		for(let yT = 0; yT < yCopies; yT++) {
@@ -386,11 +385,11 @@ class LayerLiney extends Layer {
 		let maxL, maxI;
 
 		if(o.dir) {
-			maxL = img.x;
-			maxI = img.y;
+			maxL = img.w;
+			maxI = img.h;
 		} else {
-			maxL = img.y;
-			maxI = img.x;
+			maxL = img.h;
+			maxI = img.w;
 		}
 		
 		for(let i = 0; i < maxI; i++) {
@@ -470,11 +469,11 @@ class LayerWandering extends Layer{
 		let maxN, inverseMaxN;
 
 		if(o.dir) {
-			maxN = img.x;
-			inverseMaxN = img.y;
+			maxN = img.w;
+			inverseMaxN = img.h;
 		} else {
-			maxN = img.y;
-			inverseMaxN = img.x;
+			maxN = img.h;
+			inverseMaxN = img.w;
 		}
 		const spacing = Math.sqrt(o.spacing);
 		const maxLines = inverseMaxN / spacing;
@@ -572,8 +571,8 @@ class LayerCheckers extends Layer {
 	};
 	
 	generate(o) {
-		for(let y = 0; y < img.y; y++) {
-			for(let x = 0; x < img.x; x++) {
+		for(let y = 0; y < img.h; y++) {
+			for(let x = 0; x < img.w; x++) {
 				let col = (Math.floor((x - o.shiftX * (Math.floor(y / o.scaleY) % 2)) / o.scaleX) + Math.floor((y - o.shiftY * (Math.floor(x / o.scaleX) % 2)) / o.scaleY)) % 2 == 0 ? o.evenColor : o.oddColor;
 				img.plotPixel(col, x, y);
 			}
@@ -617,16 +616,16 @@ class LayerBlobs extends Layer {
 	
 	generate(o) {
 		//const spacing = Math.sqrt(o.spacing);
-		//const blobCount = (img.x / spacing) * (img.y / spacing);
-		const blobCount = (img.x / o.spacing) * (img.y / o.spacing);
+		//const blobCount = (img.w / spacing) * (img.h / spacing);
+		const blobCount = (img.w / o.spacing) * (img.h / o.spacing);
 		
 		for(let i = 0; i < blobCount; i++) {
 			//random diameter
 			let d = Math.random() * (o.maxDiameter - o.minDiameter) + o.minDiameter;
 			//add 0.5 so the blobs arent 1 pixel smaller than they suppsoed to be
 			let r = d / 2 + 0.5;
-			let xStart = Math.floor(Math.random() * img.x);
-			let yStart = Math.floor(Math.random() * img.y);
+			let xStart = Math.floor(Math.random() * img.w);
+			let yStart = Math.floor(Math.random() * img.h);
 			
 			for(let yi = -r; yi < r; yi++) {
 				for(let xi = -r; xi < r; xi++) {
@@ -634,10 +633,10 @@ class LayerBlobs extends Layer {
 					const dist = Math.sqrt(xi * xi + yi * yi);
 					if(dist < r - 0.5) {
 						//wrap pixels around the edge (maybe make this a default option? or default in plotPixel??)
-						/*let x = Math.floor(xi + xStart) % img.x;
-						let y = Math.floor(yi + yStart) % img.y;
-						if(x < 0) x += img.x;
-						if(y < 0) y += img.y;*/
+						/*let x = Math.floor(xi + xStart) % img.w;
+						let y = Math.floor(yi + yStart) % img.h;
+						if(x < 0) x += img.w;
+						if(y < 0) y += img.h;*/
 						let x = Math.floor(xi + xStart);
 						let y = Math.floor(yi + yStart);
 						if(o.fade) {
@@ -692,10 +691,10 @@ class LayerWorley extends Layer {
 	};
 	
 	generate(o) {
-		//let xSpacing = 16;//img.x / xGrid;
-		//let ySpacing = 16;//img.y / yGrid;
-		let xGrid = Math.ceil(img.x / o.xSpacing);
-		let yGrid = Math.ceil(img.y / o.ySpacing);
+		//let xSpacing = 16;//img.w / xGrid;
+		//let ySpacing = 16;//img.h / yGrid;
+		let xGrid = Math.ceil(img.w / o.xSpacing);
+		let yGrid = Math.ceil(img.h / o.ySpacing);
 		let points = new Array(xGrid * yGrid);
 		let colors;
 		
@@ -713,8 +712,8 @@ class LayerWorley extends Layer {
 				}
 			}
 		}
-		for(let y = 0; y < img.y; y++) {
-			for(let x = 0; x < img.x; x++) {
+		for(let y = 0; y < img.h; y++) {
+			for(let x = 0; x < img.w; x++) {
 				//absurd number so that the distance gets overwritten
 				let closestDist = 999999999999999;
 				//iterate through 9 cells to compute the shortest distance
