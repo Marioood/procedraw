@@ -6,31 +6,31 @@ function mod(dividend, divisor) {
     return ((dividend % divisor) + divisor) % divisor;
 }
 function RGB2Hex(arr) {
-	return byteRGB2Hex([Math.floor(arr[0] * 255), Math.floor(arr[1] * 255), Math.floor(arr[2] * 255)]);
+  return byteRGB2Hex([Math.floor(arr[0] * 255), Math.floor(arr[1] * 255), Math.floor(arr[2] * 255)]);
 }
 function RGBA2Hex(arr) {
-	//[1, 1, 1, 1] to #ffffffff
-	let r = Math.floor(arr[0] * 255).toString(16);
-	let g = Math.floor(arr[1] * 255).toString(16);
-	let b = Math.floor(arr[2] * 255).toString(16);
-	let a = Math.floor(arr[3] * 255).toString(16);
-	//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
-	if(r.length < 2) r = "0" + r;
-	if(g.length < 2) g = "0" + g;
-	if(b.length < 2) b = "0" + b;
-	if(a.length < 2) a = "0" + a;
-	return r + g + b + a;
+  //[1, 1, 1, 1] to #ffffffff
+  let r = Math.floor(arr[0] * 255).toString(16);
+  let g = Math.floor(arr[1] * 255).toString(16);
+  let b = Math.floor(arr[2] * 255).toString(16);
+  let a = Math.floor(arr[3] * 255).toString(16);
+  //padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
+  if(r.length < 2) r = "0" + r;
+  if(g.length < 2) g = "0" + g;
+  if(b.length < 2) b = "0" + b;
+  if(a.length < 2) a = "0" + a;
+  return r + g + b + a;
 }
 function byteRGB2Hex(arr) {
-	//[255, 255, 255, 255] to #ffffff
-	let r = arr[0].toString(16);
-	let g = arr[1].toString(16);
-	let b = arr[2].toString(16);
-	//padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
-	if(r.length < 2) r = "0" + r;
-	if(g.length < 2) g = "0" + g;
-	if(b.length < 2) b = "0" + b;
-	return r + g + b;
+  //[255, 255, 255, 255] to #ffffff
+  let r = arr[0].toString(16);
+  let g = arr[1].toString(16);
+  let b = arr[2].toString(16);
+  //padding so all colors are the same length (black was encoded as #000 instead of #000000!!)
+  if(r.length < 2) r = "0" + r;
+  if(g.length < 2) g = "0" + g;
+  if(b.length < 2) b = "0" + b;
+  return r + g + b;
 }
 function HSV2RGB(col) { //[H, S, V] array
     //https://en.wikipedia.org/wiki/HSL_and_HSV#Color_conversion_formulae
@@ -75,7 +75,7 @@ function HSV2RGB(col) { //[H, S, V] array
     return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
 }
 function byteRGB2HSV(col) {
-	return RGB2HSV([col[0] / 255, col[1] / 255, col[2] / 255]);
+  return RGB2HSV([col[0] / 255, col[1] / 255, col[2] / 255]);
 }
 function RGB2HSV(col) { //[R, G, B] array
     //https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
@@ -101,31 +101,31 @@ function RGB2HSV(col) { //[R, G, B] array
     return [Math.floor(hue), Math.floor(satty * 100), Math.floor(value * 100)];
 }
 function intRGB2RGB(hex) {
-	const r = ((hex & 0xFF000000) >> 24) & 0xFF; //signed 2 unsigned
-	const g = (hex & 0x00FF0000) >> 16;
-	const b = (hex & 0x0000FF00) >> 8;
-	const a = hex & 0x000000FF;
-	return [r / 255, g / 255, b / 255, a / 255];
+  const r = ((hex & 0xFF000000) >> 24) & 0xFF; //signed 2 unsigned
+  const g = (hex & 0x00FF0000) >> 16;
+  const b = (hex & 0x0000FF00) >> 8;
+  const a = hex & 0x000000FF;
+  return [r / 255, g / 255, b / 255, a / 255];
 }
 function hex2RGB(hex) {
-	//convert #RRGGBB to 0xRRGGBB and then [R, G, B] from 0...1
-	//rgba or rgb depending on length
-	if(hex.length <= 7) {
-		return intRGB2RGB(Number("0x" + hex.slice(1) + "ff"));
-	} else {
-		return intRGB2RGB(Number("0x" + hex.slice(1)));
-	}
+  //convert #RRGGBB to 0xRRGGBB and then [R, G, B] from 0...1
+  //rgba or rgb depending on length
+  if(hex.length <= 7) {
+    return intRGB2RGB(Number("0x" + hex.slice(1) + "ff"));
+  } else {
+    return intRGB2RGB(Number("0x" + hex.slice(1)));
+  }
 }
 function limitDarkness(color) {
-	//dont become too dark so the ui is still legible
-	//make a copy of the color. modifying the argument color messed with layer duping
-	let newCol = [color[0], color[1], color[2], color[3]];
-	const darkLimit = 0.25;
-	const brightness = (newCol[0] + newCol[1] + newCol[2]) / 3;
-	if(brightness < darkLimit) {
-		newCol[0] = Math.max(newCol[0], darkLimit);
-		newCol[1] = Math.max(newCol[1], darkLimit);
-		newCol[2] = Math.max(newCol[2], darkLimit);
-	}
-	return '#' + RGB2Hex(newCol);
+  //dont become too dark so the ui is still legible
+  //make a copy of the color. modifying the argument color messed with layer duping
+  let newCol = [color[0], color[1], color[2], color[3]];
+  const darkLimit = 0.25;
+  const brightness = (newCol[0] + newCol[1] + newCol[2]) / 3;
+  if(brightness < darkLimit) {
+    newCol[0] = Math.max(newCol[0], darkLimit);
+    newCol[1] = Math.max(newCol[1], darkLimit);
+    newCol[2] = Math.max(newCol[2], darkLimit);
+  }
+  return '#' + RGB2Hex(newCol);
 }

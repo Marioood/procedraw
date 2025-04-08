@@ -4,7 +4,7 @@ const t = new Tether();
 const s = new Serialization();
 
 function main() {
-	//////// LAYER MANAGEMENT BUTTONS ////////
+  //////// LAYER MANAGEMENT BUTTONS ////////
   const removeLayer = document.getElementById("remove-layer");
   removeLayer.addEventListener("click", function (e) {
     img.layers.splice(t.currentLayer, 1);
@@ -95,14 +95,14 @@ function main() {
       dupeLayer.classList.remove("outline-invalid");
     }
   });
-	
+  
   const randomLayer = document.getElementById("random-layer");
   randomLayer.addEventListener("click", function (e) {
     if(img.layers.length > 0) {
       t.setCurrentLayer(t.currentLayer + 1);
     }
-		const layer = img.godLayer();
-		
+    const layer = img.godLayer();
+    
     img.layers.splice(t.currentLayer, 0, layer);
     img.layers[t.currentLayer].displayName = img.layers[t.currentLayer].name;
     //fix that smearing!!
@@ -124,8 +124,8 @@ function main() {
   classSelect.addEventListener("change", function (e) {
     t.currentClass = img.layerClasses[classNames[this.selectedIndex]];
   });
-	
-	
+  
+  
   let oldTimeR = 0;
   document.addEventListener("keydown", function(event) {
     //intentionally lag the input so it doesnt print too fast
@@ -138,7 +138,7 @@ function main() {
       }
     }
   });
-	//////// IMAGE OPTIONS ////////
+  //////// IMAGE OPTIONS ////////
 
   function generateSaveUrl(data) {
     const url = new URL(location.href);
@@ -147,8 +147,8 @@ function main() {
   }
 
   const saveImageText = Textarea("data is saved here", null, "save-box");
-	saveImageText.readOnly = true;
-	
+  saveImageText.readOnly = true;
+  
   const saveImageButton = Button("save!", async (e) => {
     if(t.compressSaves) {
       const url = generateSaveUrl(saveImageText.value = await s.saveEnc());
@@ -160,7 +160,7 @@ function main() {
     }
   });
   const loadImageText = Textarea("you put data here", null, "save-box");
-	
+  
   const loadImageButton = Button("load!", async (e) => {
     if(confirm("load image?")) {
       try {
@@ -184,26 +184,26 @@ function main() {
   });
     
   const imageOptions = getElem("image-options");
-	
+  
   const nameInput = InputText("our beauty",(e) => {
-		img.name = e.target.value;
-		t.setTitle(img.name);
-	}, "name-input");
-	const widthInput = InputNumber(1, 512, img.h, (e) => {
-		img.w = Number(e.target.value);
-		img.updateSize();
-		updateSize();
-		t.forceRender = true;
-		img.printImage();
-	});
-	const heightInput = InputNumber(1, 512, img.w, (e) => {
-		img.h = Number(e.target.value);
-		img.updateSize();
-		updateSize();
-		t.forceRender = true;
-		img.printImage();
-	});
-	function updateSize() {
+    img.name = e.target.value;
+    t.setTitle(img.name);
+  }, "large-input");
+  const widthInput = InputNumber(1, 512, img.h, (e) => {
+    img.w = Number(e.target.value);
+    img.updateSize();
+    updateSize();
+    t.forceRender = true;
+    img.printImage();
+  });
+  const heightInput = InputNumber(1, 512, img.w, (e) => {
+    img.h = Number(e.target.value);
+    img.updateSize();
+    updateSize();
+    t.forceRender = true;
+    img.printImage();
+  });
+  function updateSize() {
     //update canvs width
     t.canvas.height = img.h;
     t.canvas.style.height = img.h * t.canvasScale + "px";
@@ -214,45 +214,46 @@ function main() {
     heightInput.value = img.h;
     nameInput.value = img.name;
   }
-	const bgInput = InputColor([0.5, 0.5, 0.5, 1], (newCol) => {
-		img.bg = newCol;
-	}, () => {
-		img.printImage();
-	});
+  const bgInput = InputColor([0.5, 0.5, 0.5, 1], (newCol) => {
+    img.bg = newCol;
+  }, () => {
+    img.printImage();
+  });
   const scaleInput = InputNumber(0, 64, t.canvasScale, (e) => {
     t.canvasScale = e.target.value;
     t.canvas.style.width = img.w * t.canvasScale + "px";
     t.canvas.style.height = img.h * t.canvasScale + "px";
   });
-	scaleInput.step = 0.25;
-	
+  scaleInput.step = 0.25;
+  
   imageOptions.appendChild(Div(
-		nameInput,
-		Br(),
-		Div(
-			"label-container",
-			saveImageButton
-		),
-		saveImageText,
-		Br(),
-		Div(
-			"label-container",
-			loadImageButton
-		),
-		loadImageText,
-		Br(),
-		Label("img.bg"),
-		bgInput,
-		Br(),
-		Label("img.w"),
-		widthInput,
-		Br(),
-		Label("img.h"),
-		heightInput,
-		Br(),
-		Label("t.canvasScale"),
-		scaleInput,
-		Br(),
+    nameInput,
+    Br(),
+    Label("background"),
+    bgInput,
+    Br(),
+    Label("width"),
+    widthInput,
+    Br(),
+    Label("height"),
+    heightInput,
+    Br(),
+    Tag("hr"),
+    Div(
+      "label-container",
+      saveImageButton
+    ),
+    saveImageText,
+    Br(),
+    Div(
+      "label-container",
+      loadImageButton
+    ),
+    loadImageText,
+    Br(),
+    Label("zoom"),
+    scaleInput,
+    Br(),
     Button("render", (e) => {
       t.forceRender = true;
       img.printImage();
@@ -265,9 +266,9 @@ function main() {
     const tomCruise = getElem("tom-cruise");
     if(tomCruise != null) tomCruise.remove();
     if(curIdx == idx) {
-			curIdx = -1;
-			return;
-		}
+      curIdx = -1;
+      return;
+    }
     curIdx = idx;
     //get position of the target element
     //the web was well designed
@@ -281,7 +282,7 @@ function main() {
   let showCredits = false;
   const creditBox = getElem("credits-container");
   creditBox.style.display = "none";
-	
+  
   const creditButton = Button("credits", (e) => {
     showCredits = !showCredits;
     
@@ -292,45 +293,46 @@ function main() {
     }
   });
   const godButton = Button("create god image", (e) => {
-		const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham","angel","theology","cloud","edges","edge","blobs","border","noise"];
-		
-		function randName(max) {
-			let text = "";
-			let wordCount = Math.ceil(Math.random() * 8);
-			if(Math.random() > 0.99) wordCount *= 2;
-			for(let i = 0; i <= wordCount; i++) {
-				text = text + words[Math.floor(Math.random() * words.length)] + ' ';
-			}
-			return text;
-		}
-		
-		img.name = randName(8);
-		//clear layers
-		if(img.layers.length > 0) {
-			//go down a layer if we're in the middle, stay in place if we're at the bottom
-			t.setCurrentLayer(0);
-			img.layers.splice(0);
-			t.updateLayerOptions();
-			t.generateLayerList();
-			img.printImage();
-		}
-		let layerCount = Math.ceil(Math.random() * 24);
-		
-		for(let i = 0; i < layerCount; i++) {
-			const curLayer = img.godLayer();
-			curLayer.displayName = randName(4);
-			img.layers.push(curLayer);
-			t.currentLayer++;
-		}
-		t.currentLayer--;
-		t.setCurrentLayer(t.currentLayer);
-		//fix that smearing!!
-		//later me here what the hell did i mean by that
-		t.updateLayerOptions();
-		t.generateLayerList();
-		img.printImage();
-	});
-	
+    const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham","angel","theology","cloud","edges","edge","blobs","border","noise"];
+    
+    function randName(max) {
+      let text = "";
+      let wordCount = Math.ceil(Math.random() * max);
+      if(Math.random() > 0.99) wordCount *= 2;
+      for(let i = 0; i <= wordCount; i++) {
+        text = text + words[Math.floor(Math.random() * words.length)];
+        if(i < wordCount) text = text + ' ';
+      }
+      return text;
+    }
+    
+    img.name = randName(8);
+    nameInput.value = img.name;
+    //clear layers
+    if(img.layers.length > 0) {
+      //go down a layer if we're in the middle, stay in place if we're at the bottom
+      t.setCurrentLayer(0);
+      img.layers.splice(0);
+      t.updateLayerOptions();
+      t.generateLayerList();
+      img.printImage();
+    }
+    let layerCount = Math.ceil(Math.random() * 24);
+    
+    for(let i = 0; i < layerCount; i++) {
+      const curLayer = img.godLayer();
+      curLayer.displayName = randName(2);
+      img.layers.push(curLayer);
+      t.currentLayer++;
+    }
+    t.currentLayer--;
+    t.setCurrentLayer(t.currentLayer);
+    img.bg = [Math.random(), Math.random(), Math.random(), Math.random()];
+    t.updateLayerOptions();
+    t.generateLayerList();
+    img.printImage();
+  });
+  
   topContainer.appendChild(
     Div(
       Button("file", (e) => {
@@ -342,17 +344,17 @@ function main() {
           Br(),
           Button("share"),
           Br(),
-					godButton,
+          godButton,
           Br(),
-					Label("compressSaves", "header-label"),
-					InputCheckbox(t.compressSaves, (checked, e) => {
-						t.compressSaves = checked;
-					}),
-					Br(),
-					Label("saveURL", "header-label"),
-					InputCheckbox(t.saveURL, (checked, e) => {
-						t.saveURL = checked;
-					})
+          Label("compressSaves", "header-label"),
+          InputCheckbox(t.compressSaves, (checked, e) => {
+            t.compressSaves = checked;
+          }),
+          Br(),
+          Label("saveURL", "header-label"),
+          InputCheckbox(t.saveURL, (checked, e) => {
+            t.saveURL = checked;
+          })
         ));
       }, "header-dropdown"),
       Button("edit", (e) => {
@@ -365,15 +367,15 @@ function main() {
       Button("view", (e) => {
         makeItems(e, 2, Div(
           "header-items",
-					Label("renderOnUpdate", "header-label"),
-					InputCheckbox(t.renderOnUpdate, (checked, e) => {
-						t.renderOnUpdate = checked;
-					}),
+          Label("renderOnUpdate", "header-label"),
+          InputCheckbox(t.renderOnUpdate, (checked, e) => {
+            t.renderOnUpdate = checked;
+          }),
           Br(),
-					Label("useRenderWorker", "header-label"),
-					InputCheckbox(t.useRenderWorker, (checked, e) => {
-						t.useRenderWorker = checked;
-					}),
+          Label("useRenderWorker", "header-label"),
+          InputCheckbox(t.useRenderWorker, (checked, e) => {
+            t.useRenderWorker = checked;
+          }),
           Br(),
           Button("reset view"),
           Br(),
@@ -386,11 +388,11 @@ function main() {
           creditButton
         ));
       }, "header-dropdown"),
-			Text(t.version, "version-text")
+      Text(t.version, "version-text")
     )
   );
-	
-	//////// URL SAVE LOADING ////////
+  
+  //////// URL SAVE LOADING ////////
 
   const params = new URLSearchParams(window.location.search);
 
@@ -413,8 +415,8 @@ function main() {
       console.error("Failed to load save");
     }
   })();
-	
-	updateSize();
+  
+  updateSize();
   img.printImage();
 }
 //do this so the variables used during setup aren't in global scope

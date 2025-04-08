@@ -3,7 +3,7 @@
 <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
 	<defs>
 		<linearGradient id="sclera-grad" x1="0" x2="0" y1="0" y2="100%">
-			<stop offset="0" stop-color="grey"/>
+			<stop offset="0" stop-color="#808080"/>
 			<stop offset="100%" stop-color="white"/>
 		</linearGradient>
 		<linearGradient id="lash-bot-grad" x1="0" x2="0" y1="0" y2="100%">

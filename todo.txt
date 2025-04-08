@@ -1,7 +1,3 @@
-
-
-unorganized todos
- 
 blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
 link layer that copies another layer's pixels and modifies them
 filter layer that modifies the current cavnas' pixels
@@ -10,19 +6,16 @@ perlin noise layer
 give the solid layer similar options to border layer
 save as file
 image layer that has is an embedded image
-remove external dependencies
 make killAllChildren() and other similar functions global in tether.js, and make tether.js just be html--js interaction functions
 ctrl + scroll to zoom in and out
 scroll to move up and down
 shift + scroll to move left and right
-save stuff in cookies (?)
 better width and height customization (set limit, with warning)
 test browser support (and provide appropriate taxes)
 save authors
 option limit skeletons (for documentation)
 //could be a "map" filter?
 color picker sometimes doesnt reprint the image when youre done changing it
-//shown option changes eye button
 //take a break! work on the programmer art thing
 //overlap option (see wandering lines)
 //brightness tolerance
@@ -40,7 +33,10 @@ color picker sometimes doesnt reprint the image when youre done changing it
 	//plot filters (only change the output of plotPixel()) dont seem like they'd be slow
 //perlin noise
 //DONT SLAP MORE SHIT ONTO SHIT
-
 colp and option consistent sliders
-
 move up color picker
+HILARIOUS parody logos!
+clean up unused garbage
+make layer sliders render with some delay (avoid similar problems as color picker)
+"no layers exist" text
+edit tint switch layer dont switch color edit color SEE BUG

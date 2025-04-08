@@ -134,9 +134,9 @@ class ImageManager {
     const b = col0[2] + percent * (col1[2] - col0[2]);
     return [r, g, b, a];
   }
-	
-	godLayer() {
-		const choice = x => x[Math.floor(Math.random() * x.length)];
+  
+  godLayer() {
+    const choice = x => x[Math.floor(Math.random() * x.length)];
     /** @type {Layer} */
     const layer = new (choice(Object.values(img.layerClasses)));
     function randomize(opts, desc) {
@@ -174,7 +174,7 @@ class ImageManager {
     randomize(layer.od, layer.typesDefault);
     randomize(layer.options, layer.types);
     layer.od.shown = true;
-		
-		return layer;
-	}
+    
+    return layer;
+  }
 }

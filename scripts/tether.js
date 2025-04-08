@@ -97,33 +97,33 @@ function InputText(value, oninput, className) {
   return input;
 }
 function InputCheckbox(value, oninput) {
-	//normal checkbox inputs are annoying to style, so dont bother with em
-	let checked = value;
-	
-	const input = Button("", (e) => {
-		checked = !checked;
-		if(checked) {
-			e.target.classList = "checkbox-true";
-		} else {
-			e.target.classList = "checkbox-false";
-		}
-		oninput(checked, e);
-	}, (checked) ? "checkbox-true" : "checkbox-false");
-	return input;
+  //normal checkbox inputs are annoying to style, so dont bother with em
+  let checked = value;
+  
+  const input = Button("", (e) => {
+    checked = !checked;
+    if(checked) {
+      e.target.classList = "checkbox-true";
+    } else {
+      e.target.classList = "checkbox-false";
+    }
+    oninput(checked, e);
+  }, (checked) ? "checkbox-true" : "checkbox-false");
+  return input;
 }
 function Textarea(hint, oninput, className) {
-	const textarea = Tag("textarea", className);
-	textarea.placeholder = hint;
-	textarea.oninput = oninput;
-	return textarea;
+  const textarea = Tag("textarea", className);
+  textarea.placeholder = hint;
+  textarea.oninput = oninput;
+  return textarea;
 }
 function getElem(id) {//shorthand because this function is always a pain in the ass to write out
-	return document.getElementById(id);
+  return document.getElementById(id);
 }
 function killChildren(container) {
-	while(container.firstChild) {
-		container.removeChild(container.lastChild);
-	}
+  while(container.firstChild) {
+    container.removeChild(container.lastChild);
+  }
 }
 
 let colpGlobalDisplay = null;
@@ -132,20 +132,20 @@ let colpGlobalOninput = null;
 function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
   const colpDisplay = Button("", (e) => {
     colpGlobalDisplay = e.target;
-		let oldTime;
+    let oldTime;
     const oninputPlus = (newCol) => {
       inputCol[0] = newCol[0];
       inputCol[1] = newCol[1];
       inputCol[2] = newCol[2];
       inputCol[3] = newCol[3];
       oninput(newCol);
-			//intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
-			let curTime = Math.round(Date.now() / 100);
-			
-			if(oldTime != curTime) {
-				oldTime = curTime;
-				onupdate();
-			}
+      //intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
+      let curTime = Math.round(Date.now() / 100);
+      
+      if(oldTime != curTime) {
+        oldTime = curTime;
+        onupdate();
+      }
     }
     colpGlobalOninput = oninputPlus;
     
@@ -198,31 +198,31 @@ class InputColorControl {
     this.alpha = 255;
 
     this.hexBox = InputText("000000ff", (e) => {
-			const hex = e.target.value;
-			let newCol;
-			//color of display and color of output don't match if the input is invalid... but i dont care
-			if(hex.length < 6) {
-				newCol = intRGB2RGB(Number("0x" + hex));
-			} else if(hex.length == 6) {
-				newCol = intRGB2RGB(Number("0x" + hex + "ff"));
-			} else {
-				newCol = intRGB2RGB(Number("0x" + hex));
-			}
-			
+      const hex = e.target.value;
+      let newCol;
+      //color of display and color of output don't match if the input is invalid... but i dont care
+      if(hex.length < 6) {
+        newCol = intRGB2RGB(Number("0x" + hex));
+      } else if(hex.length == 6) {
+        newCol = intRGB2RGB(Number("0x" + hex + "ff"));
+      } else {
+        newCol = intRGB2RGB(Number("0x" + hex));
+      }
+      
       this.RGB[0] = Math.floor(newCol[0] * 255);
       this.RGB[1] = Math.floor(newCol[1] * 255);
       this.RGB[2] = Math.floor(newCol[2] * 255);
-			this.HSV = RGB2HSV(newCol);
+      this.HSV = RGB2HSV(newCol);
       this.alpha = Math.floor(newCol[3] * 255);
-			
-			if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
-			this.localDisplay.style.backgroundColor = '#' + hex;
-			this.setSlidersRGB();
-			this.setSlidersHSV();
-			this.setSlidersAlpha();
-			this.updateColors();
-			
-			if(colpGlobalOninput != null) colpGlobalOninput(newCol);
+      
+      if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
+      this.localDisplay.style.backgroundColor = '#' + hex;
+      this.setSlidersRGB();
+      this.setSlidersHSV();
+      this.setSlidersAlpha();
+      this.updateColors();
+      
+      if(colpGlobalOninput != null) colpGlobalOninput(newCol);
     }, "colp-text");
 
     // RGB //
@@ -389,7 +389,7 @@ class InputColorControl {
   updateSlidersRGB() {
     this.HSV = byteRGB2HSV(this.RGB);
     const hex = byteRGB2Hex(this.RGB);
-		this.updateHexBox();
+    this.updateHexBox();
     if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
     this.localDisplay.style.backgroundColor = '#' + hex;
     this.updateColors();
@@ -401,7 +401,7 @@ class InputColorControl {
   updateSlidersHSV() {
     this.RGB = HSV2RGB(this.HSV);
     const hex = byteRGB2Hex(this.RGB);
-		this.updateHexBox();
+    this.updateHexBox();
     if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
     this.localDisplay.style.backgroundColor = '#' + hex;
     this.updateColors();
@@ -414,14 +414,14 @@ class InputColorControl {
     //TODO: display alpha more
     const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
     if(colpGlobalOninput != null) colpGlobalOninput(newCol);
-		this.updateHexBox();
+    this.updateHexBox();
   }
-	updateHexBox() {
+  updateHexBox() {
     const hex = byteRGB2Hex(this.RGB);
-		let a = this.alpha.toString(16);
-		if(a.length < 2) a = "0" + a;
+    let a = this.alpha.toString(16);
+    if(a.length < 2) a = "0" + a;
     this.hexBox.value = hex + a;
-	}
+  }
 }
 //TODO: put somewhere else
 const colp = new InputColorControl();
@@ -446,7 +446,7 @@ class Tether {
     
     const colpContainer = document.getElementById("colp-container")
     colpContainer.appendChild(colp.target);
-		//this will get added back later but right now it looks really shitty and i dont feel like styling it right now
+    //this will get added back later but right now it looks really shitty and i dont feel like styling it right now
     /*const paletteContainer = Div(
       InputColor(hex2RGB("#F26F80")),
       InputColor(hex2RGB("#E8BFA4")),
@@ -518,8 +518,8 @@ class Tether {
       let text = optionKeys[i];
       //how the options are displayed (eg. color or number? decimal or integer?)
       const limits = types[optionKeys[i]];
-			//skip hidden parameters
-			if(limits.hidden) continue;
+      //skip hidden parameters
+      if(limits.hidden) continue;
       
       let labelContainer = document.createElement("span");
       labelContainer.classList.add("label-container");
@@ -650,8 +650,8 @@ class Tether {
               brother.style.backgroundColor = limitDarkness(newCol);
             }
           }, () => {
-						img.printImage();
-					});
+            img.printImage();
+          });
           container.appendChild(colBox);
           break;
         case "dropdown":
@@ -715,8 +715,7 @@ class Tether {
     killChildren(getElem("layer-list-container"));
     for(let i = img.layers.length - 1; i >= 0; i--) {
       const layer = img.layers[i];
-      const layerContainer = document.createElement("div");
-      layerContainer.className = "layer-container";
+      const layerContainer = Div("layer-container");
       layerContainer.id = "dyn-layer-" + i;
       
       //javascript is shitty so i have to do this if i want to reference a class in an event (except for global self referencing-which is disgusting)
@@ -785,7 +784,7 @@ class Tether {
       iconTint.id = "dyn-icon-tint-" + i;
       
       const icon = document.createElement("img");
-      icon.src = "img/icon/" + layer.name + ".png";
+      icon.src = "img/icon/" + layer.name + ".svg";
       icon.className = "layer-icon";
       
       iconTint.appendChild(icon);
