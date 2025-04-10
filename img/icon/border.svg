@@ -8,7 +8,7 @@
 			<stop offset="100%" stop-color="white"/>
 		</linearGradient>
 		<linearGradient id="bottom-grad" x1="0" x2="0" y1="0" y2="100%">
-			<stop offset="0" stop-color="black"/>
+			<stop offset="0" stop-color="#101010"/>
 			<stop offset="100%" stop-color="#404040"/>
 		</linearGradient>
 		<linearGradient id="left-grad" x1="0" x2="0" y1="0" y2="100%">
@@ -21,13 +21,13 @@
 		</linearGradient>
 	</defs>
   <!-- top -->
-  <path d="M 2 1 L 62 1 L 58 5 L 6 5 Z" fill="url(#top-grad)"/>
+  <path d="M 2 1 L 62 1 L 56 7 L 8 7 Z" fill="url(#top-grad)"/>
   <!-- bottom -->
-  <path d="M 2 63 L 62 63 L 58 59 L 6 59 Z" fill="url(#bottom-grad)"/>
+  <path d="M 2 63 L 62 63 L 56 57 L 8 57 Z" fill="url(#bottom-grad)"/>
   <!-- left -->
-  <path d="M 1 2 L 1 62 L 5 58 L 5 6 Z" fill="url(#left-grad)"/>
+  <path d="M 1 2 L 1 62 L 7 56 L 7 8 Z" fill="url(#left-grad)"/>
   <!-- right -->
-  <path d="M 63 2 L 63 62 L 59 58 L 59 6 Z" fill="url(#right-grad)"/>
+  <path d="M 63 2 L 63 62 L 57 56 L 57 8 Z" fill="url(#right-grad)"/>
   <!-- shine line -->
   <line x1="1" y1="1.5" x2="63" y2="1.5" stroke="#ffffff80" stroke-width="1"/>
   <line x1="1" y1="62.5" x2="63" y2="62.5" stroke="#00000080" stroke-width="1"/>

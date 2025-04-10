@@ -129,3 +129,10 @@ function limitDarkness(color) {
   }
   return '#' + RGB2Hex(newCol);
 }
+//trig functions in degrees
+function sind(theta) {
+  return Math.sin(theta * 0.0174533);
+}
+function cosd(theta) {
+  return Math.cos(theta * 0.0174533);
+}

@@ -762,3 +762,103 @@ class LayerWorley extends Layer {
     }
   }
 }
+
+class LayerWandering2 extends Layer {
+  name = "wandering2";
+  
+  options = {
+    dir: 45,
+    spacing: 16,
+    spread: 0,
+    minLength: 8,
+    maxLength: 8,
+    minWidth: 1,
+    maxWidth: 1
+  };
+  
+  types = {
+    dir: {
+      type: "number",
+      step: 1,
+      max: 360,
+      min: 0
+    },
+    spacing: {
+      type: "number",
+      min: 1,
+      max: 256,
+      unsafe: true
+    },
+    spread: {
+      type: "number",
+      step: 0.05,
+      max: 1,
+      min: 0
+    },
+    minLength: {
+      type: "number",
+      min: 1,
+      max: 256,
+      unsafe: true
+    },
+    maxLength: {
+      type: "number",
+      min: 1,
+      max: 256,
+      unsafe: true
+    },
+    minWidth: {
+      type: "number",
+      min: 1,
+      max: 16,
+      unsafe: true
+    },
+    maxWidth: {
+      type: "number",
+      min: 1,
+      max: 16,
+      unsafe: true
+    }
+  };
+  
+  generate(o) {
+    //multiply by sqrt of 2 to prevent weird skipping between angles
+    const xChange = sind(o.dir) * Math.sqrt(2);
+    const yChange = cosd(o.dir) * Math.sqrt(2);
+    let xFlip = 1;
+    let yFlip = 1;
+    if(xChange < 0) {
+      xFlip = -1;
+    }
+    if(yChange < 0) {
+      yFlip = -1;
+    }
+    const lineCount = img.w * img.h / (o.spacing * 2);
+    //draw several lines
+    for(let l = 0; l < lineCount; l++) {
+      const xOffs = Math.floor(img.w * Math.random());
+      const yOffs = Math.floor(img.h * Math.random());
+      const len = Math.random() * (o.maxLength - o.minLength) + o.minLength;
+      let progress = 0
+      //draw a line
+      if(Math.abs(xChange) < Math.abs(yChange)) {
+        for(let i = 0; i < len; i++) {
+          progress += xChange;
+          const randOffs = (Math.random() - 0.5) * o.spread * 2;
+          //prevent weird looking breaks in the lines
+          if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
+          
+          img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs);
+        }
+      } else {
+        for(let i = 0; i < len; i++) {
+          progress += yChange;
+          const randOffs = (Math.random() - 0.5) * o.spread * 2;
+          if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
+          
+          img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
+        }
+      }
+    }
+  }
+}

@@ -23,7 +23,8 @@ class ImageManager {
     wandering: LayerWandering,
     checkers: LayerCheckers,
     blobs: LayerBlobs,
-    worley: LayerWorley
+    worley: LayerWorley,
+    wandering2: LayerWandering2
   };
   name = "our beauty";
   

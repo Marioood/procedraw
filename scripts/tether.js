@@ -527,7 +527,7 @@ class Tether {
       if(limits.unsafe) {
         //text = "!" + text;
         label.className = "option-unsafe";
-        labelContainer.title = "This parameter controls a loop. Meaning it can cause lag (!)";
+        labelContainer.title = "This parameter controls a loop; it can cause lag (!)";
       }
 
       label.appendChild(document.createTextNode(text));
@@ -704,9 +704,6 @@ class Tether {
       const layer = img.layers[this.currentLayer];
       this.generateLayerOptions(layer.od, layer.typesDefault, "layer-options-default");
       this.generateLayerOptions(layer.options, layer.types, "layer-options");
-        
-      const layerTitle = document.getElementById("layer-title");
-      layerTitle.textContent = img.layers[this.currentLayer].name + " layer options";
     }
   }
   
