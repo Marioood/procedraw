@@ -1,9 +1,7 @@
 blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
-link layer that copies another layer's pixels and modifies them
 filter layer that modifies the current cavnas' pixels
 value noise layer
 perlin noise layer
-give the solid layer similar options to border layer
 save as file
 image layer that has is an embedded image
 make killAllChildren() and other similar functions global in tether.js, and make tether.js just be html--js interaction functions
@@ -21,22 +19,41 @@ color picker sometimes doesnt reprint the image when youre done changing it
 //brightness tolerance
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
 //the set color function sucked it was like 4 times slower
-//later
 //snap image editor
-//layer link
 //color ramp
 //tiled view
 //variables and math expressions
-//filters (?) they seem kinda slow.....
-	//layer tiling periods, layer offsets
-	//scale + normalized scale (like xor fractal)
-	//plot filters (only change the output of plotPixel()) dont seem like they'd be slow
 //perlin noise
 //DONT SLAP MORE SHIT ONTO SHIT
 colp and option consistent sliders
-move up color picker
 HILARIOUS parody logos!
 clean up unused garbage
 make layer sliders render with some delay (avoid similar problems as color picker)
 "no layers exist" text
 edit tint switch layer dont switch color edit color SEE BUG
+
+layers [
+  1. wandering
+  2. checkers
+  3. tile -> layerKeys[1]
+]
+
+layerKeys [
+  1. 1
+  2. 2
+  3. 3
+]
+
+VVV after you move a layer VVV
+
+layers [
+  1. checkers   // moved
+  2. wandering  // also moved
+  3. tile -> layerKeys[1]
+]
+
+layerKeys [
+  1. 2
+  2. 1
+  3. 3
+]

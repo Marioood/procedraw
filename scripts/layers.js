@@ -26,8 +26,8 @@ class Layer {
     shown: true
     //maybe add "disolve"? like the coverage option from the noise filter
   };
-  
-  //filters = [new FilterInvert()];
+  //rendered pixel data, used by filter layers
+  data;
   
   typesDefault = {
     alpha: {
@@ -858,6 +858,118 @@ class LayerWandering2 extends Layer {
           
           img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
         }
+      }
+    }
+  }
+}
+
+class LayerBorder2 extends Layer {
+  O_DEFAULT_ALPHA = 0;
+  O_FADE_ALPHA = 1;
+  O_APPROACH_ALPHA = 2;
+  
+  name = "border2";
+  
+  options = {
+    x: 0,
+    y: 0,
+    width: 64,
+    height: 64,
+    thickness: 1,
+    colorTop: [1, 1, 1, 1],
+    colorLeft: [0.75, 0.75, 0.75, 1],
+    colorBottom: [0, 0, 0, 1],
+    colorRight: [0.25, 0.25, 0.25, 1],
+    alphaMod: this.O_DEFAULT_ALPHA
+  };
+  
+  types = {
+    x: {
+      type: "number",
+      min: 0,
+      max: 256
+    },
+    y: {
+      type: "number",
+      min: 0,
+      max: 256
+    },
+    width: {
+      type: "number",
+      min: 1,
+      max: 256,
+      unsafe: true
+    },
+    height: {
+      type: "number",
+      min: 1,
+      max: 256,
+      unsafe: true
+    },
+    thickness: {
+      type: "number",
+      min: 1,
+      max: 128,
+      unsafe: true
+    },
+    colorTop: {
+      type: "color"
+    },
+    colorLeft: {
+      type: "color"
+    },
+    colorBottom: {
+      type: "color"
+    },
+    colorRight: {
+      type: "color"
+    },
+    alphaMod: {
+      type: "keyvalues",
+      keys: [
+        "none",
+        "fade alpha",
+        "approach alpha"
+      ],
+      values: [
+        this.O_DEFAULT_ALPHA,
+        this.O_FADE_ALPHA,
+        this.O_APPROACH_ALPHA
+      ]
+    }
+  };
+  
+  generate(o) {
+    function blend(c1, c2, alp) {
+      return img.blend([c1[0], c1[1], c1[2], c1[3] * alp], [c2[0], c2[1], c2[2], c2[3] * alp], 0.5);
+    }
+    function fade(c, alp) {
+      return [c[0], c[1], c[2], c[3] * alp];
+    }
+    const alphaStep = 1 / o.thickness;
+    let alpha = 1;
+    
+    if(o.alphaMod == this.O_APPROACH_ALPHA) {
+      alpha = 0;
+    }
+    for(let t = 1; t < o.thickness + 1; t++) {
+      for(let y = t; y < o.height - t; y++) {
+        img.plotPixel(fade(o.colorLeft, alpha), o.x + t - 1, y + o.y);
+        img.plotPixel(fade(o.colorRight, alpha), o.x + o.width - t, y + o.y);
+      }
+      for(let x = t; x < o.width - t; x++) {
+        img.plotPixel(fade(o.colorTop, alpha), x + o.x, o.y + t - 1);
+        img.plotPixel(fade(o.colorBottom, alpha), x + o.x, o.y + o.height - t);
+      }
+      img.plotPixel(blend(o.colorTop, o.colorLeft, alpha), o.x + t - 1, o.y + t - 1);
+      img.plotPixel(blend(o.colorTop, o.colorRight, alpha), o.x + o.width - t, o.y + t - 1);
+      img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), o.x + t - 1, o.y + o.height - t);
+      img.plotPixel(blend(o.colorBottom, o.colorRight, alpha), o.x + o.width - t, o.y + o.height - t);
+      
+      if(o.alphaMod == this.O_FADE_ALPHA) {
+        alpha -= alphaStep;
+      } else if(o.alphaMod == this.O_APPROACH_ALPHA) {
+        alpha += alphaStep;
       }
     }
   }

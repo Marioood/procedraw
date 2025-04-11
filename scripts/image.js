@@ -11,7 +11,7 @@ class ImageManager {
   w = 64;
   h = 64;
   data = [];
-  layer = undefined;
+  layer = null;
   bg = [0.5, 0.5, 0.5, 1];
   layers = [];
   layerClasses = {
@@ -24,7 +24,10 @@ class ImageManager {
     checkers: LayerCheckers,
     blobs: LayerBlobs,
     worley: LayerWorley,
-    wandering2: LayerWandering2
+    wandering2: LayerWandering2,
+    translate: FilterTranslate,
+    tile: FilterTile,
+    border2: LayerBorder2
   };
   name = "our beauty";
   
@@ -41,6 +44,10 @@ class ImageManager {
     for(let i = 0; i < this.layers.length; i++) {
       if(this.layers[i].od.shown) {
         this.layer = this.layers[i];
+        this.layer.data = new Array(img.w * img.h);
+        for(let i = 0; i < img.w * img.h * 4; i++) {
+          this.layer.data[i] = 0;
+        }
         //this.layer.options = this.layer.defaults;
         this.layer.generate(this.layer.options);
       }
@@ -91,6 +98,11 @@ class ImageManager {
     this.data[pos * 4 + 2] = this.combinePixel(color[2] * tint[2], this.data[pos * 4 + 2], blend, alpha);
     //add the alphas together
     this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
+    //set rendered layer data (for filters)
+    this.layer.data[pos * 4] = color[0] * tint[0];
+    this.layer.data[pos * 4 + 1] = color[1] * tint[1];
+    this.layer.data[pos * 4 + 2] = color[2] * tint[2];
+    this.layer.data[pos * 4 + 3] = color[3];
   }
   
   combinePixel(l, b, blend, strength) {
