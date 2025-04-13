@@ -4,11 +4,21 @@
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
+const O_FADE_NONE = 0;
+const O_FADE_NEAR_EDGE = 1;
+const O_FADE_NEAR_CENTER = 2;
+const O_FADE_SQUARED = 3;
+const O_FADE = 4;
+  
 class Layer {
   //class name
   name;
   //user defined name
   displayName;
+  //rendered pixel data, used by filter layers
+  data;
+  //this should be self explanatory
+  isFilter = false;
   //layer options
   options = {};
   //setting types (for the editor input types)
@@ -26,8 +36,6 @@ class Layer {
     shown: true
     //maybe add "disolve"? like the coverage option from the noise filter
   };
-  //rendered pixel data, used by filter layers
-  data;
   
   typesDefault = {
     alpha: {
@@ -75,17 +83,17 @@ class LayerXorFractal extends Layer {
   name = "xorFractal";
   
   options = {
-    scaleX: 1,
-    scaleY: 1,
+    xScale: 1,
+    yScale: 1,
     normalized: true
   };
   
   types = {
-    scaleX: {
+    xScale: {
       type: "number",
       step: 0.1
     },
-    scaleY: {
+    yScale: {
       type: "number",
       step: 0.1
     },
@@ -95,18 +103,18 @@ class LayerXorFractal extends Layer {
   };
   
   generate(o) {
-    let scaleX, scaleY;
+    let xScale, yScale;
     if(o.normalized) {
-      scaleX = 256 / img.w;
-      scaleY = 256 / img.h;
+      xScale = 256 / img.w;
+      yScale = 256 / img.h;
     } else {
-      scaleX = o.scaleX;
-      scaleY = o.scaleY;
+      xScale = o.xScale;
+      yScale = o.yScale;
     }
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
-        let col = ((x * scaleX) ^ (y * scaleY)) / 255;
+        let col = ((x * xScale) ^ (y * yScale)) / 255;
         img.plotPixel([col, col, col, 1], x, y);
       }
     }
@@ -157,185 +165,108 @@ class LayerBorder extends Layer {
   name = "border";
   
   options = {
-    colorTop: [1, 1, 1, 1],
-    colorBottom: [0, 0, 0, 1],
-    colorLeft: [0.75, 0.75, 0.75, 1],
-    colorRight: [0.25, 0.25, 0.25, 1],
-    x0: 0,
-    y0: 0,
-    x1: 63,
-    y1: 63,
+    x: 0,
+    y: 0,
+    width: 64,
+    height: 64,
     thickness: 1,
-    tileX: false,
-    tileY: false,
-    paddingX: 1,
-    paddingY: 1,
-    shiftX: 0,
-    shiftY: 0
-    //alphaFalloff: 0
+    colorTop: [1, 1, 1, 1],
+    colorLeft: [0.75, 0.75, 0.75, 1],
+    colorBottom: [0, 0, 0, 1],
+    colorRight: [0.25, 0.25, 0.25, 1],
+    fadeMode: O_FADE_NONE
   };
   
   types = {
-    colorTop: {
-      type: "color"
-    },
-    colorBottom: {
-      type: "color"
-    },
-    colorLeft: {
-      type: "color"
-    },
-    colorRight: {
-      type: "color"
-    },
-    x0: {
+    x: {
       type: "number",
-      min: -256,
-      max: 512,
-      unsafe: true
+      min: 0,
+      max: 256
     },
-    y0: {
+    y: {
       type: "number",
-      min: -256,
-      max: 512,
-      unsafe: true
+      min: 0,
+      max: 256
     },
-    x1: {
-      type: "number",
-      min: -256,
-      max: 512,
-      unsafe: true
-    },
-    y1: {
-      type: "number",
-      min: -256,
-      max: 512,
-      unsafe: true
-    },
-    thickness: {
+    width: {
       type: "number",
       min: 1,
       max: 256,
       unsafe: true
     },
-    tileX: {
-      type: "boolean",
-      unsafe: true
-    },
-    tileY: {
-      type: "boolean",
-      unsafe: true
-    },
-    paddingX: {
-      type: "number"
-    },
-    paddingY: {
-      type: "number"
-    },
-    shiftX: {
-      type: "number"
-    },
-    shiftY: {
-      type: "number"
-    }/*,
-    alphaFalloff: {
+    height: {
       type: "number",
-      step: 0.01,
-      min: 0,
-      max: 1
-    }*/
+      min: 1,
+      max: 256,
+      unsafe: true
+    },
+    thickness: {
+      type: "number",
+      min: 1,
+      max: 128,
+      unsafe: true
+    },
+    colorTop: {
+      type: "color"
+    },
+    colorLeft: {
+      type: "color"
+    },
+    colorBottom: {
+      type: "color"
+    },
+    colorRight: {
+      type: "color"
+    },
+    fadeMode: {
+      type: "keyvalues",
+      keys: [
+        "no fade",
+        "fade near center",
+        "fade near edge"
+      ],
+      values: [
+        O_FADE_NONE,
+        O_FADE_NEAR_CENTER,
+        O_FADE_NEAR_EDGE
+      ]
+    }
   };
   
   generate(o) {
-    let x0, y0, x1, y1;
-    //dont make the borders inside-out -- they dont work that way
-    if(o.x0 < o.x1) {
-      x0 = o.x0;
-      x1 = o.x1;
-    } else {
-      x0 = o.x1;
-      x1 = o.x0;
+    function blend(c1, c2, alp) {
+      return img.blend([c1[0], c1[1], c1[2], c1[3] * alp], [c2[0], c2[1], c2[2], c2[3] * alp], 0.5);
     }
-    
-    if(o.y0 < o.y1) {
-      y0 = o.y0;
-      y1 = o.y1;
-    } else {
-      y0 = o.y1;
-      y1 = o.y0;
+    function fade(c, alp) {
+      return [c[0], c[1], c[2], c[3] * alp];
     }
-    const width = x1 - x0 + o.paddingX;
-    const height = y1 - y0 + o.paddingY;
-    let xCopies = 1;
-    let yCopies = 1;
-    let x0Old = x0;
-    let x1Old = x1;
-    let y0Old = y0;
-    let y1Old = y1;
-    //if the pin coords are equal then the browser explodes (infinite loop)
-    if(o.tileX && x0 != x1) xCopies = Math.ceil(img.w / width);
-    if(o.tileY && y0 != y1) yCopies = Math.ceil(img.h / height);
-    //let oldAlpha = this.od.alpha;
+    const alphaStep = 1 / o.thickness;
+    let alpha = 1;
     
-    for(let yT = 0; yT < yCopies; yT++) {
-      for(let xT = 0; xT < xCopies; xT++) {
-        x0 = x0Old;
-        x1 = x1Old;
-        y0 = y0Old;
-        y1 = y1Old;
-        //just draw the border multiple times to do a thicker one
-        for(let i = 0; i < o.thickness; i++) {
-          for(let x = x0 + 1; x < x1; x++) {
-            img.plotPixel(o.colorTop, x, y0);
-            img.plotPixel(o.colorBottom, x, y1);
-          }
-          for(let y = y0 + 1; y < y1; y++) {
-            img.plotPixel(o.colorLeft, x0, y);
-            img.plotPixel(o.colorRight, x1, y);
-          }
-          //corners
-          img.plotPixel(this.blend(o.colorLeft, o.colorTop), x0, y0);
-          img.plotPixel(this.blend(o.colorRight, o.colorTop), x1, y0);
-          img.plotPixel(this.blend(o.colorLeft, o.colorBottom), x0, y1);
-          img.plotPixel(this.blend(o.colorRight, o.colorBottom), x1, y1);
-          x0++;
-          y0++;
-          x1--;
-          y1--;
-          //this.od.alpha -= o.alphaFalloff;
-        }
-        //jank but ehhhh it works
-        if(o.tileX) {
-          x0Old += width;
-          x1Old += width;
-          y0Old += o.shiftY;
-          y1Old += o.shiftY;
-        }
-        //disgusting hack to get alpha falloff to work (without having to fiddle with a bunch of arrays)
-        //this.od.alpha = oldAlpha;
+    if(o.fadeMode == O_FADE_NEAR_EDGE) {
+      alpha = 0;
+    }
+    for(let t = 1; t < o.thickness + 1; t++) {
+      if(o.fadeMode == O_FADE_NEAR_EDGE) {
+        alpha += alphaStep;
       }
-      if(o.tileY) {
-        y0Old -= o.shiftY * height;
-        y1Old -= o.shiftY * height;
-        y0Old += height;
-        y1Old += height;
-        x0Old += o.shiftX;
-        x1Old += o.shiftX;
-        if(o.tileX) {
-          //shift back x pins
-          x0Old -= width * xCopies;
-          x1Old -= width * xCopies;
-        }
+      for(let y = t; y < o.height - t; y++) {
+        img.plotPixel(fade(o.colorLeft, alpha), o.x + t - 1, y + o.y);
+        img.plotPixel(fade(o.colorRight, alpha), o.x + o.width - t, y + o.y);
+      }
+      for(let x = t; x < o.width - t; x++) {
+        img.plotPixel(fade(o.colorTop, alpha), x + o.x, o.y + t - 1);
+        img.plotPixel(fade(o.colorBottom, alpha), x + o.x, o.y + o.height - t);
+      }
+      img.plotPixel(blend(o.colorTop, o.colorLeft, alpha), o.x + t - 1, o.y + t - 1);
+      img.plotPixel(blend(o.colorTop, o.colorRight, alpha), o.x + o.width - t, o.y + t - 1);
+      img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), o.x + t - 1, o.y + o.height - t);
+      img.plotPixel(blend(o.colorBottom, o.colorRight, alpha), o.x + o.width - t, o.y + o.height - t);
+      
+      if(o.fadeMode == O_FADE_NEAR_CENTER) {
+        alpha -= alphaStep;
       }
     }
-  }
-  
-  blend(col0, col1) {
-    const r = (col0[0] + col1[0]) / 2;
-    const g = (col0[1] + col1[1]) / 2;
-    const b = (col0[2] + col1[2]) / 2;
-    const a = (col0[3] + col1[3]) / 2;
-    return [r, g, b, a];
   }
 }
 
@@ -543,10 +474,10 @@ class LayerCheckers extends Layer {
   options = {
     evenColor: [1, 1, 1, 1],
     oddColor: [0, 0, 0, 1],
-    scaleX: 1,
-    scaleY: 1,
-    shiftX: 0,
-    shiftY: 0
+    xScale: 1,
+    yScale: 1,
+    xShift: 0,
+    yShift: 0
   };
   
   types = {
@@ -556,16 +487,16 @@ class LayerCheckers extends Layer {
     oddColor: {
       type: "color"
     },
-    scaleX: {
+    xScale: {
       type: "number"
     },
-    scaleY: {
+    yScale: {
       type: "number"
     },
-    shiftX: {
+    xShift: {
       type: "number"
     },
-    shiftY: {
+    yShift: {
       type: "number"
     }
   };
@@ -573,7 +504,7 @@ class LayerCheckers extends Layer {
   generate(o) {
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
-        let col = (Math.floor((x - o.shiftX * (Math.floor(y / o.scaleY) % 2)) / o.scaleX) + Math.floor((y - o.shiftY * (Math.floor(x / o.scaleX) % 2)) / o.scaleY)) % 2 == 0 ? o.evenColor : o.oddColor;
+        let col = (Math.floor((x - o.xShift * (Math.floor(y / o.yScale) % 2)) / o.xScale) + Math.floor((y - o.yShift * (Math.floor(x / o.xScale) % 2)) / o.yScale)) % 2 == 0 ? o.evenColor : o.oddColor;
         img.plotPixel(col, x, y);
       }
     }
@@ -858,118 +789,6 @@ class LayerWandering2 extends Layer {
           
           img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
         }
-      }
-    }
-  }
-}
-
-class LayerBorder2 extends Layer {
-  O_DEFAULT_ALPHA = 0;
-  O_FADE_ALPHA = 1;
-  O_APPROACH_ALPHA = 2;
-  
-  name = "border2";
-  
-  options = {
-    x: 0,
-    y: 0,
-    width: 64,
-    height: 64,
-    thickness: 1,
-    colorTop: [1, 1, 1, 1],
-    colorLeft: [0.75, 0.75, 0.75, 1],
-    colorBottom: [0, 0, 0, 1],
-    colorRight: [0.25, 0.25, 0.25, 1],
-    alphaMod: this.O_DEFAULT_ALPHA
-  };
-  
-  types = {
-    x: {
-      type: "number",
-      min: 0,
-      max: 256
-    },
-    y: {
-      type: "number",
-      min: 0,
-      max: 256
-    },
-    width: {
-      type: "number",
-      min: 1,
-      max: 256,
-      unsafe: true
-    },
-    height: {
-      type: "number",
-      min: 1,
-      max: 256,
-      unsafe: true
-    },
-    thickness: {
-      type: "number",
-      min: 1,
-      max: 128,
-      unsafe: true
-    },
-    colorTop: {
-      type: "color"
-    },
-    colorLeft: {
-      type: "color"
-    },
-    colorBottom: {
-      type: "color"
-    },
-    colorRight: {
-      type: "color"
-    },
-    alphaMod: {
-      type: "keyvalues",
-      keys: [
-        "none",
-        "fade alpha",
-        "approach alpha"
-      ],
-      values: [
-        this.O_DEFAULT_ALPHA,
-        this.O_FADE_ALPHA,
-        this.O_APPROACH_ALPHA
-      ]
-    }
-  };
-  
-  generate(o) {
-    function blend(c1, c2, alp) {
-      return img.blend([c1[0], c1[1], c1[2], c1[3] * alp], [c2[0], c2[1], c2[2], c2[3] * alp], 0.5);
-    }
-    function fade(c, alp) {
-      return [c[0], c[1], c[2], c[3] * alp];
-    }
-    const alphaStep = 1 / o.thickness;
-    let alpha = 1;
-    
-    if(o.alphaMod == this.O_APPROACH_ALPHA) {
-      alpha = 0;
-    }
-    for(let t = 1; t < o.thickness + 1; t++) {
-      for(let y = t; y < o.height - t; y++) {
-        img.plotPixel(fade(o.colorLeft, alpha), o.x + t - 1, y + o.y);
-        img.plotPixel(fade(o.colorRight, alpha), o.x + o.width - t, y + o.y);
-      }
-      for(let x = t; x < o.width - t; x++) {
-        img.plotPixel(fade(o.colorTop, alpha), x + o.x, o.y + t - 1);
-        img.plotPixel(fade(o.colorBottom, alpha), x + o.x, o.y + o.height - t);
-      }
-      img.plotPixel(blend(o.colorTop, o.colorLeft, alpha), o.x + t - 1, o.y + t - 1);
-      img.plotPixel(blend(o.colorTop, o.colorRight, alpha), o.x + o.width - t, o.y + t - 1);
-      img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), o.x + t - 1, o.y + o.height - t);
-      img.plotPixel(blend(o.colorBottom, o.colorRight, alpha), o.x + o.width - t, o.y + o.height - t);
-      
-      if(o.alphaMod == this.O_FADE_ALPHA) {
-        alpha -= alphaStep;
-      } else if(o.alphaMod == this.O_APPROACH_ALPHA) {
-        alpha += alphaStep;
       }
     }
   }

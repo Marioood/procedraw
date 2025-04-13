@@ -136,3 +136,45 @@ function sind(theta) {
 function cosd(theta) {
   return Math.cos(theta * 0.0174533);
 }
+function deepArrayCopy(oldArr) {
+  const newArr = new Array(oldArr.length);
+  
+  for(let i = 0; i < oldArr.length; i++) {
+    const value = oldArr[i];
+    if(typeof(value) == "object") {
+      if(Array.isArray(value)) {
+        newArr[i] = deepArrayCopy(value);
+      } else if(value == null) { //that one javascript bug
+        newArr[i] = null;
+      } else {
+        newArr[i] = deepObjectCopy(value);
+      }
+    } else {
+      newArr[i] = value;
+    }
+  }
+  return newArr;
+}
+function deepObjectCopy(oldObj) {
+  const keys = Object.keys(oldObj);
+  let newObj = {};
+  
+  for(let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const value = oldObj[key];
+    const valueType = typeof oldObj[value];
+    
+    if(typeof(value) == "object") {
+      if(Array.isArray(value)) {
+        newObj[key] = deepArrayCopy(value);
+      } else if(value == null) { //that one javascript bug
+        newObj[key] = null;
+      } else {
+        newObj[key] = deepObjectCopy(value);
+      }
+    } else {
+      newObj[key] = value;
+    }
+  }
+  return newObj;
+}

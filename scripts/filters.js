@@ -1,18 +1,16 @@
 class FilterTranslate extends Layer {
   name = "translate";
+  isFilter = true;
   
   options = {
-    baseIdx: 0,
+    base: 0,
     x: 0,
     y: 0
   };
   
   types = {
-    baseIdx: {
-      type: "number",
-      step: 1,
-      min: 0,
-      max: 16
+    base: {
+      type: "layer"
     },
     x: {
       type: "number",
@@ -29,7 +27,7 @@ class FilterTranslate extends Layer {
   };
   
   generate(o) {
-    const data = img.layers[o.baseIdx].data;
+    const data = img.layers[img.layerHashes[o.base]].data;
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         const idx = x + y * img.w;
@@ -45,9 +43,10 @@ class FilterTranslate extends Layer {
 
 class FilterTile extends Layer {
   name = "tile";
+  isFilter = true;
   
   options = {
-    baseIdx: 0,
+    base: 0,
     x: 0,
     y: 0,
     width: 16,
@@ -59,11 +58,8 @@ class FilterTile extends Layer {
   };
   
   types = {
-    baseIdx: {
-      type: "number",
-      step: 1,
-      min: 0,
-      max: 16
+    base: {
+      type: "layer"
     },
     x: {
       type: "number",
@@ -116,7 +112,7 @@ class FilterTile extends Layer {
   };
   
   generate(o) {
-    const data = img.layers[o.baseIdx].data;
+    const data = img.layers[img.layerHashes[o.base]].data;
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {

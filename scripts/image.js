@@ -14,6 +14,11 @@ class ImageManager {
   layer = null;
   bg = [0.5, 0.5, 0.5, 1];
   layers = [];
+  //woot woot! memory management in javascript!!!
+  //list of indices in the layers array. used for filter layers, so that their base layers don't change
+  layerHashes = [];
+  //indexes in layerHashes that are not being used
+  layerHashesFreed = [];
   layerClasses = {
     xorFractal: LayerXorFractal,
     solid: LayerSolid,
@@ -26,8 +31,7 @@ class ImageManager {
     worley: LayerWorley,
     wandering2: LayerWandering2,
     translate: FilterTranslate,
-    tile: FilterTile,
-    border2: LayerBorder2
+    tile: FilterTile
   };
   name = "our beauty";
   
@@ -152,6 +156,8 @@ class ImageManager {
     const choice = x => x[Math.floor(Math.random() * x.length)];
     /** @type {Layer} */
     const layer = new (choice(Object.values(img.layerClasses)));
+    //TODO: dont add filters if there's no layers
+    const jsIsDumb = this; //can't use 'this' in the 'layer' case because it's undefined.................
     function randomize(opts, desc) {
       for(const key in opts) {
         const d = desc[key];
@@ -179,6 +185,18 @@ class ImageManager {
           case 'keyvalues':
             opts[key] = choice(d.values);
           break;
+          case 'layer':
+            let layerIdx = -1;
+            //once a valid layer hash is found
+            for(let safety = 0; layerIdx == -1; safety++) {
+              layerIdx = jsIsDumb.layerHashes[Math.floor(Math.random() * jsIsDumb.layerHashes.length)];
+              if(safety > 64) {
+                console.error("failed to create layer; could not find a valid layer hash");
+                return layer;
+              }
+            }
+            opts[key] = layerIdx;
+          break;
           default:
             console.error(`Unsupported option type ${d.type}`);
         }
@@ -189,5 +207,26 @@ class ImageManager {
     layer.od.shown = true;
     
     return layer;
+  }
+  
+  insertLayer(insertIdx, layer) {
+    //copy hashes so that index searching doesn't break
+    let hashesCopy = new Array(this.layerHashes.length);
+    for(let i = 0; i < hashesCopy.length; i++) hashesCopy[i] = this.layerHashes[i];
+    //rearrange layer hashes
+    for(let i = insertIdx; i < this.layers.length; i++) {
+      const hashIdx = this.layerHashes.indexOf(i);
+      hashesCopy[hashIdx]++;
+    }
+    //copy the modified hashes back
+    for(let i = 0; i < hashesCopy.length; i++) this.layerHashes[i] = hashesCopy[i];
+    //add the new layer hash
+    if(this.layerHashesFreed.length > 0) {
+      this.layerHashes[this.layerHashesFreed.pop()] = insertIdx;
+    } else {
+      this.layerHashes.push(insertIdx);
+    }
+    //add layer
+    this.layers.splice(insertIdx, 0, layer);
   }
 }

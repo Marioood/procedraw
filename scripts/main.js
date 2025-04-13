@@ -7,10 +7,31 @@ function main() {
   //////// LAYER MANAGEMENT BUTTONS ////////
   const removeLayer = document.getElementById("remove-layer");
   removeLayer.addEventListener("click", function (e) {
+    //dont do anything if there arent any layers
+    if(img.layers.length == 0) return;
+    //copy hashes so that index searching doesn't break
+    let hashesCopy = new Array(img.layerHashes.length);
+    for(let i = 0; i < hashesCopy.length; i++) hashesCopy[i] = img.layerHashes[i];
+    //mark the deleted layer as free
+    img.layerHashesFreed.push(hashesCopy.indexOf(t.currentLayer));
+    hashesCopy[img.layerHashes.indexOf(t.currentLayer)] = -1;
+    //rearrange layer hashes
+    for(let i = t.currentLayer + 1; i < img.layers.length; i++) {
+      const idx = img.layerHashes.indexOf(i);
+      hashesCopy[idx]--;
+    }
+    //copy the modified hashes back
+    for(let i = 0; i < hashesCopy.length; i++) img.layerHashes[i] = hashesCopy[i];
+    
     img.layers.splice(t.currentLayer, 1);
     //go down a layer if we're in the middle, stay in place if we're at the bottom
     if(t.currentLayer > 0) {
        t.setCurrentLayer(t.currentLayer - 1);
+    }
+    //clear layer hashes and freed indexes if there are no layers (prevent memory leaks)
+    if(img.layers.length == 0) {
+      img.layerHashes = [];
+      img.layerHashesFreed = [];
     }
     t.updateLayerOptions();
     t.generateLayerList();
@@ -31,7 +52,10 @@ function main() {
     if(confirm("clear all layers?")) {
       //go down a layer if we're in the middle, stay in place if we're at the bottom
       t.setCurrentLayer(0);
-      img.layers.splice(0);
+      img.layers = [];
+      //clear layer hashes and freed indexes if there are no layers (prevent memory leaks)
+      img.layerHashes = [];
+      img.layerHashesFreed = [];
       t.updateLayerOptions();
       t.generateLayerList();
       img.printImage();
@@ -51,31 +75,44 @@ function main() {
     if(img.layers.length > 0) {
       t.setCurrentLayer(t.currentLayer + 1);
     }
-    img.layers.splice(t.currentLayer, 0, new t.currentClass);
-    img.layers[t.currentLayer].displayName = img.layers[t.currentLayer].name;
-    //fix that smearing!!
-    //later me here what the hell did i mean by that
+    const layer = new t.currentClass;
+    layer.displayName = layer.name;
+    img.insertLayer(t.currentLayer, layer);
+    
     t.updateLayerOptions();
     t.generateLayerList();
     img.printImage();
   });
-
+/*
+layers [0 1 2 3]
+           ^* *
+hashes {0 1 2 3}
+---
+layers [0 1 2 3 4]
+            ^ * *
+hashes {0 1 3 4 2}
+=========================
+layers [0 1 2 3 4 5]
+           ^* * * *
+hashes {0 1 2 3 4 5}
+---
+layers [0 1 2 3 4 5 6]
+            ^ * * * *
+hashes {0 1 3 4 5 6 2}
+*/
   const dupeLayer = document.getElementById("dupe-layer");
   dupeLayer.addEventListener("click", function (e) {
     const layer2Dupe = img.layers[t.currentLayer];
-    if(!layer2Dupe) {
-      return;
-    }
-    //fuck you stack overflow
+    if(layer2Dupe == null) return;
+
     const clone = new img.layerClasses[layer2Dupe.name];
     //create copies - not references
-    //TODO: doesn't work with colors!!
-    clone.options = Object.assign({}, layer2Dupe.options);
-    clone.od = Object.assign({}, layer2Dupe.od);
+    clone.options = deepObjectCopy(layer2Dupe.options);
+    clone.od = deepObjectCopy(layer2Dupe.od);
     
-    t.setCurrentLayer(t.currentLayer + 1)
-    img.layers.splice(t.currentLayer, 0, clone);
-    img.layers[t.currentLayer].displayName = /*"copy of " + */img.layers[t.currentLayer - 1].displayName;
+    t.setCurrentLayer(t.currentLayer + 1);
+    clone.displayName = "copy of " + img.layers[t.currentLayer - 1].displayName;
+    img.insertLayer(t.currentLayer, clone);
     //fix that smearing!!
     t.updateLayerOptions();
     t.generateLayerList();
@@ -102,11 +139,9 @@ function main() {
       t.setCurrentLayer(t.currentLayer + 1);
     }
     const layer = img.godLayer();
+    layer.displayName = layer.name;
+    img.insertLayer(t.currentLayer, layer);
     
-    img.layers.splice(t.currentLayer, 0, layer);
-    img.layers[t.currentLayer].displayName = img.layers[t.currentLayer].name;
-    //fix that smearing!!
-    //later me here what the hell did i mean by that
     t.updateLayerOptions();
     t.generateLayerList();
     img.printImage();
@@ -127,17 +162,23 @@ function main() {
   
   
   let oldTimeR = 0;
-  document.addEventListener("keydown", function(event) {
+  document.onkeydown = (e) => {
     //intentionally lag the input so it doesnt print too fast
     let curTime = Math.round(Date.now() / 100);
     if(oldTimeR != curTime) {
-      if(event.key == "r" || event.key == "R") {
+      if(e.key == "r" || e.key == "R") {
         oldTimeR = curTime;
         t.forceRender = true;
         img.printImage();
+      } else if(e.key == "h" || e.key == "H") {
+        console.log("current layer hashes:");
+        console.log(img.layerHashes);
+        console.log("current freed layer hash indices:");
+        console.log(img.layerHashesFreed);
+        console.log("---");
       }
     }
-  });
+  }
   //////// IMAGE OPTIONS ////////
 
   function generateSaveUrl(data) {

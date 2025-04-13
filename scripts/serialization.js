@@ -32,9 +32,14 @@ class Serialization {
           const key = optionKeys[o];
           let val = layer.options[key];
           let refVal = refLayer.options[key];
-          if(layer.types[key].type == "color") {
+          const type = layer.types[key].type;
+          if(type == "color") {
             val = RGBA2Hex(val);
             refVal = RGBA2Hex(refVal);
+          } else if(type == "layer") {
+            //save layer index, because the hashes get lost after saving
+            val = img.layerHashes[val];
+            refVal = img.layerHashes[refVal];
           }
           //dont save the parameter if its just the default value
           if(refVal == val) continue;
@@ -75,21 +80,21 @@ class Serialization {
     }
     //blank layers so we arent loading images on top of eachother
     img.layers = [];
+    img.layerHashes = [];
+    img.layerHashesFreed = [];
 
     for(let i = 0; i < saved.layers.length; i++) {
       const fauxLayer = saved.layers[i];
       let newLayer = new img.layerClasses[fauxLayer.name];
-      
-      newLayer.od = Object.assign(newLayer.od, fauxLayer.od);
-      if(fauxLayer.od.tint != undefined) {
-        newLayer.od.tint = hex2RGB('#' + newLayer.od.tint);
-      }
-      //backwards compatability for pre-name layers
+      //for stripped out layer names
       if(fauxLayer.displayName == undefined) {
         newLayer.displayName = fauxLayer.name;
       } else {
         newLayer.displayName = fauxLayer.displayName;
       }
+      
+      newLayer.od = Object.assign(newLayer.od, fauxLayer.od);
+      newLayer.od.tint = hex2RGB('#' + newLayer.od.tint);
       //dont bother writing option data if there is none!!
       if(fauxLayer.options != undefined) {
         //clean up colors!
@@ -104,6 +109,8 @@ class Serialization {
           const type = newLayer.types[key].type;
           if(type == "color") {
             //too lazy to parse colors that are from the default layer... just check if theyre an array and plop em in
+            //TODO: figure out why the hell i do this? apparently it's important and stuff breaks without it, but the comment is absolute ass
+            //THANKS PAST ME
             if(typeof val == "object") {
               optionsNew[key] = val;
             } else {
@@ -115,6 +122,9 @@ class Serialization {
         }
         
         newLayer.options = optionsNew;
+        //the layer indices should be the same as the hashes at this point (starting from scratch)
+        //this should be fine....
+        img.layerHashes.push(i);
       }
       
       img.layers.push(newLayer);

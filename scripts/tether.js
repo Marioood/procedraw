@@ -663,6 +663,7 @@ class Tether {
             option.text = limits.items[i];
             input.add(option);
           }
+          //set the selected item to the default item
           input.selectedIndex = limits.items.indexOf(options[optionKeys[i]]);
           
           input.addEventListener("change", function (e) {
@@ -680,10 +681,31 @@ class Tether {
             option.text = limits.keys[i];
             input.add(option);
           }
+          //set the selected item to the default item
           input.selectedIndex = limits.values.indexOf(options[optionKeys[i]]);
           
           input.addEventListener("change", function (e) {
             options[optionKeys[i]] = limits.values[input.selectedIndex];
+            img.printImage();
+          });
+          container.appendChild(input);
+          break;
+        case "layer":
+          input = document.createElement("select");
+          input.id = id;
+          //TODO: fix order of options
+          for(let i = 0; i < img.layerHashes.length; i++) {
+            const option = document.createElement("option");
+            const key = img.layerHashes[i];
+            if(key == -1) continue; //skip if the key is marked as freed
+            option.text = img.layers[key].displayName;
+            input.add(option);
+          }
+          //set the selected item to the default item
+          input.selectedIndex = options[optionKeys[i]];
+          
+          input.addEventListener("change", function (e) {
+            options[optionKeys[i]] = input.selectedIndex;
             img.printImage();
           });
           container.appendChild(input);
@@ -732,8 +754,14 @@ class Tether {
           const tempLayer = img.layers[idx + 1];
           img.layers[idx + 1] = img.layers[idx];
           img.layers[idx] = tempLayer;
+          
+          const thisHashIdx = img.layerHashes.indexOf(idx);
+          const nextHashIdx = img.layerHashes.indexOf(idx + 1);
+          img.layerHashes[thisHashIdx]++;
+          img.layerHashes[nextHashIdx]--;
+          
           tempTether.generateLayerList();
-          tempTether.setCurrentLayer(Number(idx + 1));
+          tempTether.setCurrentLayer(idx + 1);
           tempTether.updateLayerOptions();
           tempTether.unhighlightLayer(tempTether.previousLayer);
           tempTether.highlightLayer(tempTether.currentLayer);
@@ -757,8 +785,14 @@ class Tether {
           const tempLayer = img.layers[idx - 1];
           img.layers[idx - 1] = img.layers[idx];
           img.layers[idx] = tempLayer;
+          
+          const prevHashIdx = img.layerHashes.indexOf(idx - 1);
+          const thisHashIdx = img.layerHashes.indexOf(idx);
+          img.layerHashes[prevHashIdx]++;
+          img.layerHashes[thisHashIdx]--;
+          
           tempTether.generateLayerList();
-          tempTether.setCurrentLayer(Number(idx - 1));
+          tempTether.setCurrentLayer(idx - 1);
           tempTether.updateLayerOptions();
           tempTether.unhighlightLayer(tempTether.previousLayer);
           tempTether.highlightLayer(tempTether.currentLayer);

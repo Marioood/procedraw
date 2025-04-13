@@ -31,6 +31,17 @@ clean up unused garbage
 make layer sliders render with some delay (avoid similar problems as color picker)
 "no layers exist" text
 edit tint switch layer dont switch color edit color SEE BUG
+warning about invalid blend mode
+coverage for liney
+decompress thing for save repair
+saved layer data uses a LOAD of memory!!!
+disable corners or edges
+negative options
+proper negative offs
+fade mode for blobs
+wandering2 direction offset
+strip MORE default options from saves
+strip empty objects from saves
 
 layers [
   1. wandering
