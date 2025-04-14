@@ -16,9 +16,9 @@ class ImageManager {
   layers = [];
   //woot woot! memory management in javascript!!!
   //list of indices in the layers array. used for filter layers, so that their base layers don't change
-  layerHashes = [];
-  //indexes in layerHashes that are not being used
-  layerHashesFreed = [];
+  layerKeys = [];
+  //indexes in layerKeys that are not being used
+  layerKeysFreed = [];
   layerClasses = {
     xorFractal: LayerXorFractal,
     solid: LayerSolid,
@@ -31,7 +31,8 @@ class ImageManager {
     worley: LayerWorley,
     wandering2: LayerWandering2,
     translate: FilterTranslate,
-    tile: FilterTile
+    tile: FilterTile,
+    invert: FilterInvert
   };
   name = "our beauty";
   
@@ -48,11 +49,13 @@ class ImageManager {
     for(let i = 0; i < this.layers.length; i++) {
       if(this.layers[i].od.shown) {
         this.layer = this.layers[i];
-        this.layer.data = new Array(img.w * img.h);
-        for(let i = 0; i < img.w * img.h * 4; i++) {
-          this.layer.data[i] = 0;
+        if(this.layer.linkCount > 0) {
+          this.layer.data = new Array(img.w * img.h);
+          for(let i = 0; i < img.w * img.h * 4; i++) {
+            this.layer.data[i] = 0;
+          }
         }
-        //this.layer.options = this.layer.defaults;
+        
         this.layer.generate(this.layer.options);
       }
     }
@@ -84,7 +87,7 @@ class ImageManager {
   }
 
   plotPixel(color, x, y) {
-    //color is an array of 4 bytes
+    //each channel goes from 0...1
     //[red, blue, green, alpha]
     
     //wrap around image
@@ -103,10 +106,12 @@ class ImageManager {
     //add the alphas together
     this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
     //set rendered layer data (for filters)
-    this.layer.data[pos * 4] = color[0] * tint[0];
-    this.layer.data[pos * 4 + 1] = color[1] * tint[1];
-    this.layer.data[pos * 4 + 2] = color[2] * tint[2];
-    this.layer.data[pos * 4 + 3] = color[3];
+    if(this.layer.linkCount > 0) {
+      this.layer.data[pos * 4] = color[0] * tint[0];
+      this.layer.data[pos * 4 + 1] = color[1] * tint[1];
+      this.layer.data[pos * 4 + 2] = color[2] * tint[2];
+      this.layer.data[pos * 4 + 3] = color[3];
+    }
   }
   
   combinePixel(l, b, blend, strength) {
@@ -187,11 +192,11 @@ class ImageManager {
           break;
           case 'layer':
             let layerIdx = -1;
-            //once a valid layer hash is found
+            //once a valid layer key is found
             for(let safety = 0; layerIdx == -1; safety++) {
-              layerIdx = jsIsDumb.layerHashes[Math.floor(Math.random() * jsIsDumb.layerHashes.length)];
+              layerIdx = jsIsDumb.layerKeys[Math.floor(Math.random() * jsIsDumb.layerKeys.length)];
               if(safety > 64) {
-                console.error("failed to create layer; could not find a valid layer hash");
+                console.error("failed to create layer; could not find a valid layer key");
                 return layer;
               }
             }
@@ -210,21 +215,21 @@ class ImageManager {
   }
   
   insertLayer(insertIdx, layer) {
-    //copy hashes so that index searching doesn't break
-    let hashesCopy = new Array(this.layerHashes.length);
-    for(let i = 0; i < hashesCopy.length; i++) hashesCopy[i] = this.layerHashes[i];
-    //rearrange layer hashes
+    //copy keys so that index searching doesn't break
+    let keysCopy = new Array(this.layerKeys.length);
+    for(let i = 0; i < keysCopy.length; i++) keysCopy[i] = this.layerKeys[i];
+    //rearrange layer keys
     for(let i = insertIdx; i < this.layers.length; i++) {
-      const hashIdx = this.layerHashes.indexOf(i);
-      hashesCopy[hashIdx]++;
+      const keyIdx = this.layerKeys.indexOf(i);
+      keysCopy[keyIdx]++;
     }
-    //copy the modified hashes back
-    for(let i = 0; i < hashesCopy.length; i++) this.layerHashes[i] = hashesCopy[i];
-    //add the new layer hash
-    if(this.layerHashesFreed.length > 0) {
-      this.layerHashes[this.layerHashesFreed.pop()] = insertIdx;
+    //copy the modified keys back
+    for(let i = 0; i < keysCopy.length; i++) this.layerKeys[i] = keysCopy[i];
+    //add the new layer key
+    if(this.layerKeysFreed.length > 0) {
+      this.layerKeys[this.layerKeysFreed.pop()] = insertIdx;
     } else {
-      this.layerHashes.push(insertIdx);
+      this.layerKeys.push(insertIdx);
     }
     //add layer
     this.layers.splice(insertIdx, 0, layer);

@@ -37,9 +37,9 @@ class Serialization {
             val = RGBA2Hex(val);
             refVal = RGBA2Hex(refVal);
           } else if(type == "layer") {
-            //save layer index, because the hashes get lost after saving
-            val = img.layerHashes[val];
-            refVal = img.layerHashes[refVal];
+            //save layer index, because the keys get lost after saving
+            val = img.layerKeys[val];
+            refVal = img.layerKeys[refVal];
           }
           //dont save the parameter if its just the default value
           if(refVal == val) continue;
@@ -80,8 +80,8 @@ class Serialization {
     }
     //blank layers so we arent loading images on top of eachother
     img.layers = [];
-    img.layerHashes = [];
-    img.layerHashesFreed = [];
+    img.layerKeys = [];
+    img.layerKeysFreed = [];
 
     for(let i = 0; i < saved.layers.length; i++) {
       const fauxLayer = saved.layers[i];
@@ -95,6 +95,9 @@ class Serialization {
       
       newLayer.od = Object.assign(newLayer.od, fauxLayer.od);
       newLayer.od.tint = hex2RGB('#' + newLayer.od.tint);
+      //increment layer link counts--layer rendering shits itself if it isn't right!!
+      //just using the layer index should be fine, since layer indices and keys are the same at this point
+      if(newLayer.od.base > -1) img.layers[newLayer.od.base].linkCount++;
       //dont bother writing option data if there is none!!
       if(fauxLayer.options != undefined) {
         //clean up colors!
@@ -122,9 +125,9 @@ class Serialization {
         }
         
         newLayer.options = optionsNew;
-        //the layer indices should be the same as the hashes at this point (starting from scratch)
+        //the layer indices should be the same as the keys at this point (starting from scratch)
         //this should be fine....
-        img.layerHashes.push(i);
+        img.layerKeys.push(i);
       }
       
       img.layers.push(newLayer);

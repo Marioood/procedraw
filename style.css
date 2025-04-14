@@ -96,7 +96,7 @@ h2 {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	pointer-events: 0;
+	pointer-events: none;
 	overflow: hidden;
 }
 .right-container {
@@ -138,7 +138,7 @@ h2 {
 	background-color: #404040;
 }
 .sticky-header {
-	user-select: 0;
+	user-select: none;
 	position: sticky;
 	top: 0;
 	z-index: 1; /*prevent layer icons from overlapping this*/

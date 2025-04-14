@@ -7,8 +7,8 @@ new options are passed into generate() as "o" (short for options)
 const O_FADE_NONE = 0;
 const O_FADE_NEAR_EDGE = 1;
 const O_FADE_NEAR_CENTER = 2;
-const O_FADE_SQUARED = 3;
-const O_FADE = 4;
+const O_FADE_NEAR_EDGE_SQUARED = 3;
+const O_FADE_NEAR_CENTER_SQUARED = 4;
   
 class Layer {
   //class name
@@ -19,6 +19,8 @@ class Layer {
   data;
   //this should be self explanatory
   isFilter = false;
+  //how many filters are being applied to this layer
+  linkCount = 0;
   //layer options
   options = {};
   //setting types (for the editor input types)
@@ -33,8 +35,9 @@ class Layer {
     //multiply the image by a color
     tint: [1, 1, 1, 1],
     //depth: 255,
-    shown: true
-    //maybe add "disolve"? like the coverage option from the noise filter
+    shown: true,
+    //layer hash used for filters
+    base: -1
   };
   
   typesDefault = {
@@ -68,6 +71,10 @@ class Layer {
     },
     shown: {
       type: "boolean",
+      hidden: true
+    },
+    base: {
+      type: "layer",
       hidden: true
     }
   };
@@ -518,7 +525,8 @@ class LayerBlobs extends Layer {
     spacing: 8,
     minDiameter: 8,
     maxDiameter: 8,
-    fade: false
+    minAlpha: 1,
+    fadeMode: O_FADE_NONE
   };
   
   types = {
@@ -540,8 +548,28 @@ class LayerBlobs extends Layer {
       max: 128,
       unsafe: true
     },
-    fade: {
-      type: "boolean"
+    minAlpha: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.05
+    },
+    fadeMode: {
+      type: "keyvalues",
+      keys: [
+        "no fade",
+        "fade near edge",
+        "fade near center",
+        "fade near edge (squared)",
+        "fade near center (squared)"
+      ],
+      values: [
+        O_FADE_NONE,
+        O_FADE_NEAR_EDGE,
+        O_FADE_NEAR_CENTER,
+        O_FADE_NEAR_EDGE_SQUARED,
+        O_FADE_NEAR_CENTER_SQUARED
+      ]
     }
   };
   
@@ -558,25 +586,75 @@ class LayerBlobs extends Layer {
       let xStart = Math.floor(Math.random() * img.w);
       let yStart = Math.floor(Math.random() * img.h);
       
-      for(let yi = -r; yi < r; yi++) {
-        for(let xi = -r; xi < r; xi++) {
-          //subtract 0.5 to make the blobs rounder
-          const dist = Math.sqrt(xi * xi + yi * yi);
-          if(dist < r - 0.5) {
-            //wrap pixels around the edge (maybe make this a default option? or default in plotPixel??)
-            /*let x = Math.floor(xi + xStart) % img.w;
-            let y = Math.floor(yi + yStart) % img.h;
-            if(x < 0) x += img.w;
-            if(y < 0) y += img.h;*/
-            let x = Math.floor(xi + xStart);
-            let y = Math.floor(yi + yStart);
-            if(o.fade) {
-              img.plotPixel([1, 1, 1, (r - dist) / r], x, y);
-            } else {
-              img.plotPixel([1, 1, 1, 1], x, y);
+      const alpha = Math.max(Math.random(), o.minAlpha);
+      
+      switch(o.fadeMode) {
+        case O_FADE_NONE:
+          for(let yi = -r; yi < r; yi++) {
+            for(let xi = -r; xi < r; xi++) {
+              //subtract 0.5 to make the blobs rounder
+              const dist = xi * xi + yi * yi;
+              if(dist < (r - 0.5) * (r - 0.5)) {
+                let x = Math.floor(xi + xStart);
+                let y = Math.floor(yi + yStart);
+                img.plotPixel([1, 1, 1, alpha], x, y);
+              }
             }
           }
-        }
+          break;
+        case O_FADE_NEAR_EDGE:
+          for(let yi = -r; yi < r; yi++) {
+            for(let xi = -r; xi < r; xi++) {
+              //subtract 0.5 to make the blobs rounder
+              const dist = Math.sqrt(xi * xi + yi * yi);
+              if(dist < r - 0.5) {
+                let x = Math.floor(xi + xStart);
+                let y = Math.floor(yi + yStart);
+                img.plotPixel([1, 1, 1, (r - dist) / r * alpha], x, y);
+              }
+            }
+          }
+          break;
+        case O_FADE_NEAR_CENTER:
+          for(let yi = -r; yi < r; yi++) {
+            for(let xi = -r; xi < r; xi++) {
+              //subtract 0.5 to make the blobs rounder
+              const dist = Math.sqrt(xi * xi + yi * yi);
+              if(dist < r - 0.5) {
+                let x = Math.floor(xi + xStart);
+                let y = Math.floor(yi + yStart);
+                img.plotPixel([1, 1, 1, dist / r * alpha], x, y);
+              }
+            }
+          }
+          break;
+        //i could probably use algebra to optimize this code, but womp womp
+        case O_FADE_NEAR_EDGE_SQUARED:
+          for(let yi = -r; yi < r; yi++) {
+            for(let xi = -r; xi < r; xi++) {
+              //subtract 0.5 to make the blobs rounder
+              const dist = Math.sqrt(xi * xi + yi * yi);
+              if(dist < r - 0.5) {
+                let x = Math.floor(xi + xStart);
+                let y = Math.floor(yi + yStart);
+                img.plotPixel([1, 1, 1, (r - dist) / r * (r - dist) / r * alpha], x, y);
+              }
+            }
+          }
+          break;
+        case O_FADE_NEAR_CENTER_SQUARED:
+          for(let yi = -r; yi < r; yi++) {
+            for(let xi = -r; xi < r; xi++) {
+              //subtract 0.5 to make the blobs rounder
+              const dist = Math.sqrt(xi * xi + yi * yi);
+              if(dist < r - 0.5) {
+                let x = Math.floor(xi + xStart);
+                let y = Math.floor(yi + yStart);
+                img.plotPixel([1, 1, 1, dist / r * dist / r * alpha], x, y);
+              }
+            }
+          }
+          break;
       }
     }
   }

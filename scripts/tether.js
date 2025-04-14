@@ -485,14 +485,6 @@ class Tether {
       InputColor(hex2RGB("#300256"))
     );
     colpContainer.appendChild(paletteContainer);*/
-    
-    //refresh warning
-    /*if(!DEBUG) {
-      window.addEventListener("beforeunload", function (e) {
-        event.preventDefault();
-        event.returnValue = true;
-      });
-    }*/
   }
   
   generateLayerOptions(options, types, containerId) {
@@ -693,27 +685,38 @@ class Tether {
         case "layer":
           input = document.createElement("select");
           input.id = id;
+          //const blankOption = document.createElement("option");
+          //blankOption.innerText = "< no layer >";
+          //input.add(blankOption);
           //TODO: fix order of options
-          for(let i = 0; i < img.layerHashes.length; i++) {
+          for(let i = 0; i < img.layerKeys.length; i++) {
             const option = document.createElement("option");
-            const key = img.layerHashes[i];
+            const key = img.layerKeys[i];
             if(key == -1) continue; //skip if the key is marked as freed
+            if(img.layerKeys[key] == img.layerKeys.indexOf(this.currentLayer)) continue; //skip if this key points to the current layer
             option.text = img.layers[key].displayName;
             input.add(option);
           }
-          //set the selected item to the default item
-          input.selectedIndex = options[optionKeys[i]];
+          //set the selected item to the current key
+          //mess with the index position to account for the <no layer> option
+          let oldKey = options[optionKeys[i]];
+          input.selectedIndex = oldKey;
           
           input.addEventListener("change", function (e) {
-            options[optionKeys[i]] = input.selectedIndex;
+            const key = input.selectedIndex;
+            options[optionKeys[i]] = key;
+            
+            if(key == oldKey) return;
+            if(oldKey > -1) img.layers[img.layerKeys[oldKey]].linkCount--;
+            img.layers[img.layerKeys[key]].linkCount++;
+            oldKey = key;
             img.printImage();
           });
           container.appendChild(input);
           break;
       }
       //spacing
-      const lineBreak = document.createElement("br");
-      container.appendChild(lineBreak);
+      container.appendChild(Br());
     }
   }
   
@@ -755,10 +758,10 @@ class Tether {
           img.layers[idx + 1] = img.layers[idx];
           img.layers[idx] = tempLayer;
           
-          const thisHashIdx = img.layerHashes.indexOf(idx);
-          const nextHashIdx = img.layerHashes.indexOf(idx + 1);
-          img.layerHashes[thisHashIdx]++;
-          img.layerHashes[nextHashIdx]--;
+          const thisKeyIdx = img.layerKeys.indexOf(idx);
+          const nextKeyIdx = img.layerKeys.indexOf(idx + 1);
+          img.layerKeys[thisKeyIdx]++;
+          img.layerKeys[nextKeyIdx]--;
           
           tempTether.generateLayerList();
           tempTether.setCurrentLayer(idx + 1);
@@ -786,10 +789,10 @@ class Tether {
           img.layers[idx - 1] = img.layers[idx];
           img.layers[idx] = tempLayer;
           
-          const prevHashIdx = img.layerHashes.indexOf(idx - 1);
-          const thisHashIdx = img.layerHashes.indexOf(idx);
-          img.layerHashes[prevHashIdx]++;
-          img.layerHashes[thisHashIdx]--;
+          const prevKeyIdx = img.layerKeys.indexOf(idx - 1);
+          const thisKeyIdx = img.layerKeys.indexOf(idx);
+          img.layerKeys[prevKeyIdx]++;
+          img.layerKeys[thisKeyIdx]--;
           
           tempTether.generateLayerList();
           tempTether.setCurrentLayer(idx - 1);

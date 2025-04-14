@@ -1,4 +1,7 @@
 "use strict";
+//change this variable if you're developing
+const DEBUG = true;
+
 const img = new ImageManager();
 const t = new Tether();
 const s = new Serialization();
@@ -9,29 +12,41 @@ function main() {
   removeLayer.addEventListener("click", function (e) {
     //dont do anything if there arent any layers
     if(img.layers.length == 0) return;
-    //copy hashes so that index searching doesn't break
-    let hashesCopy = new Array(img.layerHashes.length);
-    for(let i = 0; i < hashesCopy.length; i++) hashesCopy[i] = img.layerHashes[i];
-    //mark the deleted layer as free
-    img.layerHashesFreed.push(hashesCopy.indexOf(t.currentLayer));
-    hashesCopy[img.layerHashes.indexOf(t.currentLayer)] = -1;
-    //rearrange layer hashes
-    for(let i = t.currentLayer + 1; i < img.layers.length; i++) {
-      const idx = img.layerHashes.indexOf(i);
-      hashesCopy[idx]--;
+    const curLayer = img.layers[t.currentLayer]
+    if(curLayer.linkCount > 0) {
+      alert(`unable to delete layer; it is currently linked with ${curLayer.linkCount} filters(s)`);
+      return;
     }
-    //copy the modified hashes back
-    for(let i = 0; i < hashesCopy.length; i++) img.layerHashes[i] = hashesCopy[i];
+    if(curLayer.isFilter) {
+      const baseKey = curLayer.od.base;
+      //skip the link count stuff if the base isn't set
+      if(baseKey > -1) { 
+        img.layers[img.layerKeys[baseKey]].linkCount--;
+      }
+    }
+    //copy keys so that index searching doesn't break
+    let keysCopy = new Array(img.layerKeys.length);
+    for(let i = 0; i < keysCopy.length; i++) keysCopy[i] = img.layerKeys[i];
+    //mark the deleted layer as free
+    img.layerKeysFreed.push(keysCopy.indexOf(t.currentLayer));
+    keysCopy[img.layerKeys.indexOf(t.currentLayer)] = -1;
+    //rearrange layer keys
+    for(let i = t.currentLayer + 1; i < img.layers.length; i++) {
+      const idx = img.layerKeys.indexOf(i);
+      keysCopy[idx]--;
+    }
+    //copy the modified keys back
+    for(let i = 0; i < keysCopy.length; i++) img.layerKeys[i] = keysCopy[i];
     
     img.layers.splice(t.currentLayer, 1);
     //go down a layer if we're in the middle, stay in place if we're at the bottom
     if(t.currentLayer > 0) {
        t.setCurrentLayer(t.currentLayer - 1);
     }
-    //clear layer hashes and freed indexes if there are no layers (prevent memory leaks)
+    //clear layer keys and freed indexes if there are no layers (prevent memory leaks)
     if(img.layers.length == 0) {
-      img.layerHashes = [];
-      img.layerHashesFreed = [];
+      img.layerKeys = [];
+      img.layerKeysFreed = [];
     }
     t.updateLayerOptions();
     t.generateLayerList();
@@ -53,9 +68,9 @@ function main() {
       //go down a layer if we're in the middle, stay in place if we're at the bottom
       t.setCurrentLayer(0);
       img.layers = [];
-      //clear layer hashes and freed indexes if there are no layers (prevent memory leaks)
-      img.layerHashes = [];
-      img.layerHashesFreed = [];
+      //clear layer keys and freed indexes if there are no layers (prevent memory leaks)
+      img.layerKeys = [];
+      img.layerKeysFreed = [];
       t.updateLayerOptions();
       t.generateLayerList();
       img.printImage();
@@ -83,23 +98,6 @@ function main() {
     t.generateLayerList();
     img.printImage();
   });
-/*
-layers [0 1 2 3]
-           ^* *
-hashes {0 1 2 3}
----
-layers [0 1 2 3 4]
-            ^ * *
-hashes {0 1 3 4 2}
-=========================
-layers [0 1 2 3 4 5]
-           ^* * * *
-hashes {0 1 2 3 4 5}
----
-layers [0 1 2 3 4 5 6]
-            ^ * * * *
-hashes {0 1 3 4 5 6 2}
-*/
   const dupeLayer = document.getElementById("dupe-layer");
   dupeLayer.addEventListener("click", function (e) {
     const layer2Dupe = img.layers[t.currentLayer];
@@ -170,12 +168,21 @@ hashes {0 1 3 4 5 6 2}
         oldTimeR = curTime;
         t.forceRender = true;
         img.printImage();
-      } else if(e.key == "h" || e.key == "H") {
-        console.log("current layer hashes:");
-        console.log(img.layerHashes);
-        console.log("current freed layer hash indices:");
-        console.log(img.layerHashesFreed);
-        console.log("---");
+      } else if(DEBUG) {
+          if(e.key == "h" || e.key == "H") {
+          console.log("current layer keys:");
+          console.log(img.layerKeys);
+          console.log("current freed layer key indices:");
+          console.log(img.layerKeysFreed);
+          console.log("---");
+        } else if(e.key == "c" || e.key == "C") {
+          console.log("layer link counts:");
+          for(let i = 0; i < img.layers.length; i++) {
+            const layer = img.layers[i];
+            console.log(`${i}. ${layer.displayName} is linked ${layer.linkCount} time(s)`);
+          }
+          console.log("---");
+        }
       }
     }
   }
@@ -219,6 +226,7 @@ hashes {0 1 3 4 5 6 2}
         }
       } catch(error) {
         window.alert("couldn't parse data! \n\n" + error);
+        if(DEBUG) console.log(error);
         return;
       }
     }
@@ -457,6 +465,14 @@ hashes {0 1 3 4 5 6 2}
     }
   })();
   
+  //refresh warning
+  if(!DEBUG) {
+    window.addEventListener("beforeunload", function (e) {
+      event.preventDefault();
+      event.returnValue = true;
+    });
+  }
+  if(DEBUG) console.log("debug mode is enabled; some features may be disabled or enabled");
   updateSize();
   img.printImage();
 }

@@ -42,29 +42,7 @@ fade mode for blobs
 wandering2 direction offset
 strip MORE default options from saves
 strip empty objects from saves
+maybe add "disolve"? like the coverage option from the noise filter
 
-layers [
-  1. wandering
-  2. checkers
-  3. tile -> layerKeys[1]
-]
 
-layerKeys [
-  1. 1
-  2. 2
-  3. 3
-]
-
-VVV after you move a layer VVV
-
-layers [
-  1. checkers   // moved
-  2. wandering  // also moved
-  3. tile -> layerKeys[1]
-]
-
-layerKeys [
-  1. 2
-  2. 1
-  3. 3
-]
+filters are BUSTED it gives me shit headache
