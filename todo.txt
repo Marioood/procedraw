@@ -4,7 +4,6 @@ value noise layer
 perlin noise layer
 save as file
 image layer that has is an embedded image
-make killAllChildren() and other similar functions global in tether.js, and make tether.js just be html--js interaction functions
 ctrl + scroll to zoom in and out
 scroll to move up and down
 shift + scroll to move left and right
@@ -18,16 +17,13 @@ color picker sometimes doesnt reprint the image when youre done changing it
 //overlap option (see wandering lines)
 //brightness tolerance
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
-//the set color function sucked it was like 4 times slower
 //snap image editor
 //color ramp
 //tiled view
 //variables and math expressions
 //perlin noise
-//DONT SLAP MORE SHIT ONTO SHIT
 colp and option consistent sliders
 HILARIOUS parody logos!
-clean up unused garbage
 make layer sliders render with some delay (avoid similar problems as color picker)
 "no layers exist" text
 edit tint switch layer dont switch color edit color SEE BUG
@@ -40,9 +36,13 @@ negative options
 proper negative offs
 fade mode for blobs
 wandering2 direction offset
-strip MORE default options from saves
-strip empty objects from saves
 maybe add "disolve"? like the coverage option from the noise filter
+layer managment buttons are not visible on mobile (kind of important!!!)
+fix god layers! they dont work
+make loading more safe (test ways to break / exploit saving)
 
+REMINDERS
 
-filters are BUSTED it gives me shit headache
+clean up unused garbage
+//DONT SLAP MORE SHIT ONTO SHIT
+//the set color function sucked it was like 4 times slower

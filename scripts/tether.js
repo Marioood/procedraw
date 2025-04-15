@@ -434,7 +434,7 @@ class Tether {
   previousLayer = 0;
   currentClass = LayerXorFractal;
   canvasScale = 4;
-  version = "VOLATILE 0.5";
+  version = "VOLATILE 0.6";
   renderOnUpdate = true;
   forceRender = false;
   compressSaves = true;

@@ -15,14 +15,16 @@ class Filter extends Layer {
         "add",
         "multiply",
         "screen",
-        "overlay"
+        "overlay",
+        "subtract"
       ],
       values: [
         BLEND_PLAIN,
         BLEND_ADD,
         BLEND_MULTIPLY,
         BLEND_SCREEN,
-        BLEND_OVERLAY
+        BLEND_OVERLAY,
+        BLEND_SUBTRACT
       ]
     },
     tint: {
@@ -67,7 +69,6 @@ class FilterTranslate extends Filter {
   generate(o) {
     if(this.od.base == -1) return;
     const data = img.layers[img.layerKeys[this.od.base]].data;
-    console.log(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
@@ -172,10 +173,22 @@ class FilterInvert extends Filter {
   name = "invert";
   
   options = {
+    invertRed: true,
+    invertBlue: true,
+    invertGreen: true,
     invertAlpha: false
   };
   
   types = {
+    invertRed: {
+      type: "boolean"
+    },
+    invertBlue: {
+      type: "boolean"
+    },
+    invertGreen: {
+      type: "boolean"
+    },
     invertAlpha: {
       type: "boolean"
     }
@@ -192,7 +205,12 @@ class FilterInvert extends Filter {
         const g = data[idx * 4 + 1];
         const b = data[idx * 4 + 2];
         const a = data[idx * 4 + 3];
-        img.plotPixel([1 - r, 1 - g, 1 - b, a], x, y);
+        img.plotPixel(
+          [(o.invertRed) ? 1 - r : r,
+          (o.invertGreen) ? 1 - g : g,
+          (o.invertBlue) ? 1 - b : b,
+          (o.invertAlpha) ? 1 - a : a],
+        x, y);
       }
     }
   }

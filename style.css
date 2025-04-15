@@ -25,6 +25,9 @@ canvas {
 h2 {
 	font-style: italic;
 }
+a {
+  color: cyan;
+}
 /******** COLOR PICKER ********/
 .woke-bg {
 	background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);

@@ -6,6 +6,7 @@ const BLEND_MULTIPLY = 1;
 const BLEND_PLAIN = 2;
 const BLEND_SCREEN = 3;
 const BLEND_OVERLAY = 4;
+const BLEND_SUBTRACT = 5;
 
 class ImageManager {
   w = 64;
@@ -19,6 +20,10 @@ class ImageManager {
   layerKeys = [];
   //indexes in layerKeys that are not being used
   layerKeysFreed = [];
+  
+  //layerKey -> layerIndex
+  //layers[layerIndex] -> LayerSomeExampleLayer
+  
   layerClasses = {
     xorFractal: LayerXorFractal,
     solid: LayerSolid,
@@ -134,6 +139,10 @@ class ImageManager {
         } else {
           return 1 - (1 - l * strength) * ((strength + 1) * (1 - b));
         }
+      case BLEND_SUBTRACT:
+        return b - (l * strength);
+      default:
+        console.error(`unknown blend mode ${blend}`);
     }
   }
   
@@ -192,12 +201,14 @@ class ImageManager {
           break;
           case 'layer':
             let layerIdx = -1;
-            //once a valid layer key is found
-            for(let safety = 0; layerIdx == -1; safety++) {
-              layerIdx = jsIsDumb.layerKeys[Math.floor(Math.random() * jsIsDumb.layerKeys.length)];
-              if(safety > 64) {
-                console.error("failed to create layer; could not find a valid layer key");
-                return layer;
+            if(layer.isFilter) {
+              //once a valid layer key is found
+              for(let safety = 0; layerIdx == -1; safety++) {
+                layerIdx = jsIsDumb.layerKeys[Math.floor(Math.random() * jsIsDumb.layerKeys.length)];
+                if(safety > 64) {
+                  console.error("failed to create layer; could not find a valid layer key");
+                  layerIdx = -1;
+                }
               }
             }
             opts[key] = layerIdx;

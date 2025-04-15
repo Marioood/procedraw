@@ -1,7 +1,7 @@
 "use strict";
 
 class Serialization {
-  format = 1;
+  format = 2;
   
   save() {
     let saved = {};
@@ -17,23 +17,21 @@ class Serialization {
     
     for(let i = 0; i < img.layers.length; i++) {
       let layer = img.layers[i];
-      let optionsNew = {};
-      const optionKeys = Object.keys(layer.options);
       let newLayer = {};
-      let newOptionDefaults = Object.assign({}, layer.od);
-      newOptionDefaults.tint = RGB2Hex(newOptionDefaults.tint);
       //factory fresh version of the layer, for parameter stripping
       let refLayer = new img.layerClasses[layer.name];
-      //dont bother saving the options if they're empty
-      let optionCount = 0;
-      if(optionKeys.length > 0) {
-        //replace some options so theyre a little smaller (colors are arrays during runtime - but theyre smaller as hex strings)
+      
+      function copyKeys(oldOptions, types, refOptions) {
+        let newOptions = {};
+        const optionKeys = Object.keys(oldOptions);
+        //replace some options so there's less filler in the save
         for(let o = 0; o < optionKeys.length; o++) {
           const key = optionKeys[o];
-          let val = layer.options[key];
-          let refVal = refLayer.options[key];
-          const type = layer.types[key].type;
+          let val = oldOptions[key];
+          let refVal = refOptions[key];
+          const type = types[key].type;
           if(type == "color") {
+            //colors are arrays during runtime - but theyre smaller as hex strings
             val = RGBA2Hex(val);
             refVal = RGBA2Hex(refVal);
           } else if(type == "layer") {
@@ -41,22 +39,22 @@ class Serialization {
             val = img.layerKeys[val];
             refVal = img.layerKeys[refVal];
           }
-          //dont save the parameter if its just the default value
           if(refVal == val) continue;
-          optionCount++;
-          optionsNew[key] = val;
+          newOptions[key] = val;
         }
+        return newOptions;
       }
+      const newOptionsDefault = copyKeys(layer.od, layer.typesDefault, refLayer.od);
+      const newOptions = copyKeys(layer.options, layer.types, refLayer.options);
+      
       newLayer["name"] = layer.name;
       //dont bother saving the name if its unchanged
       if(layer.name != layer.displayName) {
         newLayer["displayName"] = layer.displayName;
       }
-      newLayer["od"] = newOptionDefaults;
-      //dont save the options if all of them are default or there arent any
-      if(optionCount > 0 || optionKeys.length > 0) {
-        newLayer["options"] = optionsNew;
-      }
+      //dont save the parameter if its just the default value
+      if(Object.keys(newOptionsDefault).length > 0) newLayer["od"] = newOptionsDefault;
+      if(Object.keys(newOptions).length > 0) newLayer["options"] = newOptions;
       saved.layers.push(newLayer);
     }
     
@@ -86,50 +84,59 @@ class Serialization {
     for(let i = 0; i < saved.layers.length; i++) {
       const fauxLayer = saved.layers[i];
       let newLayer = new img.layerClasses[fauxLayer.name];
-      //for stripped out layer names
+      //add back display names, for stripped out layer names
       if(fauxLayer.displayName == undefined) {
         newLayer.displayName = fauxLayer.name;
       } else {
         newLayer.displayName = fauxLayer.displayName;
       }
       
-      newLayer.od = Object.assign(newLayer.od, fauxLayer.od);
-      newLayer.od.tint = hex2RGB('#' + newLayer.od.tint);
       //increment layer link counts--layer rendering shits itself if it isn't right!!
       //just using the layer index should be fine, since layer indices and keys are the same at this point
       if(newLayer.od.base > -1) img.layers[newLayer.od.base].linkCount++;
-      //dont bother writing option data if there is none!!
-      if(fauxLayer.options != undefined) {
+      
+      function loadOptions(fauxOptions, types) {
         //clean up colors!
-        let optionsNew = {};
-        //make sure the faux options have the correct amount of options (if an image from an old version gets loaded in a version w new options)
-        fauxLayer.options = Object.assign(newLayer.options, fauxLayer.options);
-        const optionKeys = Object.keys(fauxLayer.options);
+        let newOptions = {};
+        //fauxLayer.options = ;
+        const optionKeys = Object.keys(fauxOptions);
         
         for(let o = 0; o < optionKeys.length; o++) {
           const key = optionKeys[o];
-          const val = fauxLayer.options[key];
-          const type = newLayer.types[key].type;
+          const val = fauxOptions[key];
+          const type = types[key].type;
           if(type == "color") {
             //too lazy to parse colors that are from the default layer... just check if theyre an array and plop em in
             //TODO: figure out why the hell i do this? apparently it's important and stuff breaks without it, but the comment is absolute ass
             //THANKS PAST ME
+            //i have yet to gleam any meaning from this comment
             if(typeof val == "object") {
-              optionsNew[key] = val;
+              newOptions[key] = val;
+              console.log("i am john object: " + key);
             } else {
-              optionsNew[key] = hex2RGB('#' + val);
+              newOptions[key] = hex2RGB('#' + val);
             }
+          } else if(type == "layer") {
+            newOptions[key] = val;
+            //prevent filters from shitting themselves
+            //because layer data only gets defined when the link count is > 0
+            img.layers[img.layerKeys[val]].linkCount++;
           } else {
-            optionsNew[key] = val;
+            newOptions[key] = val;
           }
         }
-        
-        newLayer.options = optionsNew;
-        //the layer indices should be the same as the keys at this point (starting from scratch)
-        //this should be fine....
-        img.layerKeys.push(i);
+        return newOptions;
       }
-      
+      //make sure the faux options have the correct amount of options
+      //for when a layer has stripped out options (very likely)
+      const fauxOptionsDefault = Object.assign(newLayer.od, fauxLayer.od);
+      const fauxOptions = Object.assign(newLayer.options, fauxLayer.options);
+      //dont bother writing option data if there is none
+      if(fauxLayer.od != undefined) newLayer.od = loadOptions(fauxOptionsDefault, newLayer.typesDefault);
+      if(fauxLayer.options != undefined) newLayer.options = loadOptions(fauxOptions, newLayer.types);
+      //the layer indices should be the same as the keys at this point (starting from scratch)
+      //this should be fine....
+      img.layerKeys.push(i);
       img.layers.push(newLayer);
     }
   }

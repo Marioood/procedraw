@@ -54,14 +54,16 @@ class Layer {
         "add",
         "multiply",
         "screen",
-        "overlay"
+        "overlay",
+        "subtract"
       ],
       values: [
         BLEND_PLAIN,
         BLEND_ADD,
         BLEND_MULTIPLY,
         BLEND_SCREEN,
-        BLEND_OVERLAY
+        BLEND_OVERLAY,
+        BLEND_SUBTRACT
       ]
     },
     tint: {

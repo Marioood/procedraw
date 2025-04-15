@@ -361,7 +361,9 @@ function main() {
     if(img.layers.length > 0) {
       //go down a layer if we're in the middle, stay in place if we're at the bottom
       t.setCurrentLayer(0);
-      img.layers.splice(0);
+      img.layers = [];
+      img.layersKeys = [];
+      img.layersKeysFreed = [];
       t.updateLayerOptions();
       t.generateLayerList();
       img.printImage();
@@ -371,7 +373,10 @@ function main() {
     for(let i = 0; i < layerCount; i++) {
       const curLayer = img.godLayer();
       curLayer.displayName = randName(2);
-      img.layers.push(curLayer);
+      //proper link count for filters
+      console.log(curLayer.od);
+      if(curLayer.od.base != -1) img.layers[img.layerKeys[curLayer.od.base]].linkCount++;
+      img.insertLayer(img.layers.length, curLayer);
       t.currentLayer++;
     }
     t.currentLayer--;
