@@ -7,6 +7,15 @@ const BLEND_PLAIN = 2;
 const BLEND_SCREEN = 3;
 const BLEND_OVERLAY = 4;
 const BLEND_SUBTRACT = 5;
+//again, NEVER change these values!!
+const MIX_PLAIN = 0;
+const MIX_HALF = 1;
+const MIX_RANDOM = 2;
+const MIX_BAYER = 3;
+const MIX_HALFTONE = 4;
+const MIX_DAFT_X = 5;
+const MIX_DAFT_Y = 6;
+const MIX_HALF_DITHER = 7;
 
 class ImageManager {
   w = 64;
@@ -37,7 +46,8 @@ class ImageManager {
     wandering2: LayerWandering2,
     translate: FilterTranslate,
     tile: FilterTile,
-    invert: FilterInvert
+    invert: FilterInvert,
+    gradient: LayerGradient
   };
   name = "our beauty";
   
@@ -73,6 +83,18 @@ class ImageManager {
     }
     //insert new image data
     t.ctx.putImageData(canvasImg, 0, 0);
+    if(t.tileView) {
+      t.ctx.putImageData(canvasImg, this.w, 0);
+      t.ctx.putImageData(canvasImg, this.w * 2, 0);
+      
+      t.ctx.putImageData(canvasImg, 0, this.h);
+      t.ctx.putImageData(canvasImg, this.w, this.h);
+      t.ctx.putImageData(canvasImg, this.w * 2, this.h);
+      
+      t.ctx.putImageData(canvasImg, 0, this.h * 2);
+      t.ctx.putImageData(canvasImg, this.w, this.h * 2);
+      t.ctx.putImageData(canvasImg, this.w * 2, this.h * 2);
+    }
     let renderTime = Date.now() - startTime;
     
     document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
@@ -169,8 +191,9 @@ class ImageManager {
   godLayer() {
     const choice = x => x[Math.floor(Math.random() * x.length)];
     /** @type {Layer} */
-    const layer = new (choice(Object.values(img.layerClasses)));
-    //TODO: dont add filters if there's no layers
+    let layer = new (choice(Object.values(img.layerClasses)));
+    //hack to prevent filter layers from generating if there are no other layers (the program crashes out if that happens)
+    if(layer.isFilter && this.layers.length == 0) layer = new LayerXorFractal();
     const jsIsDumb = this; //can't use 'this' in the 'layer' case because it's undefined.................
     function randomize(opts, desc) {
       for(const key in opts) {
@@ -200,18 +223,21 @@ class ImageManager {
             opts[key] = choice(d.values);
           break;
           case 'layer':
-            let layerIdx = -1;
+            let layerKey = -1;
             if(layer.isFilter) {
+              let layerIdx = -1;
               //once a valid layer key is found
               for(let safety = 0; layerIdx == -1; safety++) {
-                layerIdx = jsIsDumb.layerKeys[Math.floor(Math.random() * jsIsDumb.layerKeys.length)];
+                layerKey = Math.floor(Math.random() * jsIsDumb.layerKeys.length)
+                layerIdx = jsIsDumb.layerKeys[layerKey];
                 if(safety > 64) {
                   console.error("failed to create layer; could not find a valid layer key");
                   layerIdx = -1;
                 }
               }
+              jsIsDumb.layers[layerIdx].linkCount++;
             }
-            opts[key] = layerIdx;
+            opts[key] = layerKey;
           break;
           default:
             console.error(`Unsupported option type ${d.type}`);

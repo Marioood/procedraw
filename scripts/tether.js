@@ -128,12 +128,13 @@ function killChildren(container) {
 
 let colpGlobalDisplay = null;
 let colpGlobalOninput = null;
+let colpGlobalUpdate = null;
 
 function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
   const colpDisplay = Button("", (e) => {
     colpGlobalDisplay = e.target;
     let oldTime;
-    const oninputPlus = (newCol) => {
+    colpGlobalOninput = (newCol) => {
       inputCol[0] = newCol[0];
       inputCol[1] = newCol[1];
       inputCol[2] = newCol[2];
@@ -147,7 +148,7 @@ function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
         onupdate();
       }
     }
-    colpGlobalOninput = oninputPlus;
+    colpGlobalUpdate = onupdate;
     
     colp.RGB[0] = Math.floor(inputCol[0] * 255);
     colp.RGB[1] = Math.floor(inputCol[1] * 255);
@@ -197,6 +198,11 @@ class InputColorControl {
     this.HSV = byteRGB2HSV(this.RGB) //H, S, V
     this.alpha = 255;
 
+    //make this a function to call another function, because colpGlobalUpdate changes what function it is (and is also sometimes null!!)
+    function onupdate() {
+      colpGlobalUpdate();
+    }
+
     this.hexBox = InputText("000000ff", (e) => {
       const hex = e.target.value;
       let newCol;
@@ -224,6 +230,7 @@ class InputColorControl {
       
       if(colpGlobalOninput != null) colpGlobalOninput(newCol);
     }, "colp-text");
+    this.hexBox.onmouseup = onupdate;
 
     // RGB //
     this.redSlider = InputRange(0, 255, 0, (e) => {
@@ -231,37 +238,46 @@ class InputColorControl {
       this.RGB[0] = red;
       this.redBox.value = red;
       this.updateSlidersRGB();
+    
     });
+    this.redSlider.onmouseup = onupdate;
     this.redBox = InputNumber(0, 255, 0, (e) => {
       const red = Number(e.target.value);
       this.RGB[0] = red;
       this.redSlider.value = red;
       this.updateSlidersRGB();
     });
+    this.redBox.onmouseup = onupdate;
+    
     this.greenSlider = InputRange(0, 255, 0, (e) => {
       const green = Number(e.target.value);
       this.RGB[1] = green;
       this.greenBox.value = green;
       this.updateSlidersRGB();
     });
+    this.greenSlider.onmouseup = onupdate;
     this.greenBox = InputNumber(0, 255, 0, (e) => {
       const green = Number(e.target.value);
       this.RGB[1] = green;
       this.greenSlider.value = green;
       this.updateSlidersRGB();
     });
+    this.greenBox.onmouseup = onupdate;
+    
     this.blueSlider = InputRange(0, 255, 0, (e) => {
       const blue = Number(e.target.value);
       this.RGB[2] = blue;
       this.blueBox.value = blue;
       this.updateSlidersRGB();
     });
+    this.blueSlider.onmouseup = onupdate;
     this.blueBox = InputNumber(0, 255, 0, (e) => {
       const blue = Number(e.target.value);
       this.RGB[2] = blue;
       this.blueSlider.value = blue;
       this.updateSlidersRGB();
     });
+    this.blueBox.onmouseup = onupdate;
     // HSV //
     this.hueSlider = InputRange(0, 359, 0, (e) => {
       const hue = Number(e.target.value);
@@ -269,36 +285,45 @@ class InputColorControl {
       this.hueBox.value = hue;
       this.updateSlidersHSV();
     }, "woke-bg");
+    this.hueSlider.onmouseup = onupdate;
     this.hueBox = InputNumber(0, 359, 0, (e) => {
       const hue = Number(e.target.value);
       this.HSV[0] = hue;
       this.hueSlider.value = hue;
       this.updateSlidersHSV();
     });
+    this.hueBox.onmouseup = onupdate;
+    
     this.sattySlider = InputRange(0, 100, 0, (e) => {
       const satty = Number(e.target.value);
       this.HSV[1] = satty;
       this.sattyBox.value = satty;
       this.updateSlidersHSV();
     });
+    this.sattySlider.onmouseup = onupdate;
     this.sattyBox = InputNumber(0, 100, 0, (e) => {
       const satty = Number(e.target.value);
       this.HSV[1] = satty;
       this.sattySlider.value = satty;
       this.updateSlidersHSV();
     });
+    this.sattyBox.onmouseup = onupdate;
+    
     this.valueSlider = InputRange(0, 100, 0, (e) => {
       const value = Number(e.target.value);
       this.HSV[2] = value;
       this.valueBox.value = value;
       this.updateSlidersHSV();
     });
+    this.valueSlider.onmouseup = onupdate;
     this.valueBox = InputNumber(0, 100, 0, (e) => {
       const value = Number(e.target.value);
       this.HSV[2] = value;
       this.valueSlider.value = value;
       this.updateSlidersHSV();
     });
+    this.valueBox.onmouseup = onupdate;
+    
     // alpha //
     this.alphaSlider = InputRange(0, 255, 0, (e) => {
       const alpha = Number(e.target.value);
@@ -306,12 +331,15 @@ class InputColorControl {
       this.alphaBox.value = alpha;
       this.updateSlidersAlpha();
     });
+    this.alphaSlider.onmouseup = onupdate;
     this.alphaBox = InputNumber(0, 255, 0, (e) => {
       const alpha = Number(e.target.value);
       this.alpha = alpha;
       this.alphaSlider.value = alpha;
       this.updateSlidersAlpha();
     });
+    this.alphaBox.onmouseup = onupdate;
+    
     const colpContainer = Div(
       "colp-container",
       this.localDisplay,
@@ -439,6 +467,7 @@ class Tether {
   forceRender = false;
   compressSaves = true;
   saveURL = false;
+  tileView = false;
   
   constructor() {
     this.canvas = document.getElementById("render");
@@ -818,7 +847,17 @@ class Tether {
       iconTint.id = "dyn-icon-tint-" + i;
       
       const icon = document.createElement("img");
-      icon.src = "img/icon/" + layer.name + ".svg";
+      if(layer.isFilter) {
+        //TEMPORARY -- REPLACE WITH SVGs
+        icon.src = "img/icon/" + layer.name + ".png";
+        if(layer.od.base > -1) {
+          const baseName = img.layers[img.layerKeys[layer.od.base]].name;
+          console.log(baseName);
+          icon.style.backgroundImage = `url(img/icon/${baseName}.svg)`;
+        }
+      } else {
+        icon.src = "img/icon/" + layer.name + ".svg";
+      }
       icon.className = "layer-icon";
       
       iconTint.appendChild(icon);

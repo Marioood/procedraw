@@ -254,10 +254,11 @@ function main() {
   });
   function updateSize() {
     //update canvs width
-    t.canvas.height = img.h;
-    t.canvas.style.height = img.h * t.canvasScale + "px";
-    t.canvas.width = img.w;
-    t.canvas.style.width = img.w * t.canvasScale + "px";
+    const tileScale = (t.tileView) ? 3 : 1;
+    t.canvas.height = img.h * tileScale;
+    t.canvas.style.height = img.h * t.canvasScale * tileScale + "px";
+    t.canvas.width = img.w * tileScale;
+    t.canvas.style.width = img.w * t.canvasScale * tileScale + "px";
     //update width inpt
     widthInput.value = img.w;
     heightInput.value = img.h;
@@ -357,17 +358,14 @@ function main() {
     
     img.name = randName(8);
     nameInput.value = img.name;
-    //clear layers
-    if(img.layers.length > 0) {
-      //go down a layer if we're in the middle, stay in place if we're at the bottom
-      t.setCurrentLayer(0);
-      img.layers = [];
-      img.layersKeys = [];
-      img.layersKeysFreed = [];
-      t.updateLayerOptions();
-      t.generateLayerList();
-      img.printImage();
-    }
+    //go down a layer if we're in the middle, stay in place if we're at the bottom
+    t.setCurrentLayer(0);
+    img.layers = [];
+    //these were causing an error because i accidentally added an s after the 'layer' part...
+    //thanks javascript for not catching that one
+    img.layerKeys = [];
+    img.layerKeysFreed = [];
+    
     let layerCount = Math.ceil(Math.random() * 24);
     
     for(let i = 0; i < layerCount; i++) {
@@ -375,7 +373,6 @@ function main() {
       curLayer.displayName = randName(2);
       //proper link count for filters
       console.log(curLayer.od);
-      if(curLayer.od.base != -1) img.layers[img.layerKeys[curLayer.od.base]].linkCount++;
       img.insertLayer(img.layers.length, curLayer);
       t.currentLayer++;
     }
@@ -433,7 +430,13 @@ function main() {
           Br(),
           Button("reset view"),
           Br(),
-          Button("tiled view")
+          Label("tileView", "header-label"),
+          InputCheckbox(t.tileView, (checked, e) => {
+            t.tileView = checked;
+            updateSize();
+            t.forceRender = true;
+            img.printImage();
+          }),
         ));
       }, "header-dropdown"),
       Button("????", (e) => {

@@ -4,11 +4,14 @@
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
+//NEVER change these values!!
 const O_FADE_NONE = 0;
 const O_FADE_NEAR_EDGE = 1;
 const O_FADE_NEAR_CENTER = 2;
 const O_FADE_NEAR_EDGE_SQUARED = 3;
 const O_FADE_NEAR_CENTER_SQUARED = 4;
+const O_FADE_NEAR_EDGE_SQRT = 5;
+const O_FADE_NEAR_CENTER_SQRT = 6;
   
 class Layer {
   //class name
@@ -287,6 +290,7 @@ class LayerLiney extends Layer {
     depth: 3,
     brightness: 1,
     dir: true,
+    coverage: 1,
     lowColor: [0, 0, 0, 1],
     highColor: [1, 1, 1, 1]
   }
@@ -313,6 +317,12 @@ class LayerLiney extends Layer {
       type: "boolean",
       direction: true
     },
+    coverage: {
+      type: "number",
+      step: 0.05,
+      max: 1,
+      min: 0
+    },
     lowColor: {
       type: "color"
     },
@@ -331,12 +341,14 @@ class LayerLiney extends Layer {
       maxL = img.h;
       maxI = img.w;
     }
+    let isDrawn = Math.random() > o.coverage;
     
     for(let i = 0; i < maxI; i++) {
       let col = 0.5;
       for(let l = 0; l < maxL; l++) {
         if(Math.random() < o.breaks || l == 0) {
           col = Math.round((Math.random() * o.brightness) * o.depth) / o.depth;
+          isDrawn = Math.random() < o.coverage;
         }
         let x, y;
         if(o.dir) {
@@ -346,9 +358,7 @@ class LayerLiney extends Layer {
           x = i;
           y = l;
         }
-        
-        img.plotPixel(img.blend(o.lowColor, o.highColor, col), x, y);
-        //img.plotPixel([col, col, col, 1], x, y);
+        if(isDrawn) img.plotPixel(img.blend(o.lowColor, o.highColor, col), x, y);
       }
     }
   }
@@ -563,14 +573,18 @@ class LayerBlobs extends Layer {
         "fade near edge",
         "fade near center",
         "fade near edge (squared)",
-        "fade near center (squared)"
+        "fade near center (squared)",
+        "fade near edge (square root'd)",
+        "fade near center (square root'd)"
       ],
       values: [
         O_FADE_NONE,
         O_FADE_NEAR_EDGE,
         O_FADE_NEAR_CENTER,
         O_FADE_NEAR_EDGE_SQUARED,
-        O_FADE_NEAR_CENTER_SQUARED
+        O_FADE_NEAR_CENTER_SQUARED,
+        O_FADE_NEAR_EDGE_SQRT,
+        O_FADE_NEAR_CENTER_SQRT
       ]
     }
   };
@@ -630,7 +644,7 @@ class LayerBlobs extends Layer {
             }
           }
           break;
-        //i could probably use algebra to optimize this code, but womp womp
+        //i could probably use algebra to optimize this code but womp womp
         case O_FADE_NEAR_EDGE_SQUARED:
           for(let yi = -r; yi < r; yi++) {
             for(let xi = -r; xi < r; xi++) {
@@ -653,6 +667,32 @@ class LayerBlobs extends Layer {
                 let x = Math.floor(xi + xStart);
                 let y = Math.floor(yi + yStart);
                 img.plotPixel([1, 1, 1, dist / r * dist / r * alpha], x, y);
+              }
+            }
+          }
+          break;
+        case O_FADE_NEAR_EDGE_SQRT:
+          for(let yi = -r; yi < r; yi++) {
+            for(let xi = -r; xi < r; xi++) {
+              //subtract 0.5 to make the blobs rounder
+              const dist = Math.sqrt(xi * xi + yi * yi);
+              if(dist < r - 0.5) {
+                let x = Math.floor(xi + xStart);
+                let y = Math.floor(yi + yStart);
+                img.plotPixel([1, 1, 1, Math.sqrt((r - dist) / r) * alpha], x, y);
+              }
+            }
+          }
+          break;
+        case O_FADE_NEAR_CENTER_SQRT:
+          for(let yi = -r; yi < r; yi++) {
+            for(let xi = -r; xi < r; xi++) {
+              //subtract 0.5 to make the blobs rounder
+              const dist = Math.sqrt(xi * xi + yi * yi);
+              if(dist < r - 0.5) {
+                let x = Math.floor(xi + xStart);
+                let y = Math.floor(yi + yStart);
+                img.plotPixel([1, 1, 1, Math.sqrt(dist / r) * alpha], x, y);
               }
             }
           }
@@ -870,6 +910,221 @@ class LayerWandering2 extends Layer {
           img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
         }
       }
+    }
+  }
+}
+
+class LayerGradient extends Layer {
+  name = "gradient";
+  
+  options = {
+    dir: 45,
+    col1: [1, 1, 1, 1],
+    col2: [0, 0, 0, 1],
+    xBounds: 64,
+    yBounds: 64,
+    //TODO: repeat mode
+    mix: MIX_PLAIN
+  };
+  
+  types = {
+    dir: {
+      type: "number",
+      step: 1,
+      max: 360,
+      min: 0
+    },
+    col1: {
+      type: "color"
+    },
+    col2: {
+      type: "color"
+    },
+    xBounds: {
+      type: "number",
+      step: 1,
+      max: 256,
+      min: 1
+    },
+    yBounds: {
+      type: "number",
+      step: 1,
+      max: 256,
+      min: 1
+    },
+    mix: {
+      type: "keyvalues",
+      keys: [
+        "plain",
+        "hard 50%",
+        "random",
+        "bayer",
+        "halftone",
+        "daft (horizontal)",
+        "daft (vertical)",
+        "dither 50%"
+      ],
+      values: [
+        MIX_PLAIN,
+        MIX_HALF,
+        MIX_RANDOM,
+        MIX_BAYER,
+        MIX_HALFTONE,
+        MIX_DAFT_X,
+        MIX_DAFT_Y,
+        MIX_HALF_DITHER
+      ]
+    }
+  };
+  
+  generate(o) {
+    let xChange;
+    let yChange;
+    let xStart;
+    let yStart;
+    //NOTE TO SELF--drawing graphs for functions can help with creating them!
+    //figured this one out by myself B)
+    
+    //0   : south : xc = 0, yc = 1, xs = 0, ys = 0
+    //90  : east  : xc = 1, yc = 0, xs = 0, ys = 0
+    //180 : north : xc = 0, yc = -1, xs = 0, ys = 1
+    //270 : west  : xc = -1, yc = 0, xs = 1, ys = 0
+    //45  : south-east : xc = 0.5, yc = 0.5, xs = 0, ys = 0
+    //225 :north-west  : xc = -0.5, yc = -0.5, xs = 0.5, ys = 0.5
+    
+    /***** gradient control graphs *****\
+      
+    x  1 |       *
+    C    |    *     *
+    h  0 | *           *           *
+    a    |                *     *
+    n -1 |                   *
+    g    +-|-----|-----|-----|-----|-
+    e     0     90    180   270   360
+                  direction
+                  
+    y  1 | *                       *
+    C    |    *                 *
+    h  0 |       *           *
+    a    |          *     *
+    n -1 |             *
+    g    +-|-----|-----|-----|-----|-
+    e     0     90    180   270   360
+                  direction
+                  
+    x  1 |                   *        
+    S 0.5|                *     *
+    r  0 | *  *  *  *  *           *
+    a    +-|-----|-----|-----|-----|-
+    r     0     90    180   270   360
+    t             direction
+
+    y  1 |             *        
+    S 0.5|          *     *
+    r  0 | *  *  *           *  *  *
+    a    +-|-----|-----|-----|-----|-
+    r     0     90    180   270   360
+    t             direction
+
+    */
+    //compute what those graphs show!
+    if(o.dir < 90) {
+      xChange = o.dir / 90;
+    } else if(o.dir < 270) {
+      xChange = 2 - (o.dir / 90);
+    } else {
+      xChange = o.dir / 90 - 4;
+    }
+    const coDir = mod(o.dir + 90, 360);
+    if(coDir < 90) {
+      yChange = coDir / 90;
+    } else if(coDir < 270) {
+      yChange = 2 - (coDir / 90);
+    } else if(coDir < 360) {
+      yChange = coDir / 90 - 4;
+    }
+    //starting points
+    if(o.dir < 180) {
+      xStart = 0;
+    } else if(o.dir < 270) {
+      xStart = o.dir / 90 - 2;
+    } else {
+      xStart = 4 - o.dir / 90;
+    }
+    if(coDir < 180) {
+      yStart = 0;
+    } else if(coDir < 270) {
+      yStart = coDir / 90 - 2;
+    } else {
+      yStart = 4 - coDir / 90;
+    }
+    xStart *= o.xBounds;
+    yStart *= o.yBounds;
+    
+    //the reason the xi and yi increment instructions are placed so weirdly is so the edges and corners dont look all funky
+    
+    let yi = yStart;
+    for(let y = 0; y < img.h; y++) {
+      let xi = xStart;
+      if(yStart > 0) yi += yChange;
+      
+      for(let x = 0; x < img.w; x++) {
+        if(xStart > 0) xi += xChange;
+        const i = x + y * img.w;
+        //add 1 to the bounds so that the corners and edges don't look weird
+        const bias = mod(xi / o.xBounds + yi / o.yBounds, 1);
+        
+        let col;
+        //https://en.wikipedia.org/wiki/Ordered_dithering
+        const DITHER = [
+          0,  8,  2,  10,
+          12, 4,  14, 6,
+          3,  11, 1,  9,
+          15, 7,  13, 5
+        ];
+        const HALFTONE = [
+          15, 14, 12, 10, 10, 12, 14, 15,
+          14, 12, 10, 8,  8,  10, 12, 14, 
+          12, 10, 8,  4,  4,  8,  10, 12,
+          10, 8,  4,  0,  2,  6,  8,  10,
+          10, 8,  4,  2,  2,  6,  8,  10, 
+          12, 10, 8,  6,  6,  8,  10, 12,
+          14, 12, 10, 8,  8,  10, 12, 14,
+          15, 14, 12, 10, 10, 12, 14, 16
+        ];
+        switch(o.mix) {
+          case MIX_PLAIN:
+            col = img.blend(o.col1, o.col2, bias);
+            break;
+          case MIX_HALF:
+            col = (bias < 0.5) ? o.col1 : o.col2;
+            break;
+          case MIX_RANDOM:
+            col = (bias < Math.random()) ? o.col1 : o.col2;
+            break;
+          case MIX_BAYER:
+            col = (bias * 16 < DITHER[x % 4 + y % 4 * 4]) ? o.col1 : o.col2;
+            break;
+          case MIX_HALFTONE:
+            col = (bias * 16 < HALFTONE[x % 8 + y % 8 * 8]) ? o.col1 : o.col2;
+            break;
+          case MIX_DAFT_X:
+            col = (bias < y % 2 / 3 + 0.333) ? o.col1 : o.col2;
+            break;
+          case MIX_DAFT_Y:
+            col = (bias < x % 2 / 3 + 0.333) ? o.col1 : o.col2;
+            break;
+          case MIX_HALF_DITHER:
+            col = (bias < (x + y) % 2 / 3 + 0.333) ? o.col1 : o.col2;
+            break;
+          default:
+            console.error(`unknown mix mode ${o.mix}`);
+        }
+        //const col = mix(col1, col2, Math.floor(bias * 4) / 4);
+        img.plotPixel(col, x, y);
+        if(xStart == 0) xi += xChange;
+      }
+      if(yStart == 0) yi += yChange;
     }
   }
 }

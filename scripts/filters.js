@@ -134,6 +134,7 @@ class FilterTile extends Filter {
       min: 0,
       max: 256
     },
+    //TODO: shift parameters do not work correctly
     xShift: {
       type: "number",
       step: 1,
