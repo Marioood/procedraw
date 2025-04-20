@@ -1,50 +1,56 @@
-blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
-filter layer that modifies the current cavnas' pixels
-value noise layer
-perlin noise layer
+STUPID
+
 save as file
 image layer that has is an embedded image
-ctrl + scroll to zoom in and out
-scroll to move up and down
-shift + scroll to move left and right
-better width and height customization (set limit, with warning)
 test browser support (and provide appropriate taxes)
-save authors
-option limit skeletons (for documentation)
 //could be a "map" filter?
 //overlap option (see wandering lines)
 //brightness tolerance
-//img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
+"no layers exist" text
+decompress thing for save repair
 //color ramp
 //variables and math expressions
-colp and option consistent sliders
-make layer sliders render with some delay (avoid similar problems as color picker)
-"no layers exist" text
-edit tint switch layer dont switch color edit color SEE BUG
-decompress thing for save repair
-disable corners or edges
-negative options
+option limit skeletons (for documentation)
+better width and height customization (set limit, with warning)
 proper negative offs
 wandering2 direction offset
-maybe add "disolve"? like the coverage option from the noise filter
-layer managment buttons are not visible on mobile (kind of important!!!)
 make loading more safe (test ways to break / exploit saving)
+  save format is not finalized, do this way later
+palette
+HILARIOUS parody logos!
+list of controls
+fix tiling for liney -- it stinks with lower break levels
+fix tiling for worley (none powers of 2)
+
+URGENT
+
+ctrl + scroll to zoom in and out
+scroll to move up and down
+shift + scroll to move left and right
+blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
+a layer base of -1 should filter the entire canvas
+value noise layer
+perlin noise layer
+//img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
+colp and option consistent sliders
+make layer sliders render with some delay (avoid similar problems as color picker)
+edit tint switch layer dont switch color edit color SEE BUG
+disable corners or edges
+layer managment buttons are not visible on mobile (kind of important!!!)
 crop filter
 or just more options for the solid layer
-//sqrt fade
-change filter icons when the base is changed
-draw layer icons and layer control icons
+  change filter icons when the base is changed
+draw layer control icons
 more accurate layer icons
 layer button insets remove those
-invert layer 0...1 also invert layer css
-          the css wouldn't work! it's for rgb, not individual channels
-loading filters is broken!!!!
-    
+fix tile view scaling
+proper direction input... again!
+fix layer key bugs! there's still a bunch.....
+
 REMINDERS
 
 clean up unused garbage
 //DONT SLAP MORE SHIT ONTO SHIT
 //the set color function sucked it was like 4 times slower
-HILARIOUS parody logos!
 //take a break! work on the programmer art thing
 //snap! image editor

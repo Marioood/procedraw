@@ -10,6 +10,7 @@ class Serialization {
       w: img.w,
       h: img.h,
       name: img.name,
+      author: img.author,
       version: t.version,
       format: this.format
     };
@@ -69,6 +70,7 @@ class Serialization {
     img.w = saved.img.w;
     img.h = saved.img.h;
     img.name = saved.img.name;
+    img.author = saved.img.author;
     if(saved.img.format == undefined) {
       alert(`this image was saved in an ancient version of procedraw (before VOLATILE 0.5), it will not work with out repair\n\nthe image is from version ${saved.img.version}\n\n...sorry!`);
     } else if(saved.img.format < this.format) {
@@ -118,6 +120,8 @@ class Serialization {
             }
           } else if(type == "layer") {
             newOptions[key] = val;
+            //skip link count increment if the layer has no base
+            if(val == -1) continue;
             //prevent filters from shitting themselves
             //because layer data only gets defined when the link count is > 0
             img.layers[img.layerKeys[val]].linkCount++;

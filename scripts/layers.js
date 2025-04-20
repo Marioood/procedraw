@@ -58,7 +58,8 @@ class Layer {
         "multiply",
         "screen",
         "overlay",
-        "subtract"
+        "subtract",
+        "dissolve"
       ],
       values: [
         BLEND_PLAIN,
@@ -66,7 +67,8 @@ class Layer {
         BLEND_MULTIPLY,
         BLEND_SCREEN,
         BLEND_OVERLAY,
-        BLEND_SUBTRACT
+        BLEND_SUBTRACT,
+        BLEND_DISSOLVE
       ]
     },
     tint: {
@@ -861,13 +863,13 @@ class LayerWandering2 extends Layer {
     minWidth: {
       type: "number",
       min: 1,
-      max: 16,
+      max: 64,
       unsafe: true
     },
     maxWidth: {
       type: "number",
       min: 1,
-      max: 16,
+      max: 64,
       unsafe: true
     }
   };
@@ -890,24 +892,52 @@ class LayerWandering2 extends Layer {
       const xOffs = Math.floor(img.w * Math.random());
       const yOffs = Math.floor(img.h * Math.random());
       const len = Math.random() * (o.maxLength - o.minLength) + o.minLength;
-      let progress = 0
+      let progress = 0;
+      const thickness = Math.random() * (o.maxWidth - o.minWidth) + o.minWidth;
       //draw a line
       if(Math.abs(xChange) < Math.abs(yChange)) {
-        for(let i = 0; i < len; i++) {
-          progress += xChange;
-          const randOffs = (Math.random() - 0.5) * o.spread * 2;
-          //prevent weird looking breaks in the lines
-          if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
-          
-          img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs);
+        //TODO: thick lines look kind of poopy
+        if(thickness > 1) {
+          for(let i = 0; i < len; i++) {
+            progress += xChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            //prevent weird looking breaks in the lines
+            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
+            
+            for(let t = 0; t < thickness; t++) {
+              img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs + t);
+            }
+          }
+        } else {
+          for(let i = 0; i < len; i++) {
+            progress += xChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            //prevent weird looking breaks in the lines
+            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
+            
+            img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs);
+          }
         }
       } else {
-        for(let i = 0; i < len; i++) {
-          progress += yChange;
-          const randOffs = (Math.random() - 0.5) * o.spread * 2;
-          if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
-          
-          img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
+        if(thickness > 1) {
+          for(let i = 0; i < len; i++) {
+            progress += yChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            //prevent weird looking breaks in the lines
+            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
+            
+            for(let t = 0; t < thickness; t++) {
+              img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs + t, Math.round(progress) + yOffs);
+            }
+          }
+        } else {
+          for(let i = 0; i < len; i++) {
+            progress += yChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
+            
+            img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
+          }
         }
       }
     }

@@ -16,7 +16,8 @@ class Filter extends Layer {
         "multiply",
         "screen",
         "overlay",
-        "subtract"
+        "subtract",
+        "dissolve"
       ],
       values: [
         BLEND_PLAIN,
@@ -24,7 +25,8 @@ class Filter extends Layer {
         BLEND_MULTIPLY,
         BLEND_SCREEN,
         BLEND_OVERLAY,
-        BLEND_SUBTRACT
+        BLEND_SUBTRACT,
+        BLEND_DISSOLVE
       ]
     },
     tint: {
@@ -55,14 +57,14 @@ class FilterTranslate extends Filter {
     x: {
       type: "number",
       step: 1,
-      min: 0,
-      max: 256
+      min: -128,
+      max: 128
     },
     y: {
       type: "number",
       step: 1,
-      min: 0,
-      max: 256
+      min: -128,
+      max: 128
     }
   };
   
@@ -134,7 +136,6 @@ class FilterTile extends Filter {
       min: 0,
       max: 256
     },
-    //TODO: shift parameters do not work correctly
     xShift: {
       type: "number",
       step: 1,
@@ -162,8 +163,8 @@ class FilterTile extends Filter {
         const g = data[idx * 4 + 1];
         const b = data[idx * 4 + 2];
         const a = data[idx * 4 + 3];
-        const xShift = o.xShift * Math.floor(y / o.width);
-        const yShift = o.yShift * Math.floor(x / o.height);
+        const xShift = o.xShift * Math.floor(y / o.height);
+        const yShift = o.yShift * Math.floor(x / o.width);
         img.plotPixel([r, g, b, a], x - o.xOffs + o.x + xShift, y - o.yOffs + o.y + yShift);
       }
     }

@@ -7,6 +7,7 @@ const BLEND_PLAIN = 2;
 const BLEND_SCREEN = 3;
 const BLEND_OVERLAY = 4;
 const BLEND_SUBTRACT = 5;
+const BLEND_DISSOLVE = 6;
 //again, NEVER change these values!!
 const MIX_PLAIN = 0;
 const MIX_HALF = 1;
@@ -33,6 +34,9 @@ class ImageManager {
   //layerKey -> layerIndex
   //layers[layerIndex] -> LayerSomeExampleLayer
   
+  author = "you!";
+  name = "our beauty";
+  
   layerClasses = {
     xorFractal: LayerXorFractal,
     solid: LayerSolid,
@@ -49,7 +53,6 @@ class ImageManager {
     invert: FilterInvert,
     gradient: LayerGradient
   };
-  name = "our beauty";
   
   printImage() {
     let startTime = Date.now();
@@ -163,6 +166,9 @@ class ImageManager {
         }
       case BLEND_SUBTRACT:
         return b - (l * strength);
+      case BLEND_DISSOLVE:
+        //TODO: weird
+        return (strength > Math.random()) ? l : b;
       default:
         console.error(`unknown blend mode ${blend}`);
     }

@@ -19,11 +19,11 @@ This isn't really for people using the program, but for people making it (me and
 
 Guide for layers:
 * Don't use unintended behavior (negative alpha, invalid colors, etc.)
-	* Although, don't prevent users from using unintended behavior (unless it literally crashes the browser)
+  * Although, don't prevent users from using unintended behavior (unless it literally crashes the browser)
 * Layer options should be independent from resolution, especially for spaced out patterns (see blobs, wandering, or worley)
 * Mark ANY parameter that controls a loop as unsafe (see blobs or wandering)
     * Doing so could cause insane lag if the user isn't careful (!!!)
-	* Also make sure parameters don't cause infinite loops (set proper mins and maxes)
+  * Also make sure parameters don't cause infinite loops (set proper mins and maxes)
     
 ## TODO's
 * Rewrite tether.js using color picker style code (custom framework)
@@ -31,8 +31,12 @@ Guide for layers:
     * Doesn't work properly and throws a bunch of errors when testing offline
 * Reorganize code
 * Optimize layer rendering
-* Standardize code to use 2 spaces for every 1 tab
 * Anime woman mascot
 * Look into the legality of using an MIT license with modified W3C assets
-	* I am unable to find license/legal info on those specific images (the closest thing was https://www.w3.org/policies/logos/)
-		* Can I edit parts of them? Can I include them in an MIT licensed project? Who knows!
+  * I am unable to find license/legal info on those specific images (the closest thing was https://www.w3.org/policies/logos/)
+    * Can I edit parts of them? Can I include them in an MIT licensed project? Who knows!
+    
+## Code Style Guide
+* 2 spaces per tab
+* semicolons after every line
+* "use strict"; at the top of every file

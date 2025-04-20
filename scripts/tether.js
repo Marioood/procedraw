@@ -200,7 +200,7 @@ class InputColorControl {
 
     //make this a function to call another function, because colpGlobalUpdate changes what function it is (and is also sometimes null!!)
     function onupdate() {
-      colpGlobalUpdate();
+      if(colpGlobalUpdate != null) colpGlobalUpdate();
     }
 
     this.hexBox = InputText("000000ff", (e) => {
@@ -230,7 +230,6 @@ class InputColorControl {
       
       if(colpGlobalOninput != null) colpGlobalOninput(newCol);
     }, "colp-text");
-    this.hexBox.onmouseup = onupdate;
 
     // RGB //
     this.redSlider = InputRange(0, 255, 0, (e) => {
@@ -247,7 +246,6 @@ class InputColorControl {
       this.redSlider.value = red;
       this.updateSlidersRGB();
     });
-    this.redBox.onmouseup = onupdate;
     
     this.greenSlider = InputRange(0, 255, 0, (e) => {
       const green = Number(e.target.value);
@@ -262,7 +260,6 @@ class InputColorControl {
       this.greenSlider.value = green;
       this.updateSlidersRGB();
     });
-    this.greenBox.onmouseup = onupdate;
     
     this.blueSlider = InputRange(0, 255, 0, (e) => {
       const blue = Number(e.target.value);
@@ -277,7 +274,6 @@ class InputColorControl {
       this.blueSlider.value = blue;
       this.updateSlidersRGB();
     });
-    this.blueBox.onmouseup = onupdate;
     // HSV //
     this.hueSlider = InputRange(0, 359, 0, (e) => {
       const hue = Number(e.target.value);
@@ -292,7 +288,6 @@ class InputColorControl {
       this.hueSlider.value = hue;
       this.updateSlidersHSV();
     });
-    this.hueBox.onmouseup = onupdate;
     
     this.sattySlider = InputRange(0, 100, 0, (e) => {
       const satty = Number(e.target.value);
@@ -307,7 +302,6 @@ class InputColorControl {
       this.sattySlider.value = satty;
       this.updateSlidersHSV();
     });
-    this.sattyBox.onmouseup = onupdate;
     
     this.valueSlider = InputRange(0, 100, 0, (e) => {
       const value = Number(e.target.value);
@@ -322,7 +316,6 @@ class InputColorControl {
       this.valueSlider.value = value;
       this.updateSlidersHSV();
     });
-    this.valueBox.onmouseup = onupdate;
     
     // alpha //
     this.alphaSlider = InputRange(0, 255, 0, (e) => {
@@ -338,7 +331,6 @@ class InputColorControl {
       this.alphaSlider.value = alpha;
       this.updateSlidersAlpha();
     });
-    this.alphaBox.onmouseup = onupdate;
     
     const colpContainer = Div(
       "colp-container",
@@ -475,45 +467,6 @@ class Tether {
     
     const colpContainer = document.getElementById("colp-container")
     colpContainer.appendChild(colp.target);
-    //this will get added back later but right now it looks really shitty and i dont feel like styling it right now
-    /*const paletteContainer = Div(
-      InputColor(hex2RGB("#F26F80")),
-      InputColor(hex2RGB("#E8BFA4")),
-      InputColor(hex2RGB("#E0D091")),
-      InputColor(hex2RGB("#9EE86A")),
-      InputColor(hex2RGB("#13BAEC")),
-      InputColor(hex2RGB("#687EF9")),
-      InputColor(hex2RGB("#8882FF")),
-      InputColor(hex2RGB("#FC5DD7")),
-      Br(),
-      InputColor(hex2RGB("#D11006")),
-      InputColor(hex2RGB("#F2721A")),
-      InputColor(hex2RGB("#FCD31B")),
-      InputColor(hex2RGB("#60D91C")),
-      InputColor(hex2RGB("#097FA3")),
-      InputColor(hex2RGB("#0D29DD")),
-      InputColor(hex2RGB("#320F84")),
-      InputColor(hex2RGB("#8404A0")),
-      Br(),
-      InputColor(hex2RGB("#7A0305")),
-      InputColor(hex2RGB("#A34520")),
-      InputColor(hex2RGB("#C48F15")),
-      InputColor(hex2RGB("#2FA310")),
-      InputColor(hex2RGB("#004C72")),
-      InputColor(hex2RGB("#0919A5")),
-      InputColor(hex2RGB("#1B085B")),
-      InputColor(hex2RGB("#57007C")),
-      Br(),
-      InputColor(hex2RGB("#510709")),
-      InputColor(hex2RGB("#5B3A2D")),
-      InputColor(hex2RGB("#7C5D18")),
-      InputColor(hex2RGB("#0D7004")),
-      InputColor(hex2RGB("#063349")),
-      InputColor(hex2RGB("#0E1547")),
-      InputColor(hex2RGB("#0A0323")),
-      InputColor(hex2RGB("#300256"))
-    );
-    colpContainer.appendChild(paletteContainer);*/
   }
   
   generateLayerOptions(options, types, containerId) {
@@ -532,28 +485,19 @@ class Tether {
     }
 
     for(let i = 0; i < optionKeys.length; i++) {
-      //label
-      const label = document.createElement("span");
       const id = containerId + "dyn-param-" + i + "-";
-      //label.for = id;
       let text = optionKeys[i];
+      const label = Label(text);
       //how the options are displayed (eg. color or number? decimal or integer?)
       const limits = types[optionKeys[i]];
       //skip hidden parameters
       if(limits.hidden) continue;
-      
-      let labelContainer = document.createElement("span");
-      labelContainer.classList.add("label-container");
       //tell the user that these options can cause LAG
       if(limits.unsafe) {
-        //text = "!" + text;
         label.className = "option-unsafe";
-        labelContainer.title = "This parameter controls a loop; it can cause lag (!)";
+        label.title = "This parameter controls a loop; it can cause lag (!)";
       }
-
-      label.appendChild(document.createTextNode(text));
-      labelContainer.appendChild(label);
-      container.appendChild(labelContainer);
+      container.appendChild(label);
       //input box
       let input = document.createElement("input");
       input.id = id;
@@ -567,12 +511,8 @@ class Tether {
             input.step = limits.step;
           }
           //theres probably a better way of doing this but i cant be bothered to learn it (web dev grindset)
-          if(limits.min != undefined) {
-            input.min = limits.min;
-          }
-          if(limits.max != undefined) {
-            input.max = limits.max;
-          }
+          if(limits.min != undefined) input.min = limits.min;
+          if(limits.max != undefined) input.max = limits.max;
           //doing this before setting the max and min makes the slider look all funky
           input.value = options[optionKeys[i]];
           
@@ -596,16 +536,9 @@ class Tether {
           //number box
           input2.type = "number";
           input2.value = options[optionKeys[i]];
-          if(limits.step != undefined) {
-            input2.step = limits.step;
-          }
-          //theres probably a better way of doing this but i cant be bothered to learn it (web dev grindset)
-          if(limits.min != undefined) {
-            input2.min = limits.min;
-          }
-          if(limits.max != undefined) {
-            input2.max = limits.max;
-          }
+          if(limits.step != undefined) input2.step = limits.step;
+          if(limits.min != undefined) input2.min = limits.min;
+          if(limits.max != undefined) input2.max = limits.max;
           
           input2.addEventListener("input", function (e) {
             let val = input2.value;
@@ -614,7 +547,6 @@ class Tether {
             //having unsafe options too high can crash or freeze the browser!!
             if(limits.unsafe) {
               val = Math.min(Math.max(val, limits.min), limits.max);
-              //input.value = val;
               //just dont update the number - cause it makes inputting small numbers a bitch
               if(val != input2.value) {
                 this.classList.add("input-invalid");
@@ -627,40 +559,16 @@ class Tether {
             options[optionKeys[i]] = Number(input2.value);
             img.printImage();
           });
-          container.appendChild(input2);
           container.appendChild(input);
+          container.appendChild(input2);
           break;
         case "boolean":
-          let box = document.createElement("button");
-          let on = options[optionKeys[i]];
-          
-          box.classList.add("box-16");
-          let trueClass = "checkbox-true";
-          let falseClass = "checkbox-false";
-          if(limits.direction) {
-            trueClass = "checkbox-x";
-            falseClass = "checkbox-y";
-          }
-          
-          if(on) {
-            box.classList.add(trueClass);
-          } else {
-            box.classList.add(falseClass);
-          }
-          
-          box.addEventListener("click", function (e) {
-            on = !on;
-            options[optionKeys[i]] = on;
-            
-            if(on) {
-              box.classList.remove(falseClass);
-              box.classList.add(trueClass);
-            } else {
-              box.classList.remove(trueClass);
-              box.classList.add(falseClass);
-            }
+          //moved code to china
+          const box = InputCheckbox(options[optionKeys[i]], (checked, e) => {
+            options[optionKeys[i]] = checked;
             img.printImage();
           });
+          
           container.appendChild(box);
           break;
         case "color":
