@@ -7,7 +7,8 @@ const BLEND_PLAIN = 2;
 const BLEND_SCREEN = 3;
 const BLEND_OVERLAY = 4;
 const BLEND_SUBTRACT = 5;
-const BLEND_DISSOLVE = 6;
+const BLEND_CHANNEL_DISSOLVE = 6;
+const BLEND_DISSOLVE = 7;
 //again, NEVER change these values!!
 const MIX_PLAIN = 0;
 const MIX_HALF = 1;
@@ -48,10 +49,11 @@ class ImageManager {
     blobs: LayerBlobs,
     worley: LayerWorley,
     wandering2: LayerWandering2,
+    gradient: LayerGradient,
     translate: FilterTranslate,
     tile: FilterTile,
     invert: FilterInvert,
-    gradient: LayerGradient
+    scale: FilterScale
   };
   
   printImage() {
@@ -129,10 +131,19 @@ class ImageManager {
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
     const pos = x + y * this.w;
-    //todo: actually have alpha CHANNEL affect (effect? idk) the color, not just the layer's alpha
-    this.data[pos * 4] = this.combinePixel(color[0] * tint[0], this.data[pos * 4], blend, alpha);
-    this.data[pos * 4 + 1] = this.combinePixel(color[1] * tint[1], this.data[pos * 4 + 1], blend, alpha);
-    this.data[pos * 4 + 2] = this.combinePixel(color[2] * tint[2], this.data[pos * 4 + 2], blend, alpha);
+    //hack for a dissolve blend mode that chooses between PIXELS instead of COLOR CHANNELS
+    if(blend == BLEND_DISSOLVE) {
+      if(alpha > Math.random()) {
+        this.data[pos * 4] = color[0] * tint[0];
+        this.data[pos * 4 + 1] = color[1] * tint[1];
+        this.data[pos * 4 + 2] = color[2] * tint[2];
+      }
+    } else {
+      //every other blend mode
+      this.data[pos * 4] = this.combinePixel(color[0] * tint[0], this.data[pos * 4], blend, alpha);
+      this.data[pos * 4 + 1] = this.combinePixel(color[1] * tint[1], this.data[pos * 4 + 1], blend, alpha);
+      this.data[pos * 4 + 2] = this.combinePixel(color[2] * tint[2], this.data[pos * 4 + 2], blend, alpha);
+    }
     //add the alphas together
     this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
     //set rendered layer data (for filters)
@@ -166,8 +177,7 @@ class ImageManager {
         }
       case BLEND_SUBTRACT:
         return b - (l * strength);
-      case BLEND_DISSOLVE:
-        //TODO: weird
+      case BLEND_CHANNEL_DISSOLVE:
         return (strength > Math.random()) ? l : b;
       default:
         console.error(`unknown blend mode ${blend}`);

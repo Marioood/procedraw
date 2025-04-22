@@ -76,6 +76,7 @@ hr {
   top: 0;
   width: 100%;
   height: var(--main-tit-h);
+  box-shadow: 0 0 16px black;
 }
 .left-container {
   position: absolute;
@@ -98,11 +99,10 @@ hr {
   bottom: 0;
   box-sizing: border-box;
   height: var(--main-cont-h);
-  width: 100vw;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  pointer-events: none;
   overflow: hidden;
 }
 .right-container {
@@ -358,6 +358,11 @@ button:active {
 }
 .input-invalid {
   border-color: red;
+}
+.knob-container {
+  width: 64px;
+  height: 64px;
+  border: white 1px solid;
 }
 /******** HEADER ********/
 .header-dropdown {

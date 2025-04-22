@@ -12,7 +12,10 @@ const O_FADE_NEAR_EDGE_SQUARED = 3;
 const O_FADE_NEAR_CENTER_SQUARED = 4;
 const O_FADE_NEAR_EDGE_SQRT = 5;
 const O_FADE_NEAR_CENTER_SQRT = 6;
-  
+
+const O_INTERP_NEAREST = 0;
+const O_INTERP_BILINEAR = 1;
+
 class Layer {
   //class name
   name;
@@ -59,7 +62,8 @@ class Layer {
         "screen",
         "overlay",
         "subtract",
-        "dissolve"
+        "dissolve",
+        "channel dissolve"
       ],
       values: [
         BLEND_PLAIN,
@@ -68,7 +72,8 @@ class Layer {
         BLEND_SCREEN,
         BLEND_OVERLAY,
         BLEND_SUBTRACT,
-        BLEND_DISSOLVE
+        BLEND_DISSOLVE,
+        BLEND_CHANNEL_DISSOLVE
       ]
     },
     tint: {
@@ -876,8 +881,8 @@ class LayerWandering2 extends Layer {
   
   generate(o) {
     //multiply by sqrt of 2 to prevent weird skipping between angles
-    const xChange = sind(o.dir) * Math.sqrt(2);
-    const yChange = cosd(o.dir) * Math.sqrt(2);
+    const xChange = Math.sin(o.dir * DEG2RAD) * Math.sqrt(2);
+    const yChange = Math.cos(o.dir * DEG2RAD) * Math.sqrt(2);
     let xFlip = 1;
     let yFlip = 1;
     if(xChange < 0) {

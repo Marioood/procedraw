@@ -1,10 +1,7 @@
 "use strict";
 //helpful functions that are used everywhere in the code
-function mod(dividend, divisor) {
-    //% is remainder and there's no built in mod function...
-    //thanks https://stackoverflow.com/a/17323608
-    return ((dividend % divisor) + divisor) % divisor;
-}
+
+//color / ui//
 function RGB2Hex(arr) {
   return byteRGB2Hex([Math.floor(arr[0] * 255), Math.floor(arr[1] * 255), Math.floor(arr[2] * 255)]);
 }
@@ -129,12 +126,21 @@ function limitDarkness(color) {
   }
   return '#' + RGB2Hex(newCol);
 }
-//trig functions in degrees
-function sind(theta) {
-  return Math.sin(theta * 0.0174533);
+//trig stuff//
+const DEG2RAD = Math.PI / 180;
+const RAD2DEG = 180 / Math.PI;
+
+function dirFrom(x1, y1, x2, y2) {
+  const adjacent = x2 - x1;
+  const opposite = y2 - y1;
+  
+  return Math.atan(opposite / adjacent) * RAD2DEG;
 }
-function cosd(theta) {
-  return Math.cos(theta * 0.0174533);
+//misc//
+function mod(dividend, divisor) {
+    //% is remainder and there's no built in mod function...
+    //thanks https://stackoverflow.com/a/17323608
+    return ((dividend % divisor) + divisor) % divisor;
 }
 function deepArrayCopy(oldArr) {
   const newArr = new Array(oldArr.length);

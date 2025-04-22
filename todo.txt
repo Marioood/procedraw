@@ -21,6 +21,7 @@ HILARIOUS parody logos!
 list of controls
 fix tiling for liney -- it stinks with lower break levels
 fix tiling for worley (none powers of 2)
+PBR material creation (???)
 
 URGENT
 
@@ -38,6 +39,8 @@ edit tint switch layer dont switch color edit color SEE BUG
 disable corners or edges
 layer managment buttons are not visible on mobile (kind of important!!!)
 crop filter
+scale filter
+combine filter -- takes in two layers and combines them into one layer (could be useful for an emboss effect?)
 or just more options for the solid layer
   change filter icons when the base is changed
 draw layer control icons
@@ -46,6 +49,8 @@ layer button insets remove those
 fix tile view scaling
 proper direction input... again!
 fix layer key bugs! there's still a bunch.....
+the code is getting stale! rewrite it soon....
+merge the blend modes and mix modes? some of them are quite similar in purpose and functionality...
 
 REMINDERS
 
@@ -54,3 +59,5 @@ clean up unused garbage
 //the set color function sucked it was like 4 times slower
 //take a break! work on the programmer art thing
 //snap! image editor
+
+is the "color picker style" code too voodoolicious? would it be too confusing for someone unfamiliar with those functions, even if they learned about them? is it unecessary abstraction?

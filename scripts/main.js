@@ -217,16 +217,17 @@ function main() {
     t.forceRender = true;
     img.printImage();
   });
+  //move this into tether... maybe?
+  //rewrite a bunch of this so its less sloppy
   function updateSize() {
-    //update canvs width
+    t.updateCanvasScale();
     const tileScale = (t.tileView) ? 3 : 1;
     t.canvas.height = img.h * tileScale;
-    t.canvas.style.height = img.h * t.canvasScale * tileScale + "px";
     t.canvas.width = img.w * tileScale;
-    t.canvas.style.width = img.w * t.canvasScale * tileScale + "px";
     //update width inpt
     widthInput.value = img.w;
     heightInput.value = img.h;
+    //why does it update the name???
     nameInput.value = img.name;
   }
   const bgInput = InputColor([0.5, 0.5, 0.5, 1], (newCol) => {
@@ -236,8 +237,7 @@ function main() {
   });
   const scaleInput = InputNumber(0, 64, t.canvasScale, (e) => {
     t.canvasScale = e.target.value;
-    t.canvas.style.width = img.w * t.canvasScale + "px";
-    t.canvas.style.height = img.h * t.canvasScale + "px";
+    t.updateCanvasScale();
   });
   scaleInput.step = 0.25;
 
@@ -268,7 +268,7 @@ function main() {
         //DOESNT WORK!!!! color input still uses old color when clicked
         bgInput.style.backgroundColor = '#' + RGB2Hex(img.bg);
         authorInput.value = img.author;
-        bgInput.remove();
+        //bgInput.remove();
         if (history.replaceState && t.saveURL) {
           history.replaceState({}, "", generateSaveUrl(await s.saveEnc()));
         }
@@ -279,7 +279,35 @@ function main() {
       }
     }
   });
+  //MOVE this
+  let isDown = true;
+  const knobContainer = Button("", null, "knob-container");
   
+  /*knobContainer.onmousedown = (e) => {
+    isDown = true;
+  };
+  knobContainer.onmouseup = (e) => {
+    isDown = false;
+  };
+  knobContainer.pointermove = (e) => {
+    if(!isDown) return;
+    //https://stackoverflow.com/a/42111623 -- thanks bro
+    //get position of the target element
+    //the web was well designed
+    const rect = e.target.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const midX = rect.width / 2;
+    const midY = rect.height / 2;
+    const dir = mod(dirFrom(mouseX, mouseY, midX, midY), 360);
+    
+    console.log(mouseX + ", " + mouseY);
+    console.log(dir);
+    //whenever i write css functions in javascript it feels so weird...
+    e.target.style.transform = `rotate(${dir}deg)`;
+  };*/
+  //use interval? maybe?? might break when mouse leaves windoooooowwww!!!!!
+  //HAHHAHHAHAHAHAHA
   imageOptions.appendChild(Div(
     nameInput,
     Br(),
@@ -481,6 +509,22 @@ function main() {
       console.error("Failed to load save");
     }
   })();
+  
+  //////// CANVAS ZOOM SCHTUFF ////////
+  
+  //web development feels like programming for retarded people
+  
+  const canvasView = getElem("canvas-container");
+  
+  canvasView.onwheel = (e) => {
+    //wonky because we're updating the zoom amount, not the width and height
+    //zooming because exaggerated as the image becomes larger, because the canvasScale is smaller
+    //const zoomDiv = (img.w + img.h) / 2; //do this so that zooming is a little less weird... i guess
+    //t.canvasScale -= Math.sqrt(Math.abs(e.deltaY / 128)) * zoomMult;
+    t.canvasScale -= (e.deltaY / 128)/* ** 2 * zoomMult*/;
+    t.canvasScale = Math.max(t.canvasScale, 0);
+    t.updateCanvasScale();
+  };
   
   //refresh warning
   if(!DEBUG) {

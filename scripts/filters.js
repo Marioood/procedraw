@@ -17,7 +17,8 @@ class Filter extends Layer {
         "screen",
         "overlay",
         "subtract",
-        "dissolve"
+        "dissolve",
+        "channel dissolve"
       ],
       values: [
         BLEND_PLAIN,
@@ -26,7 +27,8 @@ class Filter extends Layer {
         BLEND_SCREEN,
         BLEND_OVERLAY,
         BLEND_SUBTRACT,
-        BLEND_DISSOLVE
+        BLEND_DISSOLVE,
+        BLEND_CHANNEL_DISSOLVE
       ]
     },
     tint: {
@@ -213,6 +215,105 @@ class FilterInvert extends Filter {
           (o.invertBlue) ? 1 - b : b,
           (o.invertAlpha) ? 1 - a : a],
         x, y);
+      }
+    }
+  }
+}
+
+class FilterScale extends Filter {
+  name = "scale";
+  
+  options = {
+    xScale: 1,
+    yScale: 1
+  };
+  
+  types = {
+    xScale: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 16
+    },
+    yScale: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 16
+    }
+  };
+  /*
+  AB
+  BA
+  
+  AABB
+  AABB
+  BBAA
+  BBAA
+  */
+  
+  
+  generate(o) {
+    if(this.od.base == -1) return;
+    const data = img.layers[img.layerKeys[this.od.base]].data;
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        //TODO: edge mode (void, clamp, wrap, mirror), x and y, origin (?), interpolation types, proper negative scales
+        const idx = Math.floor(x / o.xScale) % img.w + Math.floor(y / o.yScale) % img.h * img.w;
+        const r = data[idx * 4];
+        const g = data[idx * 4 + 1];
+        const b = data[idx * 4 + 2];
+        const a = data[idx * 4 + 3];
+        img.plotPixel([r, g, b, a], x, y);
+        
+        /*const idx1 = Math.floor(x / o.xScale) + Math.floor(y / o.yScale) * img.w;
+        const idx2 = Math.ceil(x / o.xScale) + Math.floor(y / o.yScale) * img.w;
+        const idx3 = Math.floor(x / o.xScale) + Math.ceil(y / o.yScale) * img.w;
+        const idx4 = Math.ceil(x / o.xScale) + Math.ceil(y / o.yScale) * img.w;
+        const r = data[idx1 * 4];
+        const g = data[idx1 * 4 + 1];
+        const b = data[idx1 * 4 + 2];
+        const xFac = x / o.xScale - Math.floor(x / o.xScale);
+        const yFac = y / o.yScale - Math.floor(y / o.yScale);
+        const ax1 = data[idx1 * 4 + 3] + xFac * (data[idx2 * 4 + 3] - data[idx1 * 4 + 3]);
+        const ay1 = data[idx1 * 4 + 3] + yFac * (data[idx3 * 4 + 3] - data[idx1 * 4 + 3]);
+        
+        const ax2 = data[idx3 * 4 + 3] + xFac * (data[idx4 * 4 + 3] - data[idx3 * 4 + 3]);
+        const ay2 = data[idx2 * 4 + 3] + yFac * (data[idx4 * 4 + 3] - data[idx2 * 4 + 3]);
+        img.plotPixel([r, g, b, (ax1 + ay1 + ax2 + ay2) / 4], x, y);*/
+        //https://en.wikipedia.org/wiki/Bilinear_interpolation#Computation
+        //wikipedians love writing the most fucking over complicated fucking math equations for the simplest shit
+        
+        //FUCK YOU WIKIPEDIA IM NOT DONATING TO YOUR SHITTY PLACE FUCK YOOU FUCK YOU
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+        //https://www.youtube.com/watch?v=4K8IEzXnMYk
+  /*      const x1 = Math.floor(x / o.xScale);
+        const y1 = Math.floor(y / o.yScale);
+        const x2 = Math.ceil(x / o.xScale);
+        const y2 = Math.ceil(y / o.yScale);
+        // 1 2
+        // 3 4
+        const idx1 = x1 + y1 * img.w;
+        const idx2 = x2 + y1 * img.w;
+        const idx3 = x1 + y2 * img.w;
+        const idx4 = x2 + y2 * img.w;
+        
+        const r = data[idx * 4];
+        const g = data[idx * 4 + 1];
+        const b = data[idx * 4 + 2];
+        const a = data[idx * 4 + 3];
+        img.plotPixel([r, g, b, a], x, y);*/
       }
     }
   }

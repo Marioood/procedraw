@@ -854,4 +854,10 @@ class Tether {
     const title = document.getElementsByTagName("title")[0];
     title.textContent = "procedraw | " + text;
   }
+  
+  updateCanvasScale() {
+    const tileScale = (t.tileView) ? 3 : 1;
+    this.canvas.style.height = img.h * this.canvasScale * tileScale + "px";
+    this.canvas.style.width = img.w * this.canvasScale * tileScale + "px";
+  }
 }
