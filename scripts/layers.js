@@ -4,7 +4,9 @@
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
-//NEVER change these values!!
+
+//NEVER change these values!
+//they are used in save files, so changing them WILL break save files!!!
 const O_FADE_NONE = 0;
 const O_FADE_NEAR_EDGE = 1;
 const O_FADE_NEAR_CENTER = 2;
@@ -59,9 +61,10 @@ class Layer {
         "plain",
         "add",
         "multiply",
+        "subtract",
         "screen",
         "overlay",
-        "subtract",
+        "shift overlay",
         "dissolve",
         "channel dissolve"
       ],
@@ -69,9 +72,10 @@ class Layer {
         BLEND_PLAIN,
         BLEND_ADD,
         BLEND_MULTIPLY,
+        BLEND_SUBTRACT,
         BLEND_SCREEN,
         BLEND_OVERLAY,
-        BLEND_SUBTRACT,
+        BLEND_SHIFT_OVERLAY,
         BLEND_DISSOLVE,
         BLEND_CHANNEL_DISSOLVE
       ]
@@ -102,34 +106,24 @@ class LayerXorFractal extends Layer {
   name = "xorFractal";
   
   options = {
-    xScale: 1,
-    yScale: 1,
-    normalized: true
+    width: 64,
+    height: 64
   };
   
   types = {
-    xScale: {
+    width: {
       type: "number",
-      step: 0.1
+      step: 1
     },
-    yScale: {
+    height: {
       type: "number",
-      step: 0.1
-    },
-    normalized: {
-      type: "boolean"
+      step: 1
     }
   };
   
   generate(o) {
-    let xScale, yScale;
-    if(o.normalized) {
-      xScale = 256 / img.w;
-      yScale = 256 / img.h;
-    } else {
-      xScale = o.xScale;
-      yScale = o.yScale;
-    }
+    const xScale = 256 / o.width;
+    const yScale = 256 / o.height;
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
@@ -156,7 +150,10 @@ class LayerNoise extends Layer {
   name = "noise";
   
   options = {
-    coverage: 1
+    coverage: 1,
+    correlated: true,
+    lowColor: [0, 0, 0, 1],
+    highColor: [1, 1, 1, 1]
   };
   
   types = {
@@ -165,6 +162,15 @@ class LayerNoise extends Layer {
       min: 0,
       max: 1,
       step: 0.05
+    },
+    correlated: {
+      type: "boolean"
+    },
+    lowColor: {
+      type: "color"
+    },
+    highColor: {
+      type: "color"
     }
   };
   
@@ -172,8 +178,17 @@ class LayerNoise extends Layer {
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         if(o.coverage > Math.random()) {
-          let col = Math.random();
-          img.plotPixel([col, col, col, 1], x, y);
+          if(o.correlated) {
+            const weight = Math.random();
+            const col = img.blend(o.lowColor, o.highColor, weight);
+            img.plotPixel(col, x, y);
+          } else {
+            const r = img.blend(o.lowColor, o.highColor, Math.random())[0];
+            const g = img.blend(o.lowColor, o.highColor, Math.random())[1];
+            const b = img.blend(o.lowColor, o.highColor, Math.random())[2];
+            const a = img.blend(o.lowColor, o.highColor, Math.random())[3];
+            img.plotPixel([r, g, b, a], x, y);
+          }
         }
       }
     }
@@ -269,14 +284,17 @@ class LayerBorder extends Layer {
       if(o.fadeMode == O_FADE_NEAR_EDGE) {
         alpha += alphaStep;
       }
+      //left and right edges
       for(let y = t; y < o.height - t; y++) {
         img.plotPixel(fade(o.colorLeft, alpha), o.x + t - 1, y + o.y);
         img.plotPixel(fade(o.colorRight, alpha), o.x + o.width - t, y + o.y);
       }
+      //top and bottom edges
       for(let x = t; x < o.width - t; x++) {
         img.plotPixel(fade(o.colorTop, alpha), x + o.x, o.y + t - 1);
         img.plotPixel(fade(o.colorBottom, alpha), x + o.x, o.y + o.height - t);
       }
+      //corners
       img.plotPixel(blend(o.colorTop, o.colorLeft, alpha), o.x + t - 1, o.y + t - 1);
       img.plotPixel(blend(o.colorTop, o.colorRight, alpha), o.x + o.width - t, o.y + t - 1);
       img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), o.x + t - 1, o.y + o.height - t);
@@ -295,7 +313,7 @@ class LayerLiney extends Layer {
   options = {
     breaks: 0.5,
     depth: 3,
-    brightness: 1,
+    bias: 1,
     dir: true,
     coverage: 1,
     lowColor: [0, 0, 0, 1],
@@ -314,7 +332,7 @@ class LayerLiney extends Layer {
       max: 255,
       min: 1
     },
-    brightness: {
+    bias: {
       type: "number",
       step: 0.05,
       max: 2,
@@ -354,7 +372,7 @@ class LayerLiney extends Layer {
       let col = 0.5;
       for(let l = 0; l < maxL; l++) {
         if(Math.random() < o.breaks || l == 0) {
-          col = Math.round((Math.random() * o.brightness) * o.depth) / o.depth;
+          col = Math.round((Math.random() * o.bias) * o.depth) / o.depth;
           isDrawn = Math.random() < o.coverage;
         }
         let x, y;

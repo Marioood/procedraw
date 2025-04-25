@@ -172,11 +172,10 @@ hr {
   width: 32px;
   height: 32px;
   border: 0;
-  background: 0;
-  display: inline-block;
-  margin-left: auto;
-  margin-right: auto;
   outline: 0;
+}
+.layer-icon-button:active {
+  border: 0;
 }
 .icon-layer-down {
   background-image: url("img/ui/layer-down.svg");
@@ -194,10 +193,9 @@ hr {
   float: right;
   width: 40px;
   height: 100%;
-  display: flex;
+  display: flex; /*center vertically*/
   justify-content: center;
   align-items: center;
-  background: 0;
 }
 .layer-text-container {
   padding: 2px;
@@ -260,7 +258,7 @@ input[type=text] {
 }
 .name-input {
   display: inline-block;
-  width: 144px;
+  width: 128px;
   font-size: 1em;
 }
 label {
@@ -405,8 +403,8 @@ button:active {
   outline: 0;
   border: 0;
   border-radius: 0;
-  width: 16px;
-  height: 14px;
+  width: 18px;
+  height: 16px;
   border-right: 1px solid var(--otln);
 }
 #clear-layer {

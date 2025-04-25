@@ -29,28 +29,24 @@ ctrl + scroll to zoom in and out
 scroll to move up and down
 shift + scroll to move left and right
 blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
-a layer base of -1 should filter the entire canvas
 value noise layer
 perlin noise layer
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
-colp and option consistent sliders
 make layer sliders render with some delay (avoid similar problems as color picker)
 edit tint switch layer dont switch color edit color SEE BUG
 disable corners or edges
-layer managment buttons are not visible on mobile (kind of important!!!)
 crop filter
-scale filter
-combine filter -- takes in two layers and combines them into one layer (could be useful for an emboss effect?)
 or just more options for the solid layer
+combine filter -- takes in two layers and combines them into one layer (could be useful for an emboss effect?)
   change filter icons when the base is changed
 draw layer control icons
 more accurate layer icons
-layer button insets remove those
-fix tile view scaling
 proper direction input... again!
 fix layer key bugs! there's still a bunch.....
 the code is getting stale! rewrite it soon....
 merge the blend modes and mix modes? some of them are quite similar in purpose and functionality...
+fix wandering2 width
+make a not-wandering layer
 
 REMINDERS
 

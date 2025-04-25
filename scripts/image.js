@@ -1,6 +1,8 @@
 "use strict";
 //global layer management (data funnelling n processing)
+
 //NEVER change these values!
+//they are used in save files, so changing them WILL break save files!!!
 const BLEND_ADD = 0;
 const BLEND_MULTIPLY = 1;
 const BLEND_PLAIN = 2;
@@ -9,7 +11,8 @@ const BLEND_OVERLAY = 4;
 const BLEND_SUBTRACT = 5;
 const BLEND_CHANNEL_DISSOLVE = 6;
 const BLEND_DISSOLVE = 7;
-//again, NEVER change these values!!
+const BLEND_SHIFT_OVERLAY = 8;
+
 const MIX_PLAIN = 0;
 const MIX_HALF = 1;
 const MIX_RANDOM = 2;
@@ -121,66 +124,116 @@ class ImageManager {
   plotPixel(color, x, y) {
     //each channel goes from 0...1
     //[red, blue, green, alpha]
-    
+
     //wrap around image
     x = mod(x, this.w);
     y = mod(y, this.h);
     //get alpha n blend from global memory... its less to type
-    //getting stuff from global memory loses ~1 ms on a 256x256 image
-    const alpha = this.layer.od.alpha * color[3];
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
     const pos = x + y * this.w;
-    //hack for a dissolve blend mode that chooses between PIXELS instead of COLOR CHANNELS
-    if(blend == BLEND_DISSOLVE) {
-      if(alpha > Math.random()) {
-        this.data[pos * 4] = color[0] * tint[0];
-        this.data[pos * 4 + 1] = color[1] * tint[1];
-        this.data[pos * 4 + 2] = color[2] * tint[2];
-      }
-    } else {
-      //every other blend mode
-      this.data[pos * 4] = this.combinePixel(color[0] * tint[0], this.data[pos * 4], blend, alpha);
-      this.data[pos * 4 + 1] = this.combinePixel(color[1] * tint[1], this.data[pos * 4 + 1], blend, alpha);
-      this.data[pos * 4 + 2] = this.combinePixel(color[2] * tint[2], this.data[pos * 4 + 2], blend, alpha);
-    }
-    //add the alphas together
-    this.data[pos * 4 + 3] = (color[3] * alpha) + this.data[pos * 4 + 3];
-    //set rendered layer data (for filters)
-    if(this.layer.linkCount > 0) {
-      this.layer.data[pos * 4] = color[0] * tint[0];
-      this.layer.data[pos * 4 + 1] = color[1] * tint[1];
-      this.layer.data[pos * 4 + 2] = color[2] * tint[2];
-      this.layer.data[pos * 4 + 3] = color[3];
-    }
-  }
-  
-  combinePixel(l, b, blend, strength) {
-    //values are normalized (0 through 1)
+    
+    const alpha = this.layer.od.alpha * color[3];
+    //color offsets
+    const rOffs = pos * 4;
+    const gOffs = pos * 4 + 1;
+    const bOffs = pos * 4 + 2;
+    const aOffs = pos * 4 + 3;
+    //layer color
+    const rl = color[0] * tint[0];
+    const gl = color[1] * tint[1];
+    const bl = color[2] * tint[2];
+    //base color
+    const rb = this.data[rOffs];
+    const gb = this.data[gOffs];
+    const bb = this.data[bOffs];
+    //moved from combinePixel(), gained ~10 ms on a 512x512 image by doing this -- nice!!
     switch(blend) {
       case BLEND_ADD:
-        return (l * strength) + b;
+        this.data[rOffs] = (rl * alpha) + rb;
+        this.data[gOffs] = (gl * alpha) + gb;
+        this.data[bOffs] = (bl * alpha) + bb;
+        break;
       case BLEND_MULTIPLY:
-        return ((l * strength) + 1 - strength) * b;
+        this.data[rOffs] = (rl * alpha + 1 - alpha) * rb;
+        this.data[gOffs] = (gl * alpha + 1 - alpha) * gb;
+        this.data[bOffs] = (bl * alpha + 1 - alpha) * bb;
+        break;
       case BLEND_PLAIN:
         //lerp
-        return b + strength * (l - b);
+        //TODO: something something similar to img.blend()
+        this.data[rOffs] = rb + alpha * (rl - rb);
+        this.data[gOffs] = gb + alpha * (gl - gb);
+        this.data[bOffs] = bb + alpha * (bl - bb);
+        break;
       case BLEND_SCREEN:
-        return 1 - (1 - l * strength) * (1 - b);
+        this.data[rOffs] = 1 - (1 - rl * alpha) * (1 - rb);
+        this.data[gOffs] = 1 - (1 - gl * alpha) * (1 - gb);
+        this.data[bOffs] = 1 - (1 - bl * alpha) * (1 - bb);
+        break;
       case BLEND_OVERLAY:
-        //fuck you wikipedia
-        //TODO: this is wonky with alpha
-        if(l < 0.5) {
-          return (2 * (l * strength) + 1 - strength) * b;
+        if(rl < 0.5) {
+          this.data[rOffs] = (2 * (rl * alpha) + 1 - alpha) * rb;
         } else {
-          return 1 - (1 - l * strength) * ((strength + 1) * (1 - b));
+          this.data[rOffs] = 1 - (1 - (rl - 0.5) * 2 * alpha) * (1 - rb);
         }
+        if(gl < 0.5) {
+          this.data[gOffs] = (2 * (gl * alpha) + 1 - alpha) * gb;
+        } else {
+          this.data[gOffs] = 1 - (1 - (gl - 0.5) * 2 * alpha) * (1 - gb);
+        }
+        if(bl < 0.5) {
+          this.data[bOffs] = (2 * (bl * alpha) + 1 - alpha) * bb;
+        } else {
+          this.data[bOffs] = 1 - (1 - (bl - 0.5) * 2 * alpha) * (1 - bb);
+        }
+        break;
       case BLEND_SUBTRACT:
-        return b - (l * strength);
+          this.data[rOffs] = rb - (rl * alpha);
+          this.data[gOffs] = gb - (gl * alpha);
+          this.data[bOffs] = bb - (bl * alpha);
+        break;
       case BLEND_CHANNEL_DISSOLVE:
-        return (strength > Math.random()) ? l : b;
+          if(alpha > Math.random()) this.data[rOffs] = rl;
+          if(alpha > Math.random()) this.data[gOffs] = gl;
+          if(alpha > Math.random()) this.data[bOffs] = bl;
+        break;
+      case BLEND_DISSOLVE:
+        if(alpha > Math.random()) {
+          this.data[rOffs] = rl;
+          this.data[gOffs] = gl;
+          this.data[bOffs] = bl;
+        }
+        break;
+      case BLEND_SHIFT_OVERLAY:
+        if(rl < 0.5) {
+          this.data[rOffs] = rb - (0.5 - rl) * 2 * alpha;
+        } else {
+          this.data[rOffs] = (rl - 0.5) * 2 * alpha + rb;
+        }
+        if(gl < 0.5) {
+          this.data[gOffs] = gb - (0.5 - gl) * 2 * alpha;
+        } else {
+          this.data[gOffs] = (gl - 0.5) * 2 * alpha + gb;
+        }
+        if(bl < 0.5) {
+          this.data[bOffs] = bb - (0.5 - bl) * 2 * alpha;
+        } else {
+          this.data[bOffs] = (bl - 0.5) * 2 * alpha + bb;
+        }
+        break;
       default:
         console.error(`unknown blend mode ${blend}`);
+    }
+    //add the alphas together
+    //alpha >1 doesnt matter on a canvas, but DOES matter for filters modifying the whole image
+    this.data[aOffs] = Math.min(this.data[aOffs] + alpha, 1);
+    //set rendered layer data (for filters)
+    if(this.layer.linkCount > 0) {
+      this.layer.data[rOffs] = rl;
+      this.layer.data[gOffs] = gl;
+      this.layer.data[bOffs] = bl;
+      this.layer.data[aOffs] = alpha;
     }
   }
   
@@ -286,5 +339,14 @@ class ImageManager {
     }
     //add layer
     this.layers.splice(insertIdx, 0, layer);
+  }
+  
+  layerDataFromKey(key) {
+    if(key > -1) {
+      return this.layers[this.layerKeys[key]].data;
+    } else {
+      //returning the data itself isntead of a copy creates these weird streaking patterns (from data overwriting itself)
+      return deepArrayCopy(this.data);
+    }
   }
 }

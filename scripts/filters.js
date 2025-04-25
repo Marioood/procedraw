@@ -14,9 +14,10 @@ class Filter extends Layer {
         "plain",
         "add",
         "multiply",
+        "subtract",
         "screen",
         "overlay",
-        "subtract",
+        "shift overlay",
         "dissolve",
         "channel dissolve"
       ],
@@ -24,9 +25,10 @@ class Filter extends Layer {
         BLEND_PLAIN,
         BLEND_ADD,
         BLEND_MULTIPLY,
+        BLEND_SUBTRACT,
         BLEND_SCREEN,
         BLEND_OVERLAY,
-        BLEND_SUBTRACT,
+        BLEND_SHIFT_OVERLAY,
         BLEND_DISSOLVE,
         BLEND_CHANNEL_DISSOLVE
       ]
@@ -71,8 +73,7 @@ class FilterTranslate extends Filter {
   };
   
   generate(o) {
-    if(this.od.base == -1) return;
-    const data = img.layers[img.layerKeys[this.od.base]].data;
+    const data = img.layerDataFromKey(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
@@ -153,8 +154,7 @@ class FilterTile extends Filter {
   };
   
   generate(o) {
-    if(this.od.base == -1) return;
-    const data = img.layers[img.layerKeys[this.od.base]].data;
+    const data = img.layerDataFromKey(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
@@ -177,44 +177,50 @@ class FilterInvert extends Filter {
   name = "invert";
   
   options = {
-    invertRed: true,
-    invertBlue: true,
-    invertGreen: true,
-    invertAlpha: false
+    redWeight: 1,
+    greenWeight: 1,
+    blueWeight: 1,
+    alphaWeight: 0
   };
   
   types = {
-    invertRed: {
-      type: "boolean"
+    redWeight: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 1
     },
-    invertBlue: {
-      type: "boolean"
+    greenWeight: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 1
     },
-    invertGreen: {
-      type: "boolean"
+    blueWeight: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 1
     },
-    invertAlpha: {
-      type: "boolean"
+    alphaWeight: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 1
     }
   };
   
   generate(o) {
-    if(this.od.base == -1) return;
-    const data = img.layers[img.layerKeys[this.od.base]].data;
+    const data = img.layerDataFromKey(this.od.base);;
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         const idx = x + y * img.w;
-        const r = data[idx * 4];
-        const g = data[idx * 4 + 1];
-        const b = data[idx * 4 + 2];
-        const a = data[idx * 4 + 3];
-        img.plotPixel(
-          [(o.invertRed) ? 1 - r : r,
-          (o.invertGreen) ? 1 - g : g,
-          (o.invertBlue) ? 1 - b : b,
-          (o.invertAlpha) ? 1 - a : a],
-        x, y);
+        const r = Math.abs(o.redWeight - data[idx * 4]);
+        const g = Math.abs(o.greenWeight - data[idx * 4 + 1]);
+        const b = Math.abs(o.blueWeight - data[idx * 4 + 2]);
+        const a = Math.abs(o.alphaWeight - data[idx * 4 + 3]);
+        img.plotPixel([r, g, b, a], x, y);
       }
     }
   }
@@ -224,22 +230,18 @@ class FilterScale extends Filter {
   name = "scale";
   
   options = {
-    xScale: 1,
-    yScale: 1
+    width: 1,
+    height: 1
   };
   
   types = {
-    xScale: {
+    width: {
       type: "number",
-      step: 0.05,
-      min: 0,
-      max: 16
+      step: 1
     },
-    yScale: {
+    height: {
       type: "number",
-      step: 0.05,
-      min: 0,
-      max: 16
+      step: 1
     }
   };
   /*
@@ -254,13 +256,15 @@ class FilterScale extends Filter {
   
   
   generate(o) {
-    if(this.od.base == -1) return;
-    const data = img.layers[img.layerKeys[this.od.base]].data;
+    const data = img.layerDataFromKey(this.od.base);
+    
+    const xScale = o.width / img.w;
+    const yScale = o.height / img.h;
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         //TODO: edge mode (void, clamp, wrap, mirror), x and y, origin (?), interpolation types, proper negative scales
-        const idx = Math.floor(x / o.xScale) % img.w + Math.floor(y / o.yScale) % img.h * img.w;
+        const idx = Math.floor(x / xScale) % img.w + Math.floor(y / yScale) % img.h * img.w;
         const r = data[idx * 4];
         const g = data[idx * 4 + 1];
         const b = data[idx * 4 + 2];
