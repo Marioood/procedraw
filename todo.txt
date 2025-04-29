@@ -29,6 +29,7 @@ repeat filter -- copies the layer several times with an offset (motion blur type
 rotate filter
 quantize filter
 contrast filter
+sharpen filter
 make a not-wandering layer
 disable corners or edges
 merge liney and noise layers? a lot of their options are awfully similar...

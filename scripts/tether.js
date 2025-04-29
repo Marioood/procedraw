@@ -564,10 +564,10 @@ class Tether {
               val = Math.min(Math.max(val, limits.min), limits.max);
               //just dont update the number - cause it makes inputting small numbers a bitch
               if(val != input2.value) {
-                this.classList.add("input-invalid");
+                input2.classList.add("input-invalid");
                 return;
               } else {
-                this.classList.remove("input-invalid");
+                input2.classList.remove("input-invalid");
               }
             }
             input.value = Number(input2.value);
