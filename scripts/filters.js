@@ -42,22 +42,6 @@ class Filter extends Layer {
       type: "boolean",
       hidden: true
     },
-    base: {
-      type: "layer",
-      hidden: false
-    }
-  };
-}
-
-class FilterTranslate extends Filter {
-  name = "translate";
-  
-  options = {
-    x: 0,
-    y: 0
-  };
-  
-  types = {
     x: {
       type: "number",
       step: 1,
@@ -69,8 +53,18 @@ class FilterTranslate extends Filter {
       step: 1,
       min: -128,
       max: 128
+    },
+    base: {
+      type: "layer",
+      hidden: false,
+      external: true,
+      brotherId: "dyn-icon-"
     }
   };
+}
+
+class FilterTweak extends Filter {
+  name = "tweak";
   
   generate(o) {
     const data = img.layerDataFromKey(this.od.base);
@@ -82,7 +76,7 @@ class FilterTranslate extends Filter {
         const g = data[idx * 4 + 1];
         const b = data[idx * 4 + 2];
         const a = data[idx * 4 + 3];
-        img.plotPixel([r, g, b, a], x + o.x, y + o.y);
+        img.plotPixel([r, g, b, a], x, y);
       }
     }
   }
@@ -92,8 +86,6 @@ class FilterTile extends Filter {
   name = "tile";
   
   options = {
-    x: 0,
-    y: 0,
     width: 16,
     height: 16,
     xOffs: 0,
@@ -103,18 +95,6 @@ class FilterTile extends Filter {
   };
   
   types = {
-    x: {
-      type: "number",
-      step: 1,
-      min: 0,
-      max: 256
-    },
-    y: {
-      type: "number",
-      step: 1,
-      min: 0,
-      max: 256
-    },
     width: {
       type: "number",
       step: 1,
@@ -130,26 +110,26 @@ class FilterTile extends Filter {
     xOffs: {
       type: "number",
       step: 1,
-      min: 0,
-      max: 256
+      min: -128,
+      max: 128
     },
     yOffs: {
       type: "number",
       step: 1,
-      min: 0,
-      max: 256
+      min: -128,
+      max: 128
     },
     xShift: {
       type: "number",
       step: 1,
-      min: 0,
-      max: 256
+      min: -128,
+      max: 128
     },
     yShift: {
       type: "number",
       step: 1,
-      min: 0,
-      max: 256
+      min: -128,
+      max: 128
     }
   };
   
@@ -167,7 +147,7 @@ class FilterTile extends Filter {
         const a = data[idx * 4 + 3];
         const xShift = o.xShift * Math.floor(y / o.height);
         const yShift = o.yShift * Math.floor(x / o.width);
-        img.plotPixel([r, g, b, a], x - o.xOffs + o.x + xShift, y - o.yOffs + o.y + yShift);
+        img.plotPixel([r, g, b, a], x - o.xOffs + xShift, y - o.yOffs + yShift);
       }
     }
   }
@@ -230,10 +210,13 @@ class FilterScale extends Filter {
   name = "scale";
   
   options = {
-    width: 1,
-    height: 1
+    width: 64,
+    height: 64
   };
-  
+  //width and height kind of stink as an abstraction, because changing the resolution of the image will change the scale of this, which can be undesirable
+  //ex: filter width and height are 64x64 and the image is 64x64 (no difference)
+  //ex: filter width and height are 64x64 and the image is 256x256 (filter is smaller than image)
+  //ex: filter width and height are 64x64 and the image is 16x16 (filter is larger than image)
   types = {
     width: {
       type: "number",
@@ -318,6 +301,37 @@ class FilterScale extends Filter {
         const b = data[idx * 4 + 2];
         const a = data[idx * 4 + 3];
         img.plotPixel([r, g, b, a], x, y);*/
+      }
+    }
+  }
+}
+class FilterSine extends Filter {
+  name = "sine";
+  
+  options = {
+    turns: 1
+  };
+  
+  types = {
+    turns: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 16
+    }
+  };
+  
+  generate(o) {
+    const data = img.layerDataFromKey(this.od.base);;
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        const idx = x + y * img.w;
+        const r = Math.sin(data[idx * 4] * Math.PI * o.turns) / 2 + 0.5;
+        const g = Math.sin(data[idx * 4 + 1] * Math.PI * o.turns) / 2 + 0.5;
+        const b = Math.sin(data[idx * 4 + 2] * Math.PI * o.turns) / 2 + 0.5;
+        const a = data[idx * 4 + 3];
+        img.plotPixel([r, g, b, a], x, y);
       }
     }
   }

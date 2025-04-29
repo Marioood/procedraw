@@ -103,12 +103,12 @@ function InputCheckbox(value, oninput) {
   const input = Button("", (e) => {
     checked = !checked;
     if(checked) {
-      e.target.classList = "checkbox-true";
+      e.target.classList = "aero-btn checkbox-true";
     } else {
-      e.target.classList = "checkbox-false";
+      e.target.classList = "aero-btn checkbox-false";
     }
     oninput(checked, e);
-  }, (checked) ? "checkbox-true" : "checkbox-false");
+  }, (checked) ? "aero-btn checkbox-true" : "aero-btn checkbox-false");
   return input;
 }
 function Textarea(hint, oninput, className) {
@@ -125,6 +125,12 @@ function killChildren(container) {
     container.removeChild(container.lastChild);
   }
 }
+
+//something i hate about javascript and just the web in general is that they started out with these super high level abstractions
+//creating good abstractions is quite hard (see: web development)
+//they require creating something from a low level, seeing what patterns repeat and that could be compressed, and compressing those
+//if you start out with super high level abstractions, or creating abstractions to ANTICIPATE code, instead of creating abstractions based off of useful code, then those abstractions are gonna suck 9 times out of 10
+//another thing with abstractions is that they can lead to super ugly, hack-y, or illegable code if no low-level alternatives exist and you have to make something that those abstractions do not support (example: custom html elements; see InputColor and InputColorControl code)
 
 let colpGlobalDisplay = null;
 let colpGlobalOninput = null;
@@ -162,7 +168,7 @@ function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
     colp.updateColors();
     colp.localDisplay.style.backgroundColor = '#' + RGB2Hex(inputCol);
     colp.hexBox.value = RGB2Hex(inputCol);
-  },"colp-input");
+  },"aero-btn colp-input");
   
   colpDisplay.style.backgroundColor = "#" + RGB2Hex(inputCol);
   
@@ -454,7 +460,7 @@ class Tether {
   previousLayer = 0;
   currentClass = LayerXorFractal;
   canvasScale = 4;
-  version = "VOLATILE 0.6";
+  version = "VOLATILE 0.7";
   renderOnUpdate = true;
   forceRender = false;
   compressSaves = true;
@@ -516,7 +522,8 @@ class Tether {
           //doing this before setting the max and min makes the slider look all funky
           input.value = options[optionKeys[i]];
           
-          input.addEventListener("input", function (e) {
+          let oldTime = 0;
+          input.oninput = (e) => {
             let val = input.value;
             //do a safety check on unsafe options
             //"unsafe options" are ones that control loops (e.g. maxLines for wandering, thickness for border)
@@ -531,8 +538,16 @@ class Tether {
             }
             input2.value = input.value;
             options[optionKeys[i]] = Number(input.value);
-            img.printImage();
-          });
+            //dont print too fast so your pc doesnt sound like a jet engine
+            let curTime = Math.round(Date.now() / 30);
+            if(oldTime != curTime) {
+              img.printImage();
+              oldTime = curTime;
+            }
+          };
+          //print the image when the user lets go of the input
+          //prevents visual desync between the input and canvas when the input changes rapidly
+          input.onmouseup = (e) => {img.printImage()};
           //number box
           input2.type = "number";
           input2.value = options[optionKeys[i]];
@@ -540,7 +555,7 @@ class Tether {
           if(limits.min != undefined) input2.min = limits.min;
           if(limits.max != undefined) input2.max = limits.max;
           
-          input2.addEventListener("input", function (e) {
+          input2.oninput = (e) => {
             let val = input2.value;
             //do a safety check on unsafe options
             //"unsafe options" are ones that control loops (e.g. maxLines for wandering, thickness for border)
@@ -558,7 +573,7 @@ class Tether {
             input.value = Number(input2.value);
             options[optionKeys[i]] = Number(input2.value);
             img.printImage();
-          });
+          };
           container.appendChild(input);
           container.appendChild(input2);
           break;
@@ -622,31 +637,48 @@ class Tether {
         case "layer":
           input = document.createElement("select");
           input.id = id;
-          //const blankOption = document.createElement("option");
-          //blankOption.innerText = "< no layer >";
-          //input.add(blankOption);
+          const canvasOption = document.createElement("option");
+          canvasOption.text = "(entire canvas)";
+          canvasOption.value = KEY_CANVAS;
+          input.add(canvasOption);
           //TODO: fix order of options
           for(let i = 0; i < img.layerKeys.length; i++) {
             const option = document.createElement("option");
-            const key = img.layerKeys[i];
-            if(key == -1) continue; //skip if the key is marked as freed
-            if(img.layerKeys[key] == img.layerKeys.indexOf(this.currentLayer)) continue; //skip if this key points to the current layer
-            option.text = img.layers[key].displayName;
+            const key = i;
+            const idx = img.layerKeys[key];
+            if(key == KEY_FREED) continue; //skip if the key is marked as freed
+            if(idx == this.currentLayer) continue; //skip if this key points to the current layer
+            if(idx == -1) continue; //skip if the index no longer exists. when removing a layer that is above a filter iffy things can happen without this
+              option.text = idx + ". " + img.layers[idx].displayName;
+            //set the value because the option's index will not always point to a valid key, due to freed keys getting skipped
+            option.value = key;
             input.add(option);
           }
           //set the selected item to the current key
-          //mess with the index position to account for the <no layer> option
           let oldKey = options[optionKeys[i]];
-          input.selectedIndex = oldKey;
+          let visualIdx;
+          //find option that corresponds to the selected key
+          for(visualIdx = 0; visualIdx < input.children.length && input.children[visualIdx].value != oldKey; visualIdx++);
+          
+          input.selectedIndex = visualIdx;
           
           input.addEventListener("change", function (e) {
-            const key = input.selectedIndex;
+            const key = input.value;
             options[optionKeys[i]] = key;
             
             if(key == oldKey) return;
-            if(oldKey > -1) img.layers[img.layerKeys[oldKey]].linkCount--;
-            img.layers[img.layerKeys[key]].linkCount++;
+            if(oldKey != KEY_CANVAS) img.layers[img.layerKeys[oldKey]].linkCount--;
+            if(key != KEY_CANVAS) img.layers[img.layerKeys[key]].linkCount++;
             oldKey = key;
+            
+            if(limits.external) {
+              const brother = document.getElementById(limits.brotherId + t.currentLayer);
+              if(key == KEY_CANVAS) {
+                brother.style.backgroundImage = "url(img/icon/canvas.svg)";
+              } else {
+                brother.style.backgroundImage = `url(img/icon/${img.layers[img.layerKeys[key]].displayName}.svg)`;
+              }
+            }
             img.printImage();
           });
           container.appendChild(input);
@@ -708,7 +740,6 @@ class Tether {
           img.printImage();
         }
       });
-      
       buttonContainer.appendChild(up);
       
       const buttonBreak = document.createElement("br");
@@ -755,12 +786,15 @@ class Tether {
       iconTint.id = "dyn-icon-tint-" + i;
       
       const icon = document.createElement("img");
+      icon.id = "dyn-icon-" + i;
+      
       if(layer.isFilter) {
-        //TEMPORARY -- REPLACE WITH SVGs
-        icon.src = "img/icon/" + layer.name + ".png";
-        if(layer.od.base > -1) {
+        icon.src = "img/icon/" + layer.name + ".svg";
+        
+        if(layer.od.base == KEY_CANVAS) {
+          icon.style.backgroundImage = "url(img/icon/canvas.svg)";
+        } else {
           const baseName = img.layers[img.layerKeys[layer.od.base]].name;
-          console.log(baseName);
           icon.style.backgroundImage = `url(img/icon/${baseName}.svg)`;
         }
       } else {

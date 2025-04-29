@@ -44,8 +44,11 @@ class Layer {
     tint: [1, 1, 1, 1],
     //depth: 255,
     shown: true,
+    //position offsets
+    x: 0,
+    y: 0,
     //layer hash used for filters
-    base: -1
+    base: KEY_CANVAS
   };
   
   typesDefault = {
@@ -80,6 +83,18 @@ class Layer {
         BLEND_CHANNEL_DISSOLVE
       ]
     },
+    x: {
+      type: "number",
+      step: 1,
+      min: -128,
+      max: 128
+    },
+    y: {
+      type: "number",
+      step: 1,
+      min: -128,
+      max: 128
+    },
     tint: {
       type: "color",
       external: true,
@@ -99,6 +114,11 @@ class Layer {
     //o is short for "options"
     //maybe remove? options will always be taken from this object.... so its kinda redundant
     //these aint static and are created AS the layers, so im not sure why i did it like that
+  }
+  
+  tintIcon(icon) {
+    //used for multi color layers (border, worley, etc.) icon's
+    //this COULD work, but then i'd have to deal with adding svgs into the document as <svg> tags instead of images, which would introduce far too much voodoo (see: https://stackoverflow.com/questions/70401341/load-svg-from-file-using-javascript)
   }
 }
 
@@ -137,9 +157,45 @@ class LayerXorFractal extends Layer {
 class LayerSolid extends Layer {
   name = "solid";
   
+  options = {
+    width: 64,
+    height: 64,
+    fitCanvas: false
+  };
+  
+  types = {
+    width: {
+      type: "number",
+      step: 1,
+      min: 1,
+      max: 512,
+      unsafe: true
+    },
+    height: {
+      type: "number",
+      step: 1,
+      min: 1,
+      max: 512,
+      unsafe: true
+    },
+    fitCanvas: {
+      type: "boolean"
+    }
+  };
+  
   generate(o) {
-    for(let y = 0; y < img.h; y++) {
-      for(let x = 0; x < img.w; x++) {
+    let width;
+    let height;
+    
+    if(o.fitCanvas) {
+      width = img.w;
+      height = img.h;
+    } else {
+      width = o.width;
+      height = o.height;
+    }
+    for(let y = 0; y < height; y++) {
+      for(let x = 0; x < width; x++) {
         img.plotPixel([1, 1, 1, 1], x, y);
       }
     }
@@ -199,8 +255,6 @@ class LayerBorder extends Layer {
   name = "border";
   
   options = {
-    x: 0,
-    y: 0,
     width: 64,
     height: 64,
     thickness: 1,
@@ -212,16 +266,6 @@ class LayerBorder extends Layer {
   };
   
   types = {
-    x: {
-      type: "number",
-      min: 0,
-      max: 256
-    },
-    y: {
-      type: "number",
-      min: 0,
-      max: 256
-    },
     width: {
       type: "number",
       min: 1,
@@ -286,25 +330,37 @@ class LayerBorder extends Layer {
       }
       //left and right edges
       for(let y = t; y < o.height - t; y++) {
-        img.plotPixel(fade(o.colorLeft, alpha), o.x + t - 1, y + o.y);
-        img.plotPixel(fade(o.colorRight, alpha), o.x + o.width - t, y + o.y);
+        img.plotPixel(fade(o.colorLeft, alpha), t - 1, y);
+        img.plotPixel(fade(o.colorRight, alpha), o.width - t, y);
       }
       //top and bottom edges
       for(let x = t; x < o.width - t; x++) {
-        img.plotPixel(fade(o.colorTop, alpha), x + o.x, o.y + t - 1);
-        img.plotPixel(fade(o.colorBottom, alpha), x + o.x, o.y + o.height - t);
+        img.plotPixel(fade(o.colorTop, alpha), x, t - 1);
+        img.plotPixel(fade(o.colorBottom, alpha), x, o.height - t);
       }
       //corners
-      img.plotPixel(blend(o.colorTop, o.colorLeft, alpha), o.x + t - 1, o.y + t - 1);
-      img.plotPixel(blend(o.colorTop, o.colorRight, alpha), o.x + o.width - t, o.y + t - 1);
-      img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), o.x + t - 1, o.y + o.height - t);
-      img.plotPixel(blend(o.colorBottom, o.colorRight, alpha), o.x + o.width - t, o.y + o.height - t);
+      img.plotPixel(blend(o.colorTop, o.colorLeft, alpha), t - 1, t - 1);
+      img.plotPixel(blend(o.colorTop, o.colorRight, alpha), o.width - t, t - 1);
+      img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), t - 1, o.height - t);
+      img.plotPixel(blend(o.colorBottom, o.colorRight, alpha), o.width - t, o.height - t);
       
       if(o.fadeMode == O_FADE_NEAR_CENTER) {
         alpha -= alphaStep;
       }
     }
   }
+  
+  /*tintIcon(icon) {
+    const top = icon.getElementsByClassName("ico-top")[0];
+    const bottom = icon.getElementsByClassName("ico-bottom")[0];
+    const right = icon.getElementsByClassName("ico-right")[0];
+    const left = icon.getElementsByClassName("ico-left")[0];
+    
+    top.fill = RGB2Hex(this.options.colorTop);
+    bottom.fill = RGB2Hex(this.options.colorBottom);
+    right.fill = RGB2Hex(this.options.colorRight);
+    left.fill = RGB2Hex(this.options.colorLeft);
+  }*/
 }
 
 class LayerLiney extends Layer {
@@ -370,6 +426,9 @@ class LayerLiney extends Layer {
     
     for(let i = 0; i < maxI; i++) {
       let col = 0.5;
+      //fix tiling by shifting each strip of lines by a random amount
+      let randOffs = Math.floor(Math.random() * maxL);
+      
       for(let l = 0; l < maxL; l++) {
         if(Math.random() < o.breaks || l == 0) {
           col = Math.round((Math.random() * o.bias) * o.depth) / o.depth;
@@ -377,11 +436,11 @@ class LayerLiney extends Layer {
         }
         let x, y;
         if(o.dir) {
-          x = l;
+          x = l + randOffs;
           y = i;
         } else {
           x = i;
-          y = l;
+          y = l + randOffs;
         }
         if(isDrawn) img.plotPixel(img.blend(o.lowColor, o.highColor, col), x, y);
       }
@@ -389,29 +448,31 @@ class LayerLiney extends Layer {
   }
 }
 
-class LayerWandering extends Layer{
+class LayerWandering extends Layer {
   name = "wandering";
   
   options = {
-    spacing: 8,
-    dir: true,
-    spread: 0.5,
-    variance: 8,
-    bias: 0.5,
-    thickness: 1,
-    wrapFix: true
-  }
+    dir: 90,
+    spacing: 16,
+    spread: 0,
+    minLength: 8,
+    maxLength: 8,
+    minWidth: 1,
+    maxWidth: 1
+  };
   
   types = {
+    dir: {
+      type: "number",
+      step: 1,
+      max: 360,
+      min: 0
+    },
     spacing: {
       type: "number",
       min: 1,
       max: 256,
       unsafe: true
-    },
-    dir: {
-      type: "boolean",
-      direction: true
     },
     spread: {
       type: "number",
@@ -419,92 +480,94 @@ class LayerWandering extends Layer{
       max: 1,
       min: 0
     },
-    variance: {
-      type: "number",
-      min: 0
-    },
-    bias: {
-      type: "number",
-      step: 0.05,
-      max: 1,
-      min: 0
-    },
-    thickness: {
+    minLength: {
       type: "number",
       min: 1,
-      max: 128,
+      max: 256,
       unsafe: true
     },
-    wrapFix: {
-      type: "boolean"
+    maxLength: {
+      type: "number",
+      min: 1,
+      max: 256,
+      unsafe: true
+    },
+    minWidth: {
+      type: "number",
+      min: 1,
+      max: 64,
+      unsafe: true
+    },
+    maxWidth: {
+      type: "number",
+      min: 1,
+      max: 64,
+      unsafe: true
     }
-  }
+  };
   
   generate(o) {
-    let maxN, inverseMaxN;
-
-    if(o.dir) {
-      maxN = img.w;
-      inverseMaxN = img.h;
-    } else {
-      maxN = img.h;
-      inverseMaxN = img.w;
+    //multiply by sqrt of 2 to prevent weird skipping between angles
+    const xChange = Math.sin(o.dir * DEG2RAD) * Math.sqrt(2);
+    const yChange = Math.cos(o.dir * DEG2RAD) * Math.sqrt(2);
+    let xFlip = 1;
+    let yFlip = 1;
+    if(xChange < 0) {
+      xFlip = -1;
     }
-    const spacing = Math.sqrt(o.spacing);
-    const maxLines = inverseMaxN / spacing;
-    
-    for(let i = 0; i < maxLines; i++) {
-      let pos = Math.round((i + 0.5) * spacing + (Math.random() - 0.5) * o.variance);
-      const start = pos;
-      const wrapBiasPivot = maxN * (Math.random() * 3 + 1);
-      for(let n = 0; n < maxN; n++) {
-        let x, y;
-        
-        if(o.dir) {
-          x = n;
-          y = pos;
-        } else {
-          x = pos;
-          y = n;
-        }
-        if(o.thickness == 1) {
-          img.plotPixel([1, 1, 1, 1], x, y);
-        } else {
-          for(let s = 0; s < o.thickness; s++) {
-            if(o.dir) {
-              img.plotPixel([1, 1, 1, 1], x, y + s);
-            } else {
-              img.plotPixel([1, 1, 1, 1], x + s, y);
+    if(yChange < 0) {
+      yFlip = -1;
+    }
+    const lineCount = img.w * img.h / (o.spacing * 2);
+    //draw several lines
+    for(let l = 0; l < lineCount; l++) {
+      const xOffs = Math.floor(img.w * Math.random());
+      const yOffs = Math.floor(img.h * Math.random());
+      const len = Math.random() * (o.maxLength - o.minLength) + o.minLength;
+      let progress = 0;
+      const thickness = Math.random() * (o.maxWidth - o.minWidth) + o.minWidth;
+      //draw a line
+      if(Math.abs(xChange) < Math.abs(yChange)) {
+        if(thickness > 1) {
+          for(let i = 0; i < len; i++) {
+            progress += xChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            //prevent weird looking breaks in the lines
+            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
+            
+            for(let t = 0; t < thickness; t++) {
+              img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs + t, i * yFlip + yOffs);
             }
           }
+        } else {
+          for(let i = 0; i < len; i++) {
+            progress += xChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            //prevent weird looking breaks in the lines
+            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
+            
+            img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs);
+          }
         }
-        
-        if(Math.random() < o.spread) {
-          //attempt to fix wrapping on the line direction (ex: if xDir is x then y would loop properly, but x wouldnt)
-          if(o.wrapFix) {
-            let wrapBias = Math.max(n / wrapBiasPivot, 0);
-            //if the line strays too far from it's start, begin to bias towards the start (make the texture seamless)
-            if(wrapBias > Math.random()) {
-              //compute difference
-              if(start > pos) {
-                pos++;
-              } else {
-                pos--;
-              }
-            } else {
-              if(Math.random() < o.bias) {
-                pos++;
-              } else {
-                pos--;
-              }
+      } else {
+        if(thickness > 1) {
+          for(let i = 0; i < len; i++) {
+            progress += yChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            //prevent weird looking breaks in the lines
+            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
+            
+            for(let t = 0; t < thickness; t++) {
+              img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs + t);
             }
-          } else {
-            //ehhh copy and paste i dont care
-            if(Math.random() < o.bias) {
-              pos++;
-            } else {
-              pos--;
-            }
+          }
+        } else {
+          for(let i = 0; i < len; i++) {
+            progress += yChange;
+            const randOffs = (Math.random() - 0.5) * o.spread * 2;
+            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
+            
+            img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
           }
         }
       }
@@ -538,10 +601,16 @@ class LayerCheckers extends Layer {
       type: "number"
     },
     xShift: {
-      type: "number"
+      type: "number",
+      step: 1,
+      min: -128,
+      max: 128
     },
     yShift: {
-      type: "number"
+      type: "number",
+      step: 1,
+      min: -128,
+      max: 128
     }
   };
   
@@ -735,6 +804,7 @@ class LayerWorley extends Layer {
     ySpacing: 16,
     closeColor: [0, 0, 0, 1],
     farColor: [1, 1, 1, 1],
+    minRadiusMult: 1,
     squareDistance: false,
     voronoi: false
   };
@@ -758,6 +828,12 @@ class LayerWorley extends Layer {
     farColor: {
       type: "color"
     },
+    minRadiusMult: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 1
+    },
     squareDistance: {
       type: "boolean"
     },
@@ -773,6 +849,7 @@ class LayerWorley extends Layer {
     let yGrid = Math.ceil(img.h / o.ySpacing);
     let points = new Array(xGrid * yGrid);
     let colors;
+    let distMults;
     
     for(let y = 0; y < yGrid; y++) {
       for(let x = 0; x < xGrid; x++) {
@@ -788,13 +865,21 @@ class LayerWorley extends Layer {
         }
       }
     }
+    if(o.minRadiusMult != 1) {
+      distMults = new Array(xGrid * yGrid);
+      for(let y = 0; y < yGrid; y++) {
+        for(let x = 0; x < xGrid; x++) {
+          distMults[x + y * xGrid] = Math.random() * (1 - o.minRadiusMult) + o.minRadiusMult;
+        }
+      }
+    }
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         //absurd number so that the distance gets overwritten
-        let closestDist = 999999999999999;
-        //iterate through 9 cells to compute the shortest distance
+        let closestDist = 9999999999999999999999;
         let printCol;
         
+        //iterate through 9 cells to compute the shortest distance
         for(let yi = -1; yi <= 1; yi++) {
           for(let xi = -1; xi <= 1; xi++) {
             const xCell = Math.floor(x / o.xSpacing) + xi;
@@ -814,7 +899,9 @@ class LayerWorley extends Layer {
             } else {
               yScale = o.xSpacing / o.ySpacing;
             }
-            const dist = (xSqr * xSqr) * xScale + (ySqr * ySqr) * yScale;
+            let dist = (xSqr * xSqr) * xScale + (ySqr * ySqr) * yScale;
+            if(o.minRadiusMult != 1) dist *= distMults[pointIdx];
+              
             if(dist < closestDist) {
               closestDist = dist;
               if(o.voronoi) printCol = colors[pointIdx];
@@ -826,141 +913,12 @@ class LayerWorley extends Layer {
           img.plotPixel(printCol, x, y);
         } else {
           //do the sqrt for only one of the distances
-          //let dist = Math.sqrt(closestDist) * (255 / ((o.xSpacing + o.ySpacing) / 2));
           let dist = Math.sqrt(closestDist) / ((o.xSpacing + o.ySpacing) / 2);
           if(o.squareDistance) {
             dist *= dist;
           }
           
           img.plotPixel(img.blend(o.closeColor, o.farColor, dist), x, y);
-        }
-      }
-    }
-  }
-}
-
-class LayerWandering2 extends Layer {
-  name = "wandering2";
-  
-  options = {
-    dir: 45,
-    spacing: 16,
-    spread: 0,
-    minLength: 8,
-    maxLength: 8,
-    minWidth: 1,
-    maxWidth: 1
-  };
-  
-  types = {
-    dir: {
-      type: "number",
-      step: 1,
-      max: 360,
-      min: 0
-    },
-    spacing: {
-      type: "number",
-      min: 1,
-      max: 256,
-      unsafe: true
-    },
-    spread: {
-      type: "number",
-      step: 0.05,
-      max: 1,
-      min: 0
-    },
-    minLength: {
-      type: "number",
-      min: 1,
-      max: 256,
-      unsafe: true
-    },
-    maxLength: {
-      type: "number",
-      min: 1,
-      max: 256,
-      unsafe: true
-    },
-    minWidth: {
-      type: "number",
-      min: 1,
-      max: 64,
-      unsafe: true
-    },
-    maxWidth: {
-      type: "number",
-      min: 1,
-      max: 64,
-      unsafe: true
-    }
-  };
-  
-  generate(o) {
-    //multiply by sqrt of 2 to prevent weird skipping between angles
-    const xChange = Math.sin(o.dir * DEG2RAD) * Math.sqrt(2);
-    const yChange = Math.cos(o.dir * DEG2RAD) * Math.sqrt(2);
-    let xFlip = 1;
-    let yFlip = 1;
-    if(xChange < 0) {
-      xFlip = -1;
-    }
-    if(yChange < 0) {
-      yFlip = -1;
-    }
-    const lineCount = img.w * img.h / (o.spacing * 2);
-    //draw several lines
-    for(let l = 0; l < lineCount; l++) {
-      const xOffs = Math.floor(img.w * Math.random());
-      const yOffs = Math.floor(img.h * Math.random());
-      const len = Math.random() * (o.maxLength - o.minLength) + o.minLength;
-      let progress = 0;
-      const thickness = Math.random() * (o.maxWidth - o.minWidth) + o.minWidth;
-      //draw a line
-      if(Math.abs(xChange) < Math.abs(yChange)) {
-        //TODO: thick lines look kind of poopy
-        if(thickness > 1) {
-          for(let i = 0; i < len; i++) {
-            progress += xChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            //prevent weird looking breaks in the lines
-            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
-            
-            for(let t = 0; t < thickness; t++) {
-              img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs + t);
-            }
-          }
-        } else {
-          for(let i = 0; i < len; i++) {
-            progress += xChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            //prevent weird looking breaks in the lines
-            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
-            
-            img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs);
-          }
-        }
-      } else {
-        if(thickness > 1) {
-          for(let i = 0; i < len; i++) {
-            progress += yChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            //prevent weird looking breaks in the lines
-            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
-            
-            for(let t = 0; t < thickness; t++) {
-              img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs + t, Math.round(progress) + yOffs);
-            }
-          }
-        } else {
-          for(let i = 0; i < len; i++) {
-            progress += yChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
-            
-            img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
-          }
         }
       }
     }

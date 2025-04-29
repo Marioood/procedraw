@@ -1,12 +1,12 @@
 :root {
-  --bg: #101010; /*DEPRECATED, REMOVE*/
+  --bg: #101010;
   --otln: #404040;
   --txt: #ffffff;
   --fnt: sans-serif;
   --main-tit-h: 24px;
   --main-cont-h: calc(100% - var(--main-tit-h));
-  --bg-cont: linear-gradient(180deg, #101010 0, #202020 100%);
-  --bg-trans: linear-gradient(180deg, #101010 0, #202020b0 100%);
+  --bg-cont: linear-gradient(180deg, var(--bg) 0, #202020 100%);
+  --bg-trans: linear-gradient(180deg, var(--bg) 0, #202020b0 100%);
   --label-w: 96px;
 }
 body {
@@ -32,51 +32,13 @@ hr {
   border: 0;
   border-bottom: var(--otln) 1px solid;
 }
-/******** COLOR PICKER ********/
-.woke-bg {
-  background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
-}
-.colp-input {
-  width: 32px;
-  height: 32px;
-  outline: 1px solid var(--otln);
-  display: inline-block;
-  background: 0; /*hide button gradient*/
-}
-.colp-x {
-  float: right;
-  width: 16px;
-  height: 16px;
-}
-.colp-container {
-  padding: 4px;
-  outline: 1px solid var(--otln);
-  background: var(--bg-cont);
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-}
-.colp-x-container {
-  width: 100%;
-  height: 18px;
-  background-color: var(--otln);
-}
-.colp-header {
-  width: inherit;
-}
-.colp-display {
-  height: 32px;
-  width: 100%;
-  border: 1px solid var(--bg);
-  outline: 1px solid var(--otln);
-}
 /******** UI DIVISION ********/
 .top-container {
   position: absolute;
   top: 0;
   width: 100%;
   height: var(--main-tit-h);
-  box-shadow: 0 0 16px black;
+  box-shadow: 0 1px var(--otln), 0 0 16px black;
 }
 .left-container {
   position: absolute;
@@ -150,7 +112,8 @@ hr {
   top: 0;
   z-index: 1; /*prevent layer icons from overlapping this*/
   border-bottom: 1px solid var(--otln);
-  height: 16px;
+  height: 18px;
+  background-color: var(--bg);
 }
 .save-box {
   max-width: 256px;
@@ -171,11 +134,7 @@ hr {
 .layer-icon-button {
   width: 32px;
   height: 32px;
-  border: 0;
-  outline: 0;
-}
-.layer-icon-button:active {
-  border: 0;
+  background-color: transparent;
 }
 .icon-layer-down {
   background-image: url("img/ui/layer-down.svg");
@@ -299,7 +258,7 @@ input[type=range]::-moz-range-thumb {
   height: 24px;
   width: 4px;
 }
-input, select, button, textarea, .checkbox-true, .checkbox-false {
+input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
   color: white;
   background: linear-gradient(180deg, black 0, #404040 100%);
   border-bottom: 1px solid black;
@@ -345,8 +304,11 @@ select {
 }
 button {
   cursor: pointer;
+  border: 0;
+  background-color: var(--bg);
+  color: white;
 }
-button:active {
+.aero-btn:active {
   border-top: 1px solid black;
   border-bottom: 1px solid #808080;
   border-right: 1px solid #606060;
@@ -361,6 +323,44 @@ button:active {
   width: 64px;
   height: 64px;
   border: white 1px solid;
+}
+/******** COLOR PICKER ********/
+.woke-bg {
+  background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
+}
+.colp-input {
+  width: 32px;
+  height: 32px;
+  outline: 1px solid var(--otln);
+  display: inline-block;
+  background: 0; /*hide button gradient*/
+}
+.colp-x {
+  float: right;
+  width: 16px;
+  height: 16px;
+}
+.colp-container {
+  padding: 4px;
+  outline: 1px solid var(--otln);
+  background: var(--bg-cont);
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+}
+.colp-x-container {
+  width: 100%;
+  height: 18px;
+  background-color: var(--otln);
+}
+.colp-header {
+  width: inherit;
+}
+.colp-display {
+  height: 32px;
+  width: 100%;
+  border: 1px solid var(--bg);
+  outline: 1px solid var(--otln);
 }
 /******** HEADER ********/
 .header-dropdown {
@@ -400,30 +400,30 @@ button:active {
   background-repeat: no-repeat;
   margin-left: 0;
   display: inline-block;
-  outline: 0;
-  border: 0;
-  border-radius: 0;
   width: 18px;
-  height: 16px;
+  height: 18px;
   border-right: 1px solid var(--otln);
 }
 #clear-layer {
+  margin-right: 0;
   float: right;
-  background-image: url("img/ui/clear.png");
+  background-image: url("img/ui/clear.svg");
+  border-right: 0;
+  border-left: 1px solid var(--otln);
 }
 #add-layer {
-  background-image: url("img/ui/add.png");
+  background-image: url("img/ui/add.svg");
 }
 #remove-layer {
-  background-image: url("img/ui/remove.png");
+  background-image: url("img/ui/remove.svg");
 }
 #dupe-layer {
-  background-image: url("img/ui/dupe.png");
+  background-image: url("img/ui/dupe.svg");
 }
 #random-layer {
-  background-image: url("img/ui/random.png");
+  background-image: url("img/ui/random.svg");
 }
-.outline-invalid {
+.outline-invalid:active {
   outline: red 1px solid;
 }
 .credits-container {

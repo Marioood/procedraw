@@ -1,0 +1,11 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="lighter-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#cccccc"/>
+			<stop offset="100%" stop-color="#d3d3d3"/>
+		</linearGradient>
+	</defs>
+  <rect x="1" y="7" width="14" height="2" fill="url(#lighter-grad)"/>
+</svg>

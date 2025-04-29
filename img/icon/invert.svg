@@ -1,0 +1,18 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="yin-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="black"/>
+			<stop offset="100%" stop-color="#202020"/>
+		</linearGradient>
+		<linearGradient id="yang-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+	</defs>
+  <circle cx="32" cy="32" r="15.5" fill="url(#yin-grad)" stroke="black" stroke-width="1"/>
+  <path d="M 32 17 A 7 7 0 0 1 32 32 M 32 32 A 7 7 0 0 0 32 47 M 32 47 A 15 15 0 0 1 32 17 Z" fill="url(#yang-grad)"/>
+  <circle cx="32" cy="24" r="2" fill="url(#yin-grad)"/>
+  <circle cx="32" cy="40" r="2" fill="url(#yang-grad)"/>
+</svg>

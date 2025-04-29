@@ -19,9 +19,20 @@ make loading more safe (test ways to break / exploit saving)
 palette
 HILARIOUS parody logos!
 list of controls
-fix tiling for liney -- it stinks with lower break levels
 fix tiling for worley (none powers of 2)
 PBR material creation (???)
+remove some mix types? a couple of them feel like filler
+bring back direction inputs!!!
+combine filter -- takes in two layers and combines them into one layer (could be useful for an emboss effect?)
+blur filter
+repeat filter -- copies the layer several times with an offset (motion blur type effect)
+rotate filter
+quantize filter
+contrast filter
+make a not-wandering layer
+disable corners or edges
+merge liney and noise layers? a lot of their options are awfully similar...
+mix options for the blobs layer
 
 URGENT
 
@@ -32,21 +43,13 @@ blend types for layer interpolation (e.g. border corners, vornoi noise) "mix typ
 value noise layer
 perlin noise layer
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
-make layer sliders render with some delay (avoid similar problems as color picker)
 edit tint switch layer dont switch color edit color SEE BUG
-disable corners or edges
-crop filter
-or just more options for the solid layer
-combine filter -- takes in two layers and combines them into one layer (could be useful for an emboss effect?)
-  change filter icons when the base is changed
-draw layer control icons
 more accurate layer icons
 proper direction input... again!
-fix layer key bugs! there's still a bunch.....
 the code is getting stale! rewrite it soon....
 merge the blend modes and mix modes? some of them are quite similar in purpose and functionality...
-fix wandering2 width
-make a not-wandering layer
+make controls more visible on mobile (see: firefox device simulation mode)
+proper layer icons
 
 REMINDERS
 
@@ -55,5 +58,8 @@ clean up unused garbage
 //the set color function sucked it was like 4 times slower
 //take a break! work on the programmer art thing
 //snap! image editor
+fix layer key bugs! there's still a bunch.....
 
 is the "color picker style" code too voodoolicious? would it be too confusing for someone unfamiliar with those functions, even if they learned about them? is it unecessary abstraction?
+
+floating point bitwise operators? could be interesting

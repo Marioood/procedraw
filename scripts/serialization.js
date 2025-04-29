@@ -1,7 +1,7 @@
 "use strict";
 
 class Serialization {
-  format = 2;
+  format = 0;
   
   save() {
     let saved = {};
@@ -95,7 +95,7 @@ class Serialization {
       
       //increment layer link counts--layer rendering shits itself if it isn't right!!
       //just using the layer index should be fine, since layer indices and keys are the same at this point
-      if(newLayer.od.base > -1) img.layers[newLayer.od.base].linkCount++;
+      if(newLayer.od.base != KEY_CANVAS) img.layers[newLayer.od.base].linkCount++;
       
       function loadOptions(fauxOptions, types) {
         //clean up colors!
@@ -121,7 +121,7 @@ class Serialization {
           } else if(type == "layer") {
             newOptions[key] = val;
             //skip link count increment if the layer has no base
-            if(val == -1) continue;
+            if(val == KEY_CANVAS) continue;
             //prevent filters from shitting themselves
             //because layer data only gets defined when the link count is > 0
             img.layers[img.layerKeys[val]].linkCount++;

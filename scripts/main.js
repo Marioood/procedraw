@@ -53,13 +53,13 @@ function main() {
     img.printImage();
   });
   //warning that you cant remove right now!
-  removeLayer.addEventListener("mousedown", function (e) {
-    if(img.layers.length == 0) removeLayer.classList.add("outline-invalid");
-  });
-  
-  removeLayer.addEventListener("mouseup", function (e) {
-    if(img.layers.length == 0) removeLayer.classList.remove("outline-invalid");
-  });
+  removeLayer.onmousedown = (e) => {
+    if(img.layers.length == 0) {
+      removeLayer.classList.add("outline-invalid");
+    } else {
+      removeLayer.classList.remove("outline-invalid");
+    }
+  };
 
   const clearLayer = document.getElementById("clear-layer");
   clearLayer.addEventListener("click", function (e) {
@@ -77,14 +77,13 @@ function main() {
     }
   });
   //warning that you cant remove right now!
-  clearLayer.addEventListener("mousedown", function (e) {
-    if(img.layers.length == 0) clearLayer.classList.add("outline-invalid");
-  });
-  
-  clearLayer.addEventListener("mouseup", function (e) {
-    if(img.layers.length == 0) clearLayer.classList.remove("outline-invalid");
-  });
-
+  clearLayer.onmousedown = (e) => {
+    if(img.layers.length == 0) {
+      clearLayer.classList.add("outline-invalid");
+    } else {
+      clearLayer.classList.remove("outline-invalid");
+    }
+  };
   const addLayer = document.getElementById("add-layer");
   addLayer.addEventListener("click", function (e) {
     if(img.layers.length > 0) {
@@ -117,19 +116,13 @@ function main() {
     img.printImage();
   });
   //warning that you cant dupe right now!
-  dupeLayer.addEventListener("mousedown", function (e) {
-    const layer2Dupe = img.layers[t.currentLayer];
-    if(!layer2Dupe) {
+  dupeLayer.onmousedown = (e) => {
+    if(img.layers.length == 0) {
       dupeLayer.classList.add("outline-invalid");
-    }
-  });
-  
-  dupeLayer.addEventListener("mouseup", function (e) {
-    const layer2Dupe = img.layers[t.currentLayer];
-    if(!layer2Dupe) {
+    } else {
       dupeLayer.classList.remove("outline-invalid");
     }
-  });
+  };
   
   const randomLayer = document.getElementById("random-layer");
   randomLayer.addEventListener("click", function (e) {
@@ -157,7 +150,6 @@ function main() {
   classSelect.addEventListener("change", function (e) {
     t.currentClass = img.layerClasses[classNames[this.selectedIndex]];
   });
-  
   
   let oldTimeR = 0;
   document.onkeydown = (e) => {
@@ -253,7 +245,7 @@ function main() {
     } else {
       saveImageText.value = s.save();
     }
-  });
+  }, "aero-btn");
   const loadImageText = Textarea("you put data here", null, "save-box");
   
   const loadImageButton = Button("load!", async (e) => {
@@ -278,12 +270,12 @@ function main() {
         return;
       }
     }
-  });
+  }, "aero-btn");
   //MOVE this
-  let isDown = true;
+  /*let isDown = true;
   const knobContainer = Button("", null, "knob-container");
   
-  /*knobContainer.onmousedown = (e) => {
+  knobContainer.onmousedown = (e) => {
     isDown = true;
   };
   knobContainer.onmouseup = (e) => {
@@ -342,7 +334,7 @@ function main() {
     Button("render", (e) => {
       t.forceRender = true;
       img.printImage();
-    })
+    }, "aero-btn")
   ));
   //////// HEADER MENU ////////
   const topContainer = document.getElementById("top-container");

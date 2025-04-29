@@ -22,6 +22,9 @@ const MIX_DAFT_X = 5;
 const MIX_DAFT_Y = 6;
 const MIX_HALF_DITHER = 7;
 
+const KEY_FREED = -1;
+const KEY_CANVAS = -2;
+
 class ImageManager {
   w = 64;
   h = 64;
@@ -51,12 +54,12 @@ class ImageManager {
     checkers: LayerCheckers,
     blobs: LayerBlobs,
     worley: LayerWorley,
-    wandering2: LayerWandering2,
     gradient: LayerGradient,
-    translate: FilterTranslate,
+    tweak: FilterTweak,
     tile: FilterTile,
     invert: FilterInvert,
-    scale: FilterScale
+    scale: FilterScale,
+    sine: FilterSine
   };
   
   printImage() {
@@ -126,8 +129,8 @@ class ImageManager {
     //[red, blue, green, alpha]
 
     //wrap around image
-    x = mod(x, this.w);
-    y = mod(y, this.h);
+    x = mod(x + this.layer.od.x, this.w);
+    y = mod(y + this.layer.od.y, this.h);
     //get alpha n blend from global memory... its less to type
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
@@ -233,7 +236,11 @@ class ImageManager {
       this.layer.data[rOffs] = rl;
       this.layer.data[gOffs] = gl;
       this.layer.data[bOffs] = bl;
-      this.layer.data[aOffs] = alpha;
+      //set the layer data to the COLOR's alpha instead of the color * layer alpha
+      //allows for a layer being filtered to be hidden while a filter is using it, which is done very often
+      
+      //add alpha together for more accurate layer data (albeit still inaccurate)
+      this.layer.data[aOffs] = Math.min(this.layer.data[aOffs] + color[3], 1);
     }
   }
   
@@ -292,16 +299,16 @@ class ImageManager {
             opts[key] = choice(d.values);
           break;
           case 'layer':
-            let layerKey = -1;
+            let layerKey = KEY_FREED;
             if(layer.isFilter) {
               let layerIdx = -1;
               //once a valid layer key is found
-              for(let safety = 0; layerIdx == -1; safety++) {
+              for(let safety = 0; layerIdx == KEY_FREED; safety++) {
                 layerKey = Math.floor(Math.random() * jsIsDumb.layerKeys.length)
                 layerIdx = jsIsDumb.layerKeys[layerKey];
                 if(safety > 64) {
                   console.error("failed to create layer; could not find a valid layer key");
-                  layerIdx = -1;
+                  layerIdx = KEY_CANVAS;
                 }
               }
               jsIsDumb.layers[layerIdx].linkCount++;
@@ -342,11 +349,11 @@ class ImageManager {
   }
   
   layerDataFromKey(key) {
-    if(key > -1) {
-      return this.layers[this.layerKeys[key]].data;
-    } else {
+    if(key == KEY_CANVAS) {
       //returning the data itself isntead of a copy creates these weird streaking patterns (from data overwriting itself)
       return deepArrayCopy(this.data);
+    } else {
+      return this.layers[this.layerKeys[key]].data;
     }
   }
 }

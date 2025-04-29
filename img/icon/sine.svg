@@ -1,0 +1,19 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="dark-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="black"/>
+			<stop offset="100%" stop-color="#202020"/>
+		</linearGradient>
+		<linearGradient id="light-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+	</defs>
+  <circle cx="32" cy="32" r="15.5" fill="url(#dark-grad)" stroke="black" stroke-width="1"/>
+  <circle cx="32" cy="32" r="15" fill="url(#light-grad)"/>
+  <circle cx="32" cy="32" r="12" fill="url(#dark-grad)"/>
+  <circle cx="32" cy="32" r="8" fill="url(#light-grad)"/>
+  <circle cx="32" cy="32" r="4" fill="url(#dark-grad)"/>
+</svg>
