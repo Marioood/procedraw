@@ -59,7 +59,9 @@ class ImageManager {
     tile: FilterTile,
     invert: FilterInvert,
     scale: FilterScale,
-    sine: FilterSine
+    sine: FilterSine,
+    merge: FilterMerge,
+    repeat: FilterRepeat
   };
   
   printImage() {

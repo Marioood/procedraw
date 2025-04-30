@@ -18,6 +18,32 @@ const O_FADE_NEAR_CENTER_SQRT = 6;
 const O_INTERP_NEAREST = 0;
 const O_INTERP_BILINEAR = 1;
 
+const LIMITS_BLEND = {
+  type: "keyvalues",
+  keys: [
+    "plain",
+    "add",
+    "multiply",
+    "subtract",
+    "screen",
+    "overlay",
+    "shift overlay",
+    "dissolve",
+    "channel dissolve"
+  ],
+  values: [
+    BLEND_PLAIN,
+    BLEND_ADD,
+    BLEND_MULTIPLY,
+    BLEND_SUBTRACT,
+    BLEND_SCREEN,
+    BLEND_OVERLAY,
+    BLEND_SHIFT_OVERLAY,
+    BLEND_DISSOLVE,
+    BLEND_CHANNEL_DISSOLVE
+  ]
+}
+
 class Layer {
   //class name
   name;
@@ -58,31 +84,7 @@ class Layer {
       min: 0,
       max: 1
     },
-    blend: {
-      type: "keyvalues",
-      keys: [
-        "plain",
-        "add",
-        "multiply",
-        "subtract",
-        "screen",
-        "overlay",
-        "shift overlay",
-        "dissolve",
-        "channel dissolve"
-      ],
-      values: [
-        BLEND_PLAIN,
-        BLEND_ADD,
-        BLEND_MULTIPLY,
-        BLEND_SUBTRACT,
-        BLEND_SCREEN,
-        BLEND_OVERLAY,
-        BLEND_SHIFT_OVERLAY,
-        BLEND_DISSOLVE,
-        BLEND_CHANNEL_DISSOLVE
-      ]
-    },
+    blend: LIMITS_BLEND,
     x: {
       type: "number",
       step: 1,

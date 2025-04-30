@@ -40,3 +40,6 @@ Guide for layers:
 * 2 spaces per tab
 * semicolons after every line
 * "use strict"; at the top of every file
+* Absolutely NO stolen code, or code written by or with the aid of AI
+* Credit where you get algorithms/snippets of code above where you use them
+* No external libraries

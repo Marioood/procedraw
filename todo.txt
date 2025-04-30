@@ -16,6 +16,7 @@ proper negative offs
 wandering2 direction offset
 make loading more safe (test ways to break / exploit saving)
   save format is not finalized, do this way later
+  less cryptic error messages
 palette
 HILARIOUS parody logos!
 list of controls
@@ -23,17 +24,14 @@ fix tiling for worley (none powers of 2)
 PBR material creation (???)
 remove some mix types? a couple of them feel like filler
 bring back direction inputs!!!
-combine filter -- takes in two layers and combines them into one layer (could be useful for an emboss effect?)
-blur filter
-repeat filter -- copies the layer several times with an offset (motion blur type effect)
 rotate filter
 quantize filter
 contrast filter
-sharpen filter
 make a not-wandering layer
 disable corners or edges
 merge liney and noise layers? a lot of their options are awfully similar...
-mix options for the blobs layer
+mix options for the blobs layer (col0 -> col1)
+embed pdimg data into a png, have that png be from procedraw (static, obviously) but have that png be able to be loaded into procedraw
 
 URGENT
 
@@ -51,6 +49,9 @@ the code is getting stale! rewrite it soon....
 merge the blend modes and mix modes? some of them are quite similar in purpose and functionality...
 make controls more visible on mobile (see: firefox device simulation mode)
 proper layer icons
+anti aliasing for blobs layer
+sharpen filter
+blur filter
 
 REMINDERS
 
