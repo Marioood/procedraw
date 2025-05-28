@@ -8,15 +8,22 @@ new options are passed into generate() as "o" (short for options)
 //NEVER change these values!
 //they are used in save files, so changing them WILL break save files!!!
 const O_FADE_NONE = 0;
-const O_FADE_NEAR_EDGE = 1;
-const O_FADE_NEAR_CENTER = 2;
-const O_FADE_NEAR_EDGE_SQUARED = 3;
-const O_FADE_NEAR_CENTER_SQUARED = 4;
-const O_FADE_NEAR_EDGE_SQRT = 5;
-const O_FADE_NEAR_CENTER_SQRT = 6;
+const O_FADE_NEAR_END = 1;
+const O_FADE_NEAR_START = 2;
+const O_FADE_NEAR_END_SQUARED = 3;
+const O_FADE_NEAR_START_SQUARED = 4;
+const O_FADE_NEAR_END_SQRT = 5;
+const O_FADE_NEAR_START_SQRT = 6;
 
 const O_INTERP_NEAREST = 0;
 const O_INTERP_BILINEAR = 1;
+
+const O_GREATER_THAN = 0;
+const O_LESS_THAN = 1;
+const O_EQUAL_TO = 2;
+const O_NOT_EQUAL_TO = 3;
+const O_GREATER_THAN_OR_EQUAL_TO = 4;
+const O_LESS_THAN_OR_EQUAL_TO = 5;
 
 const LIMITS_BLEND = {
   type: "keyvalues",
@@ -47,6 +54,8 @@ const LIMITS_BLEND = {
 class Layer {
   //class name
   name;
+  //the hover hint for this layer. basically just a description of what it looks like.
+  static description;
   //user defined name
   displayName;
   //rendered pixel data, used by filter layers
@@ -73,7 +82,7 @@ class Layer {
     //position offsets
     x: 0,
     y: 0,
-    //layer hash used for filters
+    //layer key used for filters
     base: KEY_CANVAS
   };
   
@@ -127,6 +136,8 @@ class Layer {
 class LayerXorFractal extends Layer {
   name = "xorFractal";
   
+  static description = "A bitwise XOR fractal.";
+  
   options = {
     width: 64,
     height: 64
@@ -158,6 +169,8 @@ class LayerXorFractal extends Layer {
 
 class LayerSolid extends Layer {
   name = "solid";
+  
+  static description = "A layer of solid color.";
   
   options = {
     width: 64,
@@ -207,6 +220,8 @@ class LayerSolid extends Layer {
 class LayerNoise extends Layer {
   name = "noise";
   
+  static description = "A layer of TV static.";
+  
   options = {
     coverage: 1,
     correlated: true,
@@ -255,6 +270,8 @@ class LayerNoise extends Layer {
 
 class LayerBorder extends Layer {
   name = "border";
+  
+  static description = "An outline of a rectangle with different colored sides.";
   
   options = {
     width: 64,
@@ -307,8 +324,8 @@ class LayerBorder extends Layer {
       ],
       values: [
         O_FADE_NONE,
-        O_FADE_NEAR_CENTER,
-        O_FADE_NEAR_EDGE
+        O_FADE_NEAR_START,
+        O_FADE_NEAR_END
       ]
     }
   };
@@ -323,11 +340,11 @@ class LayerBorder extends Layer {
     const alphaStep = 1 / o.thickness;
     let alpha = 1;
     
-    if(o.fadeMode == O_FADE_NEAR_EDGE) {
+    if(o.fadeMode == O_FADE_NEAR_END) {
       alpha = 0;
     }
     for(let t = 1; t < o.thickness + 1; t++) {
-      if(o.fadeMode == O_FADE_NEAR_EDGE) {
+      if(o.fadeMode == O_FADE_NEAR_END) {
         alpha += alphaStep;
       }
       //left and right edges
@@ -346,7 +363,7 @@ class LayerBorder extends Layer {
       img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), t - 1, o.height - t);
       img.plotPixel(blend(o.colorBottom, o.colorRight, alpha), o.width - t, o.height - t);
       
-      if(o.fadeMode == O_FADE_NEAR_CENTER) {
+      if(o.fadeMode == O_FADE_NEAR_START) {
         alpha -= alphaStep;
       }
     }
@@ -367,6 +384,8 @@ class LayerBorder extends Layer {
 
 class LayerLiney extends Layer {
   name = "liney";
+  
+  static description = "A layer of stretched out TV static.";
   
   options = {
     breaks: 0.5,
@@ -453,14 +472,19 @@ class LayerLiney extends Layer {
 class LayerWandering extends Layer {
   name = "wandering";
   
+  static description = "A layer of randomly positioned lines.";
+  
   options = {
     dir: 90,
+    dirOffs: 0,
     spacing: 16,
     spread: 0,
     minLength: 8,
     maxLength: 8,
     minWidth: 1,
-    maxWidth: 1
+    maxWidth: 1,
+    minAlpha: 1,
+    fadeMode: O_FADE_NONE
   };
   
   types = {
@@ -469,6 +493,12 @@ class LayerWandering extends Layer {
       step: 1,
       max: 360,
       min: 0
+    },
+    dirOffs: {
+      type: "number",
+      step: 1,
+      min: 0,
+      max: 360
     },
     spacing: {
       type: "number",
@@ -505,71 +535,91 @@ class LayerWandering extends Layer {
       min: 1,
       max: 64,
       unsafe: true
+    },
+    minAlpha: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.05
+    },
+    fadeMode: {
+      type: "keyvalues",
+      keys: [
+        "no fade",
+        "fade near start",
+        "fade near end"
+      ],
+      values: [
+        O_FADE_NONE,
+        O_FADE_NEAR_START,
+        O_FADE_NEAR_END
+      ]
     }
   };
   
   generate(o) {
-    //multiply by sqrt of 2 to prevent weird skipping between angles
-    const xChange = Math.sin(o.dir * DEG2RAD) * Math.sqrt(2);
-    const yChange = Math.cos(o.dir * DEG2RAD) * Math.sqrt(2);
-    let xFlip = 1;
-    let yFlip = 1;
-    if(xChange < 0) {
-      xFlip = -1;
-    }
-    if(yChange < 0) {
-      yFlip = -1;
-    }
     const lineCount = img.w * img.h / (o.spacing * 2);
     //draw several lines
     for(let l = 0; l < lineCount; l++) {
+      const dir = o.dir + (Math.random() * o.dirOffs - o.dirOffs / 2);
+      //multiply by sqrt of 2 to prevent weird skipping between angles
+      const xChange = Math.sin(dir * DEG2RAD) * Math.sqrt(2);
+      const yChange = Math.cos(dir * DEG2RAD) * Math.sqrt(2);
+      let xFlip = 1;
+      let yFlip = 1;
+      if(xChange < 0) {
+        xFlip = -1;
+      }
+      if(yChange < 0) {
+        yFlip = -1;
+      }
       const xOffs = Math.floor(img.w * Math.random());
       const yOffs = Math.floor(img.h * Math.random());
-      const len = Math.random() * (o.maxLength - o.minLength) + o.minLength;
+      //round so that lines are properly variated
+      const len = Math.round(Math.random() * (o.maxLength - o.minLength) + o.minLength);
       let progress = 0;
-      const thickness = Math.random() * (o.maxWidth - o.minWidth) + o.minWidth;
+      //round so that lines are properly variated
+      const thickness = Math.round(Math.random() * (o.maxWidth - o.minWidth) + o.minWidth);
+      
+      let alpha = (o.fadeMode == O_FADE_NEAR_START) ? 0 : 1;
+      const alphaMult = Math.random() * (1 - o. minAlpha) + o.minAlpha;
       //draw a line
       if(Math.abs(xChange) < Math.abs(yChange)) {
-        if(thickness > 1) {
-          for(let i = 0; i < len; i++) {
-            progress += xChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            //prevent weird looking breaks in the lines
-            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
-            
-            for(let t = 0; t < thickness; t++) {
-              img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs + t, i * yFlip + yOffs);
-            }
+        for(let i = 0; i < len; i++) {
+          progress += xChange;
+          const randOffs = (Math.random() - 0.5) * o.spread * 2;
+          //prevent weird looking breaks in the lines
+          if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
+          
+          if(o.fadeMode == O_FADE_NEAR_START) {
+            alpha += 1 / len;
           }
-        } else {
-          for(let i = 0; i < len; i++) {
-            progress += xChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            //prevent weird looking breaks in the lines
-            if(randOffs + xChange < 1 && randOffs + xChange > -1) progress += randOffs;
-            
-            img.plotPixel([1, 1, 1, 1], Math.round(progress) + xOffs, i * yFlip + yOffs);
+          
+          for(let t = 0; t < thickness; t++) {
+            img.plotPixel([1, 1, 1, alpha * alphaMult], Math.round(progress) + xOffs + t, i * yFlip + yOffs);
+          }
+          
+          if(o.fadeMode == O_FADE_NEAR_END) {
+            alpha -= 1 / len;
           }
         }
       } else {
-        if(thickness > 1) {
-          for(let i = 0; i < len; i++) {
-            progress += yChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            //prevent weird looking breaks in the lines
-            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
-            
-            for(let t = 0; t < thickness; t++) {
-              img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs + t);
-            }
+        for(let i = 0; i < len; i++) {
+          progress += yChange;
+          const randOffs = (Math.random() - 0.5) * o.spread * 2;
+          //prevent weird looking breaks in the lines
+          if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
+          
+          if(o.fadeMode == O_FADE_NEAR_START) {
+            alpha += 1 / len;
           }
-        } else {
-          for(let i = 0; i < len; i++) {
-            progress += yChange;
-            const randOffs = (Math.random() - 0.5) * o.spread * 2;
-            if(randOffs + yChange < 1 && randOffs + yChange > -1) progress += randOffs;
-            
-            img.plotPixel([1, 1, 1, 1], i * xFlip + xOffs, Math.round(progress) + yOffs);
+          
+          for(let t = 0; t < thickness; t++) {
+            img.plotPixel([1, 1, 1, alpha * alphaMult], i * xFlip + xOffs, Math.round(progress) + yOffs + t);
+          }
+          
+          if(o.fadeMode == O_FADE_NEAR_END) {
+            alpha -= 1 / len;
           }
         }
       }
@@ -579,6 +629,8 @@ class LayerWandering extends Layer {
   
 class LayerCheckers extends Layer {
   name = "checkers";
+  
+  static description = "A layer that resembles a checkerboard.";
   
   options = {
     evenColor: [1, 1, 1, 1],
@@ -629,6 +681,8 @@ class LayerCheckers extends Layer {
 class LayerBlobs extends Layer {
   name = "blobs";
   
+  static description = "A layer of randomly positioned circles.";
+  
   options = {
     spacing: 8,
     minDiameter: 8,
@@ -675,12 +729,12 @@ class LayerBlobs extends Layer {
       ],
       values: [
         O_FADE_NONE,
-        O_FADE_NEAR_EDGE,
-        O_FADE_NEAR_CENTER,
-        O_FADE_NEAR_EDGE_SQUARED,
-        O_FADE_NEAR_CENTER_SQUARED,
-        O_FADE_NEAR_EDGE_SQRT,
-        O_FADE_NEAR_CENTER_SQRT
+        O_FADE_NEAR_END,
+        O_FADE_NEAR_START,
+        O_FADE_NEAR_END_SQUARED,
+        O_FADE_NEAR_START_SQUARED,
+        O_FADE_NEAR_END_SQRT,
+        O_FADE_NEAR_START_SQRT
       ]
     }
   };
@@ -714,7 +768,7 @@ class LayerBlobs extends Layer {
             }
           }
           break;
-        case O_FADE_NEAR_EDGE:
+        case O_FADE_NEAR_END:
           for(let yi = -r; yi < r; yi++) {
             for(let xi = -r; xi < r; xi++) {
               //subtract 0.5 to make the blobs rounder
@@ -727,7 +781,7 @@ class LayerBlobs extends Layer {
             }
           }
           break;
-        case O_FADE_NEAR_CENTER:
+        case O_FADE_NEAR_START:
           for(let yi = -r; yi < r; yi++) {
             for(let xi = -r; xi < r; xi++) {
               //subtract 0.5 to make the blobs rounder
@@ -741,7 +795,7 @@ class LayerBlobs extends Layer {
           }
           break;
         //i could probably use algebra to optimize this code but womp womp
-        case O_FADE_NEAR_EDGE_SQUARED:
+        case O_FADE_NEAR_END_SQUARED:
           for(let yi = -r; yi < r; yi++) {
             for(let xi = -r; xi < r; xi++) {
               //subtract 0.5 to make the blobs rounder
@@ -754,7 +808,7 @@ class LayerBlobs extends Layer {
             }
           }
           break;
-        case O_FADE_NEAR_CENTER_SQUARED:
+        case O_FADE_NEAR_START_SQUARED:
           for(let yi = -r; yi < r; yi++) {
             for(let xi = -r; xi < r; xi++) {
               //subtract 0.5 to make the blobs rounder
@@ -767,7 +821,7 @@ class LayerBlobs extends Layer {
             }
           }
           break;
-        case O_FADE_NEAR_EDGE_SQRT:
+        case O_FADE_NEAR_END_SQRT:
           for(let yi = -r; yi < r; yi++) {
             for(let xi = -r; xi < r; xi++) {
               //subtract 0.5 to make the blobs rounder
@@ -780,7 +834,7 @@ class LayerBlobs extends Layer {
             }
           }
           break;
-        case O_FADE_NEAR_CENTER_SQRT:
+        case O_FADE_NEAR_START_SQRT:
           for(let yi = -r; yi < r; yi++) {
             for(let xi = -r; xi < r; xi++) {
               //subtract 0.5 to make the blobs rounder
@@ -801,6 +855,8 @@ class LayerBlobs extends Layer {
 class LayerWorley extends Layer {
   name = "worley";
   
+  static description = "A layer of Worley noise.";
+  
   options = {
     xSpacing: 16,
     ySpacing: 16,
@@ -808,7 +864,8 @@ class LayerWorley extends Layer {
     farColor: [1, 1, 1, 1],
     minRadiusMult: 1,
     squareDistance: false,
-    voronoi: false
+    voronoi: false,
+    taxicab: false
   };
   
   types = {
@@ -841,12 +898,13 @@ class LayerWorley extends Layer {
     },
     voronoi: {
       type: "boolean"
+    },
+    taxicab: {
+      type: "boolean"
     }
   };
   
   generate(o) {
-    //let xSpacing = 16;//img.w / xGrid;
-    //let ySpacing = 16;//img.h / yGrid;
     let xGrid = Math.ceil(img.w / o.xSpacing);
     let yGrid = Math.ceil(img.h / o.ySpacing);
     let points = new Array(xGrid * yGrid);
@@ -875,12 +933,20 @@ class LayerWorley extends Layer {
         }
       }
     }
+    //why did i put this in the cell checking code???
+    let xScale = 1;
+    let yScale = 1;
+    //stretch out blobs if x spacing and y spacing arent equal (prevents some of the weird grid artifacts)
+    if(o.xSpacing < o.ySpacing) {
+      xScale = o.ySpacing / o.xSpacing;
+    } else {
+      yScale = o.xSpacing / o.ySpacing;
+    }
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         //absurd number so that the distance gets overwritten
         let closestDist = 9999999999999999999999;
         let printCol;
-        
         //iterate through 9 cells to compute the shortest distance
         for(let yi = -1; yi <= 1; yi++) {
           for(let xi = -1; xi <= 1; xi++) {
@@ -893,15 +959,12 @@ class LayerWorley extends Layer {
             const pointIdx = xIdx + yIdx * xGrid;
             const xSqr = (x - (points[pointIdx][0] + xCell * o.xSpacing));
             const ySqr = (y - (points[pointIdx][1] + yCell * o.ySpacing));
-            let xScale = 1;
-            let yScale = 1;
-            //stretch out blobs if x spacing and y spacing arent equal (prevents some of the weird grid artifacts)
-            if(o.xSpacing < o.ySpacing) {
-              xScale = o.ySpacing / o.xSpacing;
+            let dist;
+            if(o.taxicab) {
+              dist = Math.abs(xSqr * xScale) + Math.abs(ySqr * yScale);
             } else {
-              yScale = o.xSpacing / o.ySpacing;
+              dist = (xSqr * xSqr) * xScale + (ySqr * ySqr) * yScale;
             }
-            let dist = (xSqr * xSqr) * xScale + (ySqr * ySqr) * yScale;
             if(o.minRadiusMult != 1) dist *= distMults[pointIdx];
               
             if(dist < closestDist) {
@@ -910,16 +973,21 @@ class LayerWorley extends Layer {
             }
           }
         }
-        
         if(o.voronoi) {
           img.plotPixel(printCol, x, y);
         } else {
           //do the sqrt for only one of the distances
-          let dist = Math.sqrt(closestDist) / ((o.xSpacing + o.ySpacing) / 2);
+          let dist;
+          if(o.taxicab) {
+            //divide by this to look closer to the euclidean distance version
+            //no real reason to divide by half of PI, it just... feels right
+            dist = closestDist / ((o.xSpacing + o.ySpacing) / (Math.PI / 2));
+          } else {
+            dist = Math.sqrt(closestDist) / ((o.xSpacing + o.ySpacing) / 2);
+          }
           if(o.squareDistance) {
             dist *= dist;
           }
-          
           img.plotPixel(img.blend(o.closeColor, o.farColor, dist), x, y);
         }
       }
@@ -929,6 +997,8 @@ class LayerWorley extends Layer {
 
 class LayerGradient extends Layer {
   name = "gradient";
+  
+  static description = "A layer with a gradual transition between two colors.";
   
   options = {
     dir: 45,
@@ -1138,6 +1208,57 @@ class LayerGradient extends Layer {
         if(xStart == 0) xi += xChange;
       }
       if(yStart == 0) yi += yChange;
+    }
+  }
+}
+
+class LayerValueNoise extends Layer {
+  name = "valueNoise";
+  
+  static description = "A layer of value noise.";
+  
+  options = {
+    octaves: 2
+  };
+  
+  types = {
+    octaves: {
+      type: "number",
+      step: 1,
+      max: 16,
+      min: 1,
+      unsafe: true
+    }
+  };
+  
+  generate(o) {
+    let fractalNoise = new Array(img.w * img.h);
+    
+    for(let i = 0; i < fractalNoise.length; i++) fractalNoise[i] = Math.random();
+    
+    let scale = 1;
+    //the first octave is already done above, so skip it
+    for(let octave = 1; octave < o.octaves; octave++) {
+      scale *= 2;
+      
+      let tempNoise = new Array(Math.ceil(img.w / scale) * Math.ceil(img.h / scale));
+      
+      for(let i = 0; i < tempNoise.length; i++) tempNoise[i] = Math.random();
+      
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const imgIdx = x + y * img.w;
+          const scaledIdx = Math.floor(x / scale) + Math.floor(y / scale) * Math.floor(img.w / scale);
+          //average noise together (same math as 'plain' blend moe)
+          fractalNoise[imgIdx] = fractalNoise[imgIdx] + (1 / scale) * (tempNoise[scaledIdx] - fractalNoise[imgIdx]);
+        }
+      }
+    }
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        let col = fractalNoise[x + y * img.w];
+        img.plotPixel([col, col, col, 1], x, y);
+      }
     }
   }
 }

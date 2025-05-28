@@ -42,6 +42,8 @@ class Filter extends Layer {
 class FilterTweak extends Filter {
   name = "tweak";
   
+  static description = "A filter that duplicates a base layer.";
+  
   generate(o) {
     const data = img.layerDataFromKey(this.od.base);
     
@@ -60,6 +62,8 @@ class FilterTweak extends Filter {
 
 class FilterTile extends Filter {
   name = "tile";
+  
+  static description = "A filter that repeats a rectangular chunk of a base layer over the entire canvas.";
   
   options = {
     width: 16,
@@ -132,6 +136,8 @@ class FilterTile extends Filter {
 class FilterInvert extends Filter {
   name = "invert";
   
+  static description = "A filter that inverts a base layer.";
+  
   options = {
     redWeight: 1,
     greenWeight: 1,
@@ -185,22 +191,21 @@ class FilterInvert extends Filter {
 class FilterScale extends Filter {
   name = "scale";
   
+  static description = "A filter that scales a base layer.";
+  
   options = {
-    width: 64,
-    height: 64
+    xScale: 2,
+    yScale: 2
   };
-  //width and height kind of stink as an abstraction, because changing the resolution of the image will change the scale of this, which can be undesirable
-  //ex: filter width and height are 64x64 and the image is 64x64 (no difference)
-  //ex: filter width and height are 64x64 and the image is 256x256 (filter is smaller than image)
-  //ex: filter width and height are 64x64 and the image is 16x16 (filter is larger than image)
+  
   types = {
-    width: {
+    xScale: {
       type: "number",
-      step: 1
+      step: 0.05
     },
-    height: {
+    yScale: {
       type: "number",
-      step: 1
+      step: 0.05
     }
   };
   /*
@@ -212,13 +217,11 @@ class FilterScale extends Filter {
   BBAA
   BBAA
   */
-  
-  
-  generate(o) {
+  static generate(o) {
     const data = img.layerDataFromKey(this.od.base);
     
-    const xScale = o.width / img.w;
-    const yScale = o.height / img.h;
+    const xScale = o.xScale;
+    const yScale = o.yScale;
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
@@ -284,6 +287,8 @@ class FilterScale extends Filter {
 class FilterSine extends Filter {
   name = "sine";
   
+  static description = "A filter that puts a base layer's pixels through a sine wave function.";
+  
   options = {
     turns: 1
   };
@@ -314,6 +319,8 @@ class FilterSine extends Filter {
 }
 class FilterMerge extends Filter {
   name = "merge";
+  
+  static description = "A filter that renders a top layer onto a base layer.";
   
   options = {
     topBase: KEY_CANVAS,
@@ -448,11 +455,13 @@ class FilterMerge extends Filter {
 class FilterRepeat extends Filter {
   name = "repeat";
   
+  static description = "A filter that duplicates and offsets a base layer.";
+  
   options = {
     copies: 4,
     xOffs: 1,
     yOffs: 0,
-    fadeMode: O_FADE_NEAR_CENTER
+    fadeMode: O_FADE_NEAR_END
   };
   
   types = {
@@ -484,8 +493,8 @@ class FilterRepeat extends Filter {
       ],
       values: [
         O_FADE_NONE,
-        O_FADE_NEAR_CENTER,
-        O_FADE_NEAR_EDGE
+        O_FADE_NEAR_START,
+        O_FADE_NEAR_END
       ]
     }
   };
@@ -494,10 +503,10 @@ class FilterRepeat extends Filter {
     const data = img.layerDataFromKey(this.od.base);
     let xOffs = 0;
     let yOffs = 0;
-    let alphaMult = (o.fadeMode == O_FADE_NEAR_CENTER) ? 0 : 1;
+    let alphaMult = (o.fadeMode == O_FADE_NEAR_START) ? 0 : 1;
     
     for(let c = 0; c < o.copies; c++) {
-      if(o.fadeMode == O_FADE_NEAR_CENTER) {
+      if(o.fadeMode == O_FADE_NEAR_START) {
         alphaMult += 1 / o.copies;
       }
       
@@ -515,8 +524,143 @@ class FilterRepeat extends Filter {
       xOffs += o.xOffs;
       yOffs += o.yOffs;
       
-      if(o.fadeMode == O_FADE_NEAR_EDGE) {
+      if(o.fadeMode == O_FADE_NEAR_END) {
         alphaMult += -1 / o.copies;
+      }
+    }
+  }
+}
+
+class FilterMask extends Filter {
+  name = "mask";
+  
+  static description = "A filter that takes in a layer to compare and renders parts of a base layer depending on the comparison layer's brightness of pixels.";
+  
+  options = {
+    maskBase: KEY_CANVAS,
+    maskValue: 0.5,
+    useRed: true,
+    useGreen: true,
+    useBlue: true,
+    useAlpha: false,
+    mode: O_GREATER_THAN,
+    precision: 0,
+    mergeAlpha: false
+  };
+  
+  types = {
+    maskBase: {
+      type: "layer"
+    },
+    maskValue: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 1
+    },
+    useRed: {
+      type: "boolean"
+    },
+    useGreen: {
+      type: "boolean"
+    },
+    useBlue: {
+      type: "boolean"
+    },
+    useAlpha: {
+      type: "boolean"
+    },
+    mode: {
+      type: "keyvalues",
+      keys: [
+        "layer color > value",
+        "layer color < value",
+        "layer color = value",
+        "layer color NOT = value",
+        "layer color >= value",
+        "layer color <= value"
+      ],
+      values: [
+        O_GREATER_THAN,
+        O_LESS_THAN,
+        O_EQUAL_TO,
+        O_NOT_EQUAL_TO,
+        O_GREATER_THAN_OR_EQUAL_TO,
+        O_LESS_THAN_OR_EQUAL_TO
+      ]
+    },
+    precision: {
+      type: "number",
+      step: 0.05,
+      min: 0,
+      max: 1
+    },
+    mergeAlpha: {
+      type: "boolean"
+    }
+  };
+  
+  generate(o) {
+    const baseData = img.layerDataFromKey(this.od.base);
+    const compareData = img.layerDataFromKey(o.maskBase);
+    let compareValue = 0;
+    //the values being compared will be between 0 and the number of channels being compared
+    if(o.useRed) compareValue += o.maskValue;
+    if(o.useGreen) compareValue += o.maskValue;
+    if(o.useBlue) compareValue += o.maskValue;
+    if(o.useAlpha) compareValue += o.maskValue;
+    
+    const channelCount = compareValue / o.maskValue;
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        const idx = x + y * img.w;
+        //base color
+        const rb = baseData[idx * 4];
+        const gb = baseData[idx * 4 + 1];
+        const bb = baseData[idx * 4 + 2];
+        const ab = baseData[idx * 4 + 3] * (o.mergeAlpha ? compareData[idx * 4 + 3] : 1);
+        
+        let compareColor = 0;
+        if(o.useRed) compareColor += compareData[idx * 4];
+        if(o.useGreen) compareColor += compareData[idx * 4 + 1];
+        if(o.useBlue) compareColor += compareData[idx * 4 + 2];
+        if(o.useAlpha) compareColor += compareData[idx * 4 + 3];
+        //0 is the highest precision, 1 is 0 or 1
+        if(o.precision != 0) compareColor = Math.round(compareColor / (o.precision * channelCount)) * o.precision * channelCount;
+          
+        switch(o.mode) {
+          case O_GREATER_THAN:                
+            if(compareColor > compareValue) {
+              img.plotPixel([rb, gb, bb, ab], x, y);
+            }
+            break;
+          case O_LESS_THAN:                
+            if(compareColor < compareValue) {
+              img.plotPixel([rb, gb, bb, ab], x, y);
+            }
+            break;
+          case O_EQUAL_TO:                
+            if(compareColor == compareValue) {
+              img.plotPixel([rb, gb, bb, ab], x, y);
+            }
+            break;
+          case O_NOT_EQUAL_TO:                
+            if(compareColor != compareValue) {
+              img.plotPixel([rb, gb, bb, ab], x, y);
+            }
+            break;
+          case O_GREATER_THAN_OR_EQUAL_TO:                
+            if(compareColor >= compareValue) {
+              img.plotPixel([rb, gb, bb, ab], x, y);
+            }
+            break;
+          case O_LESS_THAN_OR_EQUAL_TO:                
+            if(compareColor <= compareValue) {
+              img.plotPixel([rb, gb, bb, ab], x, y);
+            }
+            break;
+        }
       }
     }
   }

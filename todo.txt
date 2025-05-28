@@ -13,7 +13,6 @@ decompress thing for save repair
 option limit skeletons (for documentation)
 better width and height customization (set limit, with warning)
 proper negative offs
-wandering2 direction offset
 make loading more safe (test ways to break / exploit saving)
   save format is not finalized, do this way later
   less cryptic error messages
@@ -26,7 +25,7 @@ remove some mix types? a couple of them feel like filler
 bring back direction inputs!!!
 rotate filter
 quantize filter
-contrast filter
+contrast filter (can be achieved with a tweak layer set to canvas with the overlay blend mode)
 make a not-wandering layer
 disable corners or edges
 merge liney and noise layers? a lot of their options are awfully similar...
@@ -52,6 +51,16 @@ proper layer icons
 anti aliasing for blobs layer
 sharpen filter
 blur filter
+saturation OR black and white filter
+actual documentation / tutorials
+
+round and sharp easing function
+repurpose unfinished maps as a ttt map???
+
+normalize filter - scales a layer's brightness to between 0 and 1
+
+restructure code to allow for the image/layer renderer to be used on it's own (without the editor). people (kit) have told me that procedraw could be useful for html5 game textures.....
+  layer wrappers
 
 REMINDERS
 

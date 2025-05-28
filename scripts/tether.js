@@ -1,4 +1,5 @@
 "use strict";
+//intermingling of html and js - scary!! (data output n input)
 //very simple "framework" (ew...) to make intermingling js with html slightly more bearable
 //this is basically just a ripoff of gretcha.js by Tsoding (https://github.com/tsoding/grecha.js)
 function Tag(tagName, className) {
@@ -8,32 +9,12 @@ function Tag(tagName, className) {
   }
   return tag;
 }
-function P(text, className) {
-  let para = Tag("p", className);
-  para.innerText = text;
-  return para;
-}
 function Text(text, className) {
   let span = Tag("span", className);
   span.innerText = text;
   return span;
 }
-function H2(text, className) {
-  let head = Tag("h2", className);
-  head.innerText = text;
-  return head;
-}
-function H3(text, className) {
-  let head = Tag("h3", className);
-  head.innerText = text;
-  return head;
-}
-function H4(text, className) {
-  let head = Tag("h4", className);
-  head.innerText = text;
-  return head;
-}
-function Div(...tags) {
+function divWrap(...tags) {
   let div = Tag("div");
   let i = 0;
   //hack to have the args be (...tags) OR (className, ...tags)
@@ -46,18 +27,6 @@ function Div(...tags) {
       div.appendChild(tags[i]);
   }
   return div;
-}
-function Span(...tags) {
-  let span = Tag("span");
-  let i = 0;
-  if(typeof(tags[0]) == "string") {
-      i++;
-      span.className = tags[0];
-  }
-  for(; i < tags.length; i++) {
-      span.appendChild(tags[i]);
-  }
-  return span;
 }
 function Button(text, onclick, className) {
   let button = Tag("button", className);
@@ -77,9 +46,6 @@ function InputRange(min, max, value, oninput, className) {
   range.min = min;
   range.max = max;
   return range;
-}
-function Br(className) { //diamonds...
-  return Tag("br", className);
 }
 function Label(text, className) {
   let label = Tag("label", className);
@@ -116,9 +82,6 @@ function Textarea(hint, oninput, className) {
   textarea.placeholder = hint;
   textarea.oninput = oninput;
   return textarea;
-}
-function getElem(id) {//shorthand because this function is always a pain in the ass to write out
-  return document.getElementById(id);
 }
 function killChildren(container) {
   while(container.firstChild) {
@@ -198,7 +161,7 @@ class InputColorControl {
 
   constructor() { //[R, G, B, A] from 0...1
     //custom color picker because i use firefox and it uses the ms paint color picker
-    this.localDisplay = Div("colp-display");
+    this.localDisplay = divWrap("colp-display");
     this.RGB = [0, 0, 0]; //R, G, B
     this.localDisplay.style.backgroundColor = "#" + RGB2Hex(this.RGB);
     this.HSV = byteRGB2HSV(this.RGB) //H, S, V
@@ -338,37 +301,37 @@ class InputColorControl {
       this.updateSlidersAlpha();
     });
     
-    const colpContainer = Div(
+    const colpContainer = divWrap(
       "colp-container",
       this.localDisplay,
-      Br(),
+      document.createElement("br"),
       Label("red"),
       this.redSlider,
       this.redBox,
-      Br(),
+      document.createElement("br"),
       Label("green"),
       this.greenSlider,
       this.greenBox,
-      Br(),
+      document.createElement("br"),
       Label("blue"),
       this.blueSlider,
       this.blueBox,
-      Br(),
+      document.createElement("br"),
       Label("hex"),
       this.hexBox,
-      Br(),
+      document.createElement("br"),
       Label("hue"),
       this.hueSlider,
       this.hueBox,
-      Br(),
+      document.createElement("br"),
       Label("satty"),
       this.sattySlider,
       this.sattyBox,
-      Br(),
+      document.createElement("br"),
       Label("value"),
       this.valueSlider,
       this.valueBox,
-      Br(),
+      document.createElement("br"),
       Label("alpha"),
       this.alphaSlider,
       this.alphaBox
@@ -451,7 +414,6 @@ class InputColorControl {
 }
 //TODO: put somewhere else
 const colp = new InputColorControl();
-//intermingling of html and js - scary!! (data output n input)
 //TODO: gut this and move most of it to main.js
 class Tether {
   canvas = undefined;
@@ -685,13 +647,13 @@ class Tether {
           break;
       }
       //spacing
-      container.appendChild(Br());
+      container.appendChild(document.createElement("br"));
     }
   }
   
   updateLayerOptions() {
-    killChildren(getElem("layer-options"));
-    killChildren(getElem("layer-options-default"));
+    killChildren(document.getElementById("layer-options"));
+    killChildren(document.getElementById("layer-options-default"));
     if(img.layers.length == 0) {
       
     } else {
@@ -703,10 +665,10 @@ class Tether {
   
   generateLayerList() {
     const listContainer = document.getElementById("layer-list-container");
-    killChildren(getElem("layer-list-container"));
+    killChildren(document.getElementById("layer-list-container"));
     for(let i = img.layers.length - 1; i >= 0; i--) {
       const layer = img.layers[i];
-      const layerContainer = Div("layer-container");
+      const layerContainer = divWrap("layer-container");
       layerContainer.id = "dyn-layer-" + i;
       
       //javascript is shitty so i have to do this if i want to reference a class in an event (except for global self referencing-which is disgusting)

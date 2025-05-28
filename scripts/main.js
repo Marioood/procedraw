@@ -20,8 +20,18 @@ function main() {
     if(curLayer.isFilter) {
       const baseKey = curLayer.od.base;
       //skip the link count stuff if the base isn't set
-      if(baseKey > -1) { 
+      if(baseKey != KEY_CANVAS) { 
         img.layers[img.layerKeys[baseKey]].linkCount--;
+      }
+      //decrement link counts in layers linked via options (FilterMerge)
+      const keys = Object.keys(curLayer.options);
+      
+      for(let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if(curLayer.types[key].type == "layer") {
+          const layerKey = curLayer.options[key];
+          if(layerKey != KEY_CANVAS) img.layers[img.layerKeys[layerKey]].linkCount--;
+        }
       }
     }
     //copy keys so that index searching doesn't break
@@ -29,7 +39,7 @@ function main() {
     for(let i = 0; i < keysCopy.length; i++) keysCopy[i] = img.layerKeys[i];
     //mark the deleted layer as free
     img.layerKeysFreed.push(keysCopy.indexOf(t.currentLayer));
-    keysCopy[img.layerKeys.indexOf(t.currentLayer)] = -1;
+    keysCopy[img.layerKeys.indexOf(t.currentLayer)] = KEY_FREED;
     //rearrange layer keys
     for(let i = t.currentLayer + 1; i < img.layers.length; i++) {
       const idx = img.layerKeys.indexOf(i);
@@ -139,16 +149,57 @@ function main() {
   });
 
   const classSelect = document.getElementById("layer-class-select");
-  const classNames = Object.keys(img.layerClasses);
-
-  for(let i = 0; i < classNames.length; i++) {
+  const regularNames = [
+    "xorFractal",
+    "solid",
+    "noise",
+    "border",
+    "liney",
+    "wandering",
+    "checkers",
+    "blobs",
+    "worley",
+    "gradient",
+    "valueNoise"
+  ]
+  const filterNames = [
+    "tweak",
+    "tile",
+    "invert",
+    "scale",
+    "sine",
+    "merge",
+    "repeat",
+    "mask"
+  ];
+  
+  //written in yap code
+  if(Object.keys(img.layerClasses).length != regularNames.length + filterNames.length) alert("the programmer takes a nap!!! -- you forgot to add a new layer to the class select code! expected " + (regularNames.length + filterNames.length) + " classes, found " + Object.keys(img.layerClasses).length);
+  
+  for(let i = 0; i < regularNames.length; i++) {
     const option = document.createElement("option");
-    option.text = classNames[i];
+    option.text = regularNames[i];
+    option.title = img.layerClasses[regularNames[i]].description;
+    classSelect.add(option);
+  }
+  //seperator to make regular layers and filter layers more distinct to the user
+  classSelect.appendChild(document.createElement("hr"));
+  
+  for(let i = 0; i < filterNames.length; i++) {
+    const option = document.createElement("option");
+    option.text = filterNames[i];
+    option.title = img.layerClasses[filterNames[i]].description;
     classSelect.add(option);
   }
 
   classSelect.addEventListener("change", function (e) {
-    t.currentClass = img.layerClasses[classNames[this.selectedIndex]];
+    let className;
+    if(this.selectedIndex < regularNames.length) {
+      className = regularNames[this.selectedIndex];
+    } else {
+      className = filterNames[this.selectedIndex - regularNames.length];
+    }
+    t.currentClass = img.layerClasses[className];
   });
   
   let oldTimeR = 0;
@@ -186,7 +237,7 @@ function main() {
     return url.toString();
   }
     
-  const imageOptions = getElem("image-options");
+  const imageOptions = document.getElementById("image-options");
   
   const nameInput = InputText(img.name,(e) => {
     img.name = e.target.value;
@@ -300,37 +351,37 @@ function main() {
   };*/
   //use interval? maybe?? might break when mouse leaves windoooooowwww!!!!!
   //HAHHAHHAHAHAHAHA
-  imageOptions.appendChild(Div(
+  imageOptions.appendChild(divWrap(
     nameInput,
-    Br(),
+    document.createElement("br"),
     Label("author"),
     authorInput,
-    Br(),
+    document.createElement("br"),
     Label("background"),
     bgInput,
-    Br(),
+    document.createElement("br"),
     Label("width"),
     widthInput,
-    Br(),
+    document.createElement("br"),
     Label("height"),
     heightInput,
-    Br(),
+    document.createElement("br"),
     Tag("hr"),
-    Div(
+    divWrap(
       "label-container",
       saveImageButton
     ),
     saveImageText,
-    Br(),
-    Div(
+    document.createElement("br"),
+    divWrap(
       "label-container",
       loadImageButton
     ),
     loadImageText,
-    Br(),
+    document.createElement("br"),
     Label("zoom"),
     scaleInput,
-    Br(),
+    document.createElement("br"),
     Button("render", (e) => {
       t.forceRender = true;
       img.printImage();
@@ -340,7 +391,7 @@ function main() {
   const topContainer = document.getElementById("top-container");
   let curIdx = -1;
   const makeItems = (e, idx, thetan) => {
-    const tomCruise = getElem("tom-cruise");
+    const tomCruise = document.getElementById("tom-cruise");
     if(tomCruise != null) tomCruise.remove();
     if(curIdx == idx) {
       curIdx = -1;
@@ -357,7 +408,7 @@ function main() {
   };
   
   let showCredits = false;
-  const creditBox = getElem("credits-container");
+  const creditBox = document.getElementById("credits-container");
   creditBox.style.display = "none";
   
   const creditButton = Button("credits", (e) => {
@@ -414,23 +465,23 @@ function main() {
   });
   
   topContainer.appendChild(
-    Div(
+    divWrap(
       Button("file", (e) => {
-        makeItems(e, 0, Div(
+        makeItems(e, 0, divWrap(
           "header-items",
           Button("save as file"),
-          Br(),
+          document.createElement("br"),
           Button("load from file"),
-          Br(),
+          document.createElement("br"),
           Button("share"),
-          Br(),
+          document.createElement("br"),
           godButton,
-          Br(),
+          document.createElement("br"),
           Label("compressSaves", "header-label"),
           InputCheckbox(t.compressSaves, (checked, e) => {
             t.compressSaves = checked;
           }),
-          Br(),
+          document.createElement("br"),
           Label("saveURL", "header-label"),
           InputCheckbox(t.saveURL, (checked, e) => {
             t.saveURL = checked;
@@ -438,27 +489,28 @@ function main() {
         ));
       }, "header-dropdown"),
       Button("edit", (e) => {
-        makeItems(e, 1, Div(
+        makeItems(e, 1, divWrap(
           "header-items",
-          P("xenu is real"),
-          P("tom cruise is a fudge packer")
+          Text("xenu is real"),
+          document.createElement("br"),
+          Text("tom cruise is a fudge packer")
         ));
       }, "header-dropdown"),
       Button("view", (e) => {
-        makeItems(e, 2, Div(
+        makeItems(e, 2, divWrap(
           "header-items",
           Label("renderOnUpdate", "header-label"),
           InputCheckbox(t.renderOnUpdate, (checked, e) => {
             t.renderOnUpdate = checked;
           }),
-          Br(),
+          document.createElement("br"),
           Label("useRenderWorker", "header-label"),
           InputCheckbox(t.useRenderWorker, (checked, e) => {
             t.useRenderWorker = checked;
           }),
-          Br(),
+          document.createElement("br"),
           Button("reset view"),
-          Br(),
+          document.createElement("br"),
           Label("tileView", "header-label"),
           InputCheckbox(t.tileView, (checked, e) => {
             t.tileView = checked;
@@ -469,12 +521,12 @@ function main() {
         ));
       }, "header-dropdown"),
       Button("????", (e) => {
-        makeItems(e, 3, Div(
+        makeItems(e, 3, divWrap(
           "header-items",
           creditButton
         ));
       }, "header-dropdown"),
-      Text(t.version, "version-text")
+      Text("🙾 procedraw | " + t.version, "version-text")
     )
   );
   
@@ -506,7 +558,7 @@ function main() {
   
   //web development feels like programming for retarded people
   
-  const canvasView = getElem("canvas-container");
+  const canvasView = document.getElementById("canvas-container");
   
   canvasView.onwheel = (e) => {
     //wonky because we're updating the zoom amount, not the width and height

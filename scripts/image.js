@@ -45,6 +45,7 @@ class ImageManager {
   name = "our beauty";
   
   layerClasses = {
+    //regular layers
     xorFractal: LayerXorFractal,
     solid: LayerSolid,
     noise: LayerNoise,
@@ -55,13 +56,15 @@ class ImageManager {
     blobs: LayerBlobs,
     worley: LayerWorley,
     gradient: LayerGradient,
+    valueNoise: LayerValueNoise,
     tweak: FilterTweak,
     tile: FilterTile,
     invert: FilterInvert,
     scale: FilterScale,
     sine: FilterSine,
     merge: FilterMerge,
-    repeat: FilterRepeat
+    repeat: FilterRepeat,
+    mask: FilterMask
   };
   
   printImage() {
@@ -303,7 +306,7 @@ class ImageManager {
           case 'layer':
             let layerKey = KEY_FREED;
             if(layer.isFilter) {
-              let layerIdx = -1;
+              let layerIdx = KEY_FREED;
               //once a valid layer key is found
               for(let safety = 0; layerIdx == KEY_FREED; safety++) {
                 layerKey = Math.floor(Math.random() * jsIsDumb.layerKeys.length)
