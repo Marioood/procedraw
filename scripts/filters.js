@@ -195,7 +195,8 @@ class FilterScale extends Filter {
   
   options = {
     xScale: 2,
-    yScale: 2
+    yScale: 2,
+    edgeMode: O_WRAP //wet option
   };
   
   types = {
@@ -206,6 +207,21 @@ class FilterScale extends Filter {
     yScale: {
       type: "number",
       step: 0.05
+    },
+    edgeMode: {
+      type: "keyvalues",
+      keys: [
+        "wrap",
+        "clamp",
+        "void",
+        "reflect"
+      ],
+      values: [
+        O_WRAP,
+        O_CLAMP,
+        O_VOID,
+        O_REFLECT
+      ]
     }
   };
   /*
@@ -217,70 +233,77 @@ class FilterScale extends Filter {
   BBAA
   BBAA
   */
-  static generate(o) {
+  //wikipedia is a bad source
+  generate(o) {
     const data = img.layerDataFromKey(this.od.base);
     
     const xScale = o.xScale;
     const yScale = o.yScale;
+    //negative scales slightly shift the picture, so undo that
+    const xOffs = (xScale < 0) ? -1 : 0;
+    const yOffs = (yScale < 0) ? -1 : 0;
     
-    for(let y = 0; y < img.h; y++) {
-      for(let x = 0; x < img.w; x++) {
-        //TODO: edge mode (void, clamp, wrap, mirror), x and y, origin (?), interpolation types, proper negative scales
-        const idx = Math.floor(x / xScale) % img.w + Math.floor(y / yScale) % img.h * img.w;
-        const r = data[idx * 4];
-        const g = data[idx * 4 + 1];
-        const b = data[idx * 4 + 2];
-        const a = data[idx * 4 + 3];
-        img.plotPixel([r, g, b, a], x, y);
-        
-        /*const idx1 = Math.floor(x / o.xScale) + Math.floor(y / o.yScale) * img.w;
-        const idx2 = Math.ceil(x / o.xScale) + Math.floor(y / o.yScale) * img.w;
-        const idx3 = Math.floor(x / o.xScale) + Math.ceil(y / o.yScale) * img.w;
-        const idx4 = Math.ceil(x / o.xScale) + Math.ceil(y / o.yScale) * img.w;
-        const r = data[idx1 * 4];
-        const g = data[idx1 * 4 + 1];
-        const b = data[idx1 * 4 + 2];
-        const xFac = x / o.xScale - Math.floor(x / o.xScale);
-        const yFac = y / o.yScale - Math.floor(y / o.yScale);
-        const ax1 = data[idx1 * 4 + 3] + xFac * (data[idx2 * 4 + 3] - data[idx1 * 4 + 3]);
-        const ay1 = data[idx1 * 4 + 3] + yFac * (data[idx3 * 4 + 3] - data[idx1 * 4 + 3]);
-        
-        const ax2 = data[idx3 * 4 + 3] + xFac * (data[idx4 * 4 + 3] - data[idx3 * 4 + 3]);
-        const ay2 = data[idx2 * 4 + 3] + yFac * (data[idx4 * 4 + 3] - data[idx2 * 4 + 3]);
-        img.plotPixel([r, g, b, (ax1 + ay1 + ax2 + ay2) / 4], x, y);*/
-        //https://en.wikipedia.org/wiki/Bilinear_interpolation#Computation
-        //wikipedians love writing the most fucking over complicated fucking math equations for the simplest shit
-        
-        //FUCK YOU WIKIPEDIA IM NOT DONATING TO YOUR SHITTY PLACE FUCK YOOU FUCK YOU
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-        //https://www.youtube.com/watch?v=4K8IEzXnMYk
-  /*      const x1 = Math.floor(x / o.xScale);
-        const y1 = Math.floor(y / o.yScale);
-        const x2 = Math.ceil(x / o.xScale);
-        const y2 = Math.ceil(y / o.yScale);
-        // 1 2
-        // 3 4
-        const idx1 = x1 + y1 * img.w;
-        const idx2 = x2 + y1 * img.w;
-        const idx3 = x1 + y2 * img.w;
-        const idx4 = x2 + y2 * img.w;
-        
-        const r = data[idx * 4];
-        const g = data[idx * 4 + 1];
-        const b = data[idx * 4 + 2];
-        const a = data[idx * 4 + 3];
-        img.plotPixel([r, g, b, a], x, y);*/
-      }
+    //TODO: edge mode (void, clamp, wrap, mirror), x and y, origin (?), interpolation types, proper negative scales
+    //option to recursively scale down? could be neat
+    switch(o.edgeMode) {
+      case O_WRAP:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            const xIdx = mod(Math.floor(x / xScale), img.w);
+            const yIdx = mod(Math.floor(y / yScale), img.h) * img.w;
+            const idx = xIdx + yIdx;
+            const r = data[idx * 4];
+            const g = data[idx * 4 + 1];
+            const b = data[idx * 4 + 2];
+            const a = data[idx * 4 + 3];
+            img.plotPixel([r, g, b, a], x, y);
+          }
+        }
+        break;
+      case O_CLAMP:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            const xIdx = Math.max(Math.min(Math.floor(x / xScale), img.w - 1), 0);
+            const yIdx = Math.max(Math.min(Math.floor(y / yScale), img.h - 1), 0) * img.w;
+            const idx = xIdx + yIdx;
+            const r = data[idx * 4];
+            const g = data[idx * 4 + 1];
+            const b = data[idx * 4 + 2];
+            const a = data[idx * 4 + 3];
+            img.plotPixel([r, g, b, a], x, y);
+          }
+        }
+        break;
+      case O_VOID:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            if(x < img.w * xScale && y < img.h * yScale) {
+              const xIdx = Math.floor(x / xScale);
+              const yIdx = Math.floor(y / yScale) * img.w;
+              const idx = xIdx + yIdx;
+              const r = data[idx * 4];
+              const g = data[idx * 4 + 1];
+              const b = data[idx * 4 + 2];
+              const a = data[idx * 4 + 3];
+              img.plotPixel([r, g, b, a], x, y);
+            }
+          }
+        }
+        break;
+      case O_REFLECT:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            const xIdx = Math.floor((img.w - x) / xScale);
+            const yIdx = Math.floor((img.h - y) / yScale) * img.w;
+            const idx = xIdx + yIdx;
+            const r = data[idx * 4];
+            const g = data[idx * 4 + 1];
+            const b = data[idx * 4 + 2];
+            const a = data[idx * 4 + 3];
+            img.plotPixel([r, g, b, a], x, y);
+          }
+        }
+        break;
     }
   }
 }

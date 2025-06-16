@@ -3,6 +3,6 @@
 <svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
   <rect x="0" y="0" width="64" height="64" fill="black"/>
   
-  <text x="8" y="39" fill="white" style="font-size: 32px;">!?!?</text>
-  <text x="8" y="40" fill="#a0a0a0" style="font-size: 32px;">!?!?</text>
+  <text x="8" y="39" fill="white" font-size="32">!?!?</text>
+  <text x="8" y="40" fill="#a0a0a0" font-size="32">!?!?</text>
 </svg>

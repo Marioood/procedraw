@@ -11,8 +11,6 @@ decompress thing for save repair
 //color ramp
 //variables and math expressions
 option limit skeletons (for documentation)
-better width and height customization (set limit, with warning)
-proper negative offs
 make loading more safe (test ways to break / exploit saving)
   save format is not finalized, do this way later
   less cryptic error messages
@@ -31,6 +29,8 @@ disable corners or edges
 merge liney and noise layers? a lot of their options are awfully similar...
 mix options for the blobs layer (col0 -> col1)
 embed pdimg data into a png, have that png be from procedraw (static, obviously) but have that png be able to be loaded into procedraw
+
+dent and crystal filters (see: paint.net)
 
 URGENT
 
@@ -53,6 +53,9 @@ sharpen filter
 blur filter
 saturation OR black and white filter
 actual documentation / tutorials
+better width and height customization (set limit, with warning)
+proper negative offs
+dimension dependent options
 
 round and sharp easing function
 repurpose unfinished maps as a ttt map???

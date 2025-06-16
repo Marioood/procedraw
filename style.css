@@ -7,6 +7,7 @@
   --main-cont-h: calc(100% - var(--main-tit-h));
   --bg-cont: linear-gradient(180deg, var(--bg) 0, #202020 100%);
   --bg-trans: linear-gradient(180deg, var(--bg) 0, #202020b0 100%);
+  --bg-dark: linear-gradient(180deg, black 0, var(--bg) 100%);
   --label-w: 96px;
 }
 body {
@@ -21,6 +22,7 @@ canvas {
   box-shadow: 0 0 16px black;
   outline: 1px solid var(--otln);
   background-image: url("img/ui/checker.png");
+  background-position: center; /*prevent weird scrolling of the background when zooming*/
 }
 h2 {
   font-style: italic;
@@ -66,6 +68,9 @@ hr {
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  background: url("img/ui/canvas-container-bg.svg"), var(--bg-dark);
+  background-repeat: no-repeat;
+  background-position: bottom right 360px;
 }
 .right-container {
   border: var(--otln) 1px solid;
@@ -95,6 +100,9 @@ hr {
   width: 100%;
   box-sizing: border-box;
   overflow: auto;
+  background: url("img/ui/layer-container-bg.svg"), var(--bg-dark);
+  background-repeat: no-repeat;
+  background-position: bottom right;
 }
 .layer-container {
   border-bottom: var(--otln) 1px solid;
@@ -102,6 +110,7 @@ hr {
   width: auto;
   box-sizing: border-box;
   margin: 1px;
+  background: var(--bg-cont);
 }
 .layer-highlight {
   background-color: #404040;
@@ -429,8 +438,8 @@ button {
 .credits-container {
   position: absolute;
   width: 512px;
-  height: 256px;
-  top: calc(50% - 128px);
+  height: 360px;
+  top: calc(50% - 180px);
   left: calc(50% - 256px);
   border: 1px solid var(--otln);
   padding: 4px;

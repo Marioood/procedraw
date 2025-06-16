@@ -18,6 +18,11 @@ const O_FADE_NEAR_START_SQRT = 6;
 const O_INTERP_NEAREST = 0;
 const O_INTERP_BILINEAR = 1;
 
+const O_WRAP = 0;
+const O_CLAMP = 1;
+const O_VOID = 2;
+const O_REFLECT = 3;
+
 const O_GREATER_THAN = 0;
 const O_LESS_THAN = 1;
 const O_EQUAL_TO = 2;
@@ -776,7 +781,8 @@ class LayerBlobs extends Layer {
               if(dist < r - 0.5) {
                 let x = Math.floor(xi + xStart);
                 let y = Math.floor(yi + yStart);
-                img.plotPixel([1, 1, 1, (r - dist) / r * alpha], x, y);
+                //img.plotPixel([1, 1, 1, (r - dist) / r * alpha], x, y);
+                img.plotPixel([1, 1, 1, Math.min((r - dist) * 1, 1) * alpha], x, y);
               }
             }
           }

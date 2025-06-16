@@ -225,6 +225,8 @@ function main() {
             console.log(`${i}. ${layer.displayName} is linked ${layer.linkCount} time(s)`);
           }
           console.log("---");
+        } else if(e.key == "g" || e.key == "G") {
+          console.log(godText(256));
         }
       }
     }
@@ -421,20 +423,8 @@ function main() {
     }
   });
   const godButton = Button("create god image", (e) => {
-    const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham","angel","theology","cloud","edges","edge","blobs","border","noise","bort","gradient"];
     
-    function randName(max) {
-      let text = "";
-      let wordCount = Math.ceil(Math.random() * max);
-      if(Math.random() > 0.99) wordCount *= 2;
-      for(let i = 0; i <= wordCount; i++) {
-        text = text + words[Math.floor(Math.random() * words.length)];
-        if(i < wordCount) text = text + ' ';
-      }
-      return text;
-    }
-    
-    img.name = randName(8);
+    img.name = godText(16);
     img.author = "God";
     nameInput.value = img.name;
     authorInput.value = img.author;
@@ -450,7 +440,7 @@ function main() {
     
     for(let i = 0; i < layerCount; i++) {
       const curLayer = img.godLayer();
-      curLayer.displayName = randName(2);
+      curLayer.displayName = godText(2);
       //proper link count for filters
       console.log(curLayer.od);
       img.insertLayer(img.layers.length, curLayer);
@@ -526,7 +516,7 @@ function main() {
           creditButton
         ));
       }, "header-dropdown"),
-      Text("🙾 procedraw | " + t.version, "version-text")
+      Text(t.version, "version-text")
     )
   );
   
