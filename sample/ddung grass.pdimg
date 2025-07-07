@@ -1,0 +1,1 @@
+{"img":{"bg":"7f7f7fff","w":16,"h":16,"name":"our beauty","author":"you!","version":"VOLATILE 0.8","format":0},"layers":[{"name":"valueNoise","od":{"tint":"00ff00ff"},"options":{"octaves":3}},{"name":"solid","od":{"alpha":0.52,"tint":"007f00ff"}},{"name":"HSV","od":{"tint":"ffffffff"},"options":{"hue":345,"satty":0.75}}]}

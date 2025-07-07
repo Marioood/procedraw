@@ -147,36 +147,143 @@ function main() {
     t.generateLayerList();
     img.printImage();
   });
-
-  const classSelect = document.getElementById("layer-class-select");
+  //LAYER SELECT STUFFFFFFFS
+  let layerSelectShown = false;
+  
+  const layerSelectDropdown = document.getElementById("layer-select-dropdown-button");
+  
+  layerSelectDropdown.onclick = (e) => {
+    if(layerSelectShown) {
+      document.getElementById("layer-select-table").style.display = "none";
+    } else {
+      document.getElementById("layer-select-table").style.display = "table";
+    }
+    layerSelectShown = !layerSelectShown;
+  };
+  
+  document.getElementById("layer-select-table").style.display = "none";
+  //maybe have this be decided based on some value in the layer?
   const regularNames = [
-    "xorFractal",
-    "solid",
-    "noise",
-    "border",
-    "liney",
-    "wandering",
-    "checkers",
-    "blobs",
-    "worley",
-    "gradient",
-    "valueNoise"
+    [
+      "xorFractal",
+      "solid",
+      "border",
+      "checkers",
+      "gradient",
+      "waveTable"
+    ],
+    [
+      "noise",
+      "liney",
+      "worley",
+      "valueNoise"
+    ],
+    [
+      "wandering",
+      "blobs"
+    ]
   ]
   const filterNames = [
-    "tweak",
-    "tile",
-    "invert",
-    "scale",
-    "sine",
-    "merge",
-    "repeat",
-    "mask"
+    [
+      "tweak",
+      //rotate
+      "shear",
+      "scale",
+      "tile",
+      "repeat",
+      "mask",
+      "offset"
+    ],
+    [
+      "invert",
+      "contrast",
+      "HSV",
+      "blur",
+      "sine"
+    ],
+    [
+      "emboss",
+      "sharpen",
+      "merge",
+      "vectorize",
+      "sunlight"
+    ]
   ];
   
   //written in yap code
-  if(Object.keys(img.layerClasses).length != regularNames.length + filterNames.length) alert("the programmer takes a nap!!! -- you forgot to add a new layer to the class select code! expected " + (regularNames.length + filterNames.length) + " classes, found " + Object.keys(img.layerClasses).length);
+  //if(Object.keys(img.layerClasses).length != regularNames.length + filterNames.length) alert("the programmer takes a nap!!! -- you forgot to add a new layer to the class select code! expected " + (regularNames.length + filterNames.length) + " classes, found " + Object.keys(img.layerClasses).length);
+  //uhhhhhhhh max length
+  let regularNamesLen = regularNames[0].length;
+  if(regularNames[1].length > regularNamesLen) regularNamesLen = regularNames[1].length;
+  if(regularNames[2].length > regularNamesLen) regularNamesLen = regularNames[2].length;
+  const regularNamesSelect = document.getElementById("layer-select-render-layers");
   
-  for(let i = 0; i < regularNames.length; i++) {
+  for(let row = 0; row < regularNamesLen; row++) {
+    const rowElem = document.createElement("tr");
+    for(let col = 0; col < 3; col++) {
+      const item = regularNames[col][row];
+      const td = document.createElement("td");
+      //skip if the name doesn't exist
+      if(item == undefined) {
+        //insert excess table data so that the background doesn't get messed up
+        rowElem.appendChild(td);
+        continue;
+      }
+      const button = document.createElement("button");
+      button.className = "layer-select-table-button";
+      button.innerText = item;
+      button.title = img.layerClasses[item].description;
+      button.value = item;
+
+      button.onclick = (e) => {
+        let className = e.target.value;
+        t.currentClass = img.layerClasses[className];
+        document.getElementById("layer-select-table").style.display = "none";
+        layerSelectShown = false;
+        layerSelectDropdown.innerText = className;
+      };
+      td.appendChild(button);
+      rowElem.appendChild(td);
+    }
+    regularNamesSelect.appendChild(rowElem);
+  }
+  
+  let filterNamesLen = filterNames[0].length;
+  if(filterNames[1].length > filterNamesLen) filterNamesLen = filterNames[1].length;
+  if(filterNames[2].length > filterNamesLen) filterNamesLen = filterNames[2].length;
+  const filterNamesSelect = document.getElementById("layer-select-filter-layers");
+  
+  for(let row = 0; row < filterNamesLen; row++) {
+    const rowElem = document.createElement("tr");
+    for(let col = 0; col < 3; col++) {
+      const item = filterNames[col][row];
+      const td = document.createElement("td");
+      //skip if the name doesn't exist
+      if(item == undefined) {
+        //insert excess table data so that the background doesn't get messed up
+        rowElem.appendChild(td);
+        continue;
+      }
+      const button = document.createElement("button");
+      button.className = "layer-select-table-button";
+      button.innerText = item;
+      button.title = img.layerClasses[item].description;
+      button.value = item;
+
+      button.onclick = (e) => {
+        let className = e.target.value;
+        t.currentClass = img.layerClasses[className];
+        document.getElementById("layer-select-table").style.display = "none";
+        layerSelectShown = false;
+        layerSelectDropdown.innerText = className;
+      };
+      td.appendChild(button);
+      rowElem.appendChild(td);
+    }
+    filterNamesSelect.appendChild(rowElem);
+  }
+  
+  /*for(let i = 0; i < regularNames.length; i++) {
     const option = document.createElement("option");
     option.text = regularNames[i];
     option.title = img.layerClasses[regularNames[i]].description;
@@ -200,7 +307,7 @@ function main() {
       className = filterNames[this.selectedIndex - regularNames.length];
     }
     t.currentClass = img.layerClasses[className];
-  });
+  });*/
   
   let oldTimeR = 0;
   document.onkeydown = (e) => {
@@ -209,16 +316,17 @@ function main() {
     if(oldTimeR != curTime) {
       if(e.key == "r" || e.key == "R") {
         oldTimeR = curTime;
-        t.forceRender = true;
-        img.printImage();
+        img.printImage(true);
       } else if(DEBUG) {
-          if(e.key == "h" || e.key == "H") {
+        if(e.key == "h" || e.key == "H") {
+          //print layer keys
           console.log("current layer keys:");
           console.log(img.layerKeys);
           console.log("current freed layer key indices:");
           console.log(img.layerKeysFreed);
           console.log("---");
         } else if(e.key == "c" || e.key == "C") {
+          //print out the layer links
           console.log("layer link counts:");
           for(let i = 0; i < img.layers.length; i++) {
             const layer = img.layers[i];
@@ -226,7 +334,94 @@ function main() {
           }
           console.log("---");
         } else if(e.key == "g" || e.key == "G") {
+          //print random text (for chang :alien:)
           console.log(godText(256));
+        } else if(e.key == "l" || e.key == "L") {
+          //print layers
+          console.log("--- LAYER INFO ---");
+          console.log(img.w + " x " + img.h);
+          console.log(img.bg);
+          console.log(img.layers);
+          console.log("---");
+        } else if(e.key == "d" || e.key == "D") {
+          //image data error report
+          console.log(img.data);
+          console.log("errors:");
+          let log = [];
+          
+          for(let y = 0; y < img.h; y++) {
+            for(let x = 0; x < img.w; x++) {
+              const idx = x + y * img.w;
+              
+              const r = img.data[idx * 4];
+              const g = img.data[idx * 4 + 1];
+              const b = img.data[idx * 4 + 2];
+              const a = img.data[idx * 4 + 3];
+              let errors = "";
+              
+              if(r === null) {
+                errors += "red is null, ";
+              } else if(r === undefined) {
+                errors += "red is undefined, ";
+              } else if(r != r) {
+                errors += "red is NaN, ";
+              } else if(typeof(r) != "number") {
+                errors += "red (" + r + ") is type " + typeof(r) + ", ";
+              } else if(r > 1) {
+                errors += "red (" + r + ") is >1, ";
+              } else if(r < 0) {
+                errors += "red (" + r + ") is <0, ";
+              }
+              if(g === null) {
+                errors += "green is null, ";
+              } else if(g === undefined) {
+                errors += "green is undefined, ";
+              } else if(g != g) {
+                errors += "green is NaN, ";
+              } else if(typeof(g) != "number") {
+                errors += "green (" + g + ") is type " + typeof(g) + ", ";
+              } else if(g > 1) {
+                errors += "green (" + r + ") is >1, ";
+              } else if(g < 0) {
+                errors += "green (" + r + ") is <0, ";
+              }
+              if(b === null) {
+                errors += "blue is null, ";
+              } else if(b === undefined) {
+                errors += "blue is undefined, ";
+              } else if(b != b) {
+                errors += "blue is NaN, ";
+              } else if(typeof(a) != "number") {
+                errors += "blue (" + b + ") is type " + typeof(b) + ", ";
+              } else if(b > 1) {
+                errors += "blue (" + r + ") is >1, ";
+              } else if(b < 0) {
+                errors += "blue (" + r + ") is <0, ";
+              }
+              if(a === null) {
+                errors += "alpha is null, ";
+              } else if(a === undefined) {
+                errors += "alpha is undefined, ";
+              } else if(a != a) {
+                errors += "alpha is NaN, ";
+              } else if(typeof(a) != "number") {
+                errors += "alpha (" + a + ") is type " + typeof(a) + ", ";
+              } else if(a > 1) {
+                errors += "alpha (" + r + ") is >1, ";
+              } else if(a < 0) {
+                errors += "alpha (" + r + ") is <0, ";
+              }
+              if(errors != "") {
+                log.push("pixel (" + x + ", " + y + ") " + errors);
+              }
+            }
+          }
+          if(log.length == 0) {
+            console.log("no errors found!");
+          } else {
+            console.log(log);
+            console.log(log.length + " errors found...");
+          }
         }
       }
     }
@@ -252,15 +447,13 @@ function main() {
     img.w = Number(e.target.value);
     img.updateSize();
     updateSize();
-    t.forceRender = true;
-    img.printImage();
+    img.printImage(true);
   });
   const heightInput = InputNumber(1, 512, img.w, (e) => {
     img.h = Number(e.target.value);
     img.updateSize();
     updateSize();
-    t.forceRender = true;
-    img.printImage();
+    img.printImage(true);
   });
   //move this into tether... maybe?
   //rewrite a bunch of this so its less sloppy
@@ -308,7 +501,7 @@ function main() {
         t.generateLayerList();
         img.updateSize();
         updateSize();
-        img.printImage();
+        img.printImage(true);
         t.setTitle(img.name);
         //DOESNT WORK!!!! color input still uses old color when clicked
         bgInput.style.backgroundColor = '#' + RGB2Hex(img.bg);
@@ -324,35 +517,7 @@ function main() {
       }
     }
   }, "aero-btn");
-  //MOVE this
-  /*let isDown = true;
-  const knobContainer = Button("", null, "knob-container");
   
-  knobContainer.onmousedown = (e) => {
-    isDown = true;
-  };
-  knobContainer.onmouseup = (e) => {
-    isDown = false;
-  };
-  knobContainer.pointermove = (e) => {
-    if(!isDown) return;
-    //https://stackoverflow.com/a/42111623 -- thanks bro
-    //get position of the target element
-    //the web was well designed
-    const rect = e.target.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const midX = rect.width / 2;
-    const midY = rect.height / 2;
-    const dir = mod(dirFrom(mouseX, mouseY, midX, midY), 360);
-    
-    console.log(mouseX + ", " + mouseY);
-    console.log(dir);
-    //whenever i write css functions in javascript it feels so weird...
-    e.target.style.transform = `rotate(${dir}deg)`;
-  };*/
-  //use interval? maybe?? might break when mouse leaves windoooooowwww!!!!!
-  //HAHHAHHAHAHAHAHA
   imageOptions.appendChild(divWrap(
     nameInput,
     document.createElement("br"),
@@ -385,8 +550,7 @@ function main() {
     scaleInput,
     document.createElement("br"),
     Button("render", (e) => {
-      t.forceRender = true;
-      img.printImage();
+      img.printImage(true);
     }, "aero-btn")
   ));
   //////// HEADER MENU ////////
@@ -442,7 +606,6 @@ function main() {
       const curLayer = img.godLayer();
       curLayer.displayName = godText(2);
       //proper link count for filters
-      console.log(curLayer.od);
       img.insertLayer(img.layers.length, curLayer);
       t.currentLayer++;
     }
@@ -491,23 +654,31 @@ function main() {
           "header-items",
           Label("renderOnUpdate", "header-label"),
           InputCheckbox(t.renderOnUpdate, (checked, e) => {
+            console.log(checked);
             t.renderOnUpdate = checked;
           }),
-          document.createElement("br"),
+          /*document.createElement("br"),
           Label("useRenderWorker", "header-label"),
           InputCheckbox(t.useRenderWorker, (checked, e) => {
             t.useRenderWorker = checked;
-          }),
+          }),*/
           document.createElement("br"),
-          Button("reset view"),
+          Label("smoothView", "header-label"),
+          InputCheckbox(t.smoothView, (checked, e) => {
+            t.smoothView = checked;
+            if(t.smoothView) {
+              t.canvas.style.imageRendering = "smooth";
+            } else {
+              t.canvas.style.imageRendering = "pixelated";
+            }
+          }),
           document.createElement("br"),
           Label("tileView", "header-label"),
           InputCheckbox(t.tileView, (checked, e) => {
             t.tileView = checked;
             updateSize();
-            t.forceRender = true;
-            img.printImage();
-          }),
+            img.printImage(true);
+          })
         ));
       }, "header-dropdown"),
       Button("????", (e) => {
@@ -569,7 +740,7 @@ function main() {
   }
   if(DEBUG) console.log("debug mode is enabled; some features may be disabled or enabled");
   updateSize();
-  img.printImage();
+  img.printImage(true);
 }
 //do this so the variables used during setup aren't in global scope
 main();

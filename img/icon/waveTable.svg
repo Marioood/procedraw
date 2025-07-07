@@ -1,0 +1,35 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="64" height="64" fill="black"/>
+	<defs>
+		<linearGradient id="light-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+		<linearGradient id="x-grad" x1="0" x2="1" y1="0" y2="0">
+			<stop offset="0" stop-color="black"/>
+			<stop offset="25%" stop-color="transparent"/>
+			<stop offset="50%" stop-color="black"/>
+			<stop offset="75%" stop-color="transparent"/>
+			<stop offset="100%" stop-color="black"/>
+		</linearGradient>
+		<!--<linearGradient id="y-grad" x1="0" x2="0" y1="0" y2="1">
+			<stop offset="0" stop-color="black"/>
+			<stop offset="12.5%" stop-color="white"/>
+			<stop offset="25%" stop-color="black"/>
+			<stop offset="37.5%" stop-color="white"/>
+			<stop offset="50%" stop-color="black"/>
+			<stop offset="62.5%" stop-color="white"/>
+			<stop offset="75%" stop-color="black"/>
+			<stop offset="87.5%" stop-color="white"/>
+			<stop offset="100%" stop-color="black"/>
+		</linearGradient>-->
+	</defs>
+  <rect x="1" y="1" width="62" height="62" fill="url(#light-grad)"/>
+  <rect x="1" y="1" width="62" height="62" fill="url(#x-grad)"/>
+  <!--<rect x="1" y="1" width="62" height="62" opacity="0.5" fill="url(#y-grad)"/>-->
+  <!-- shine line -->
+  <line x1="1" y1="1.5" x2="63" y2="1.5" stroke="#ffffff80" stroke-width="1"/>
+  <line x1="1" y1="62.5" x2="63" y2="62.5" stroke="#00000080" stroke-width="1"/>
+</svg>

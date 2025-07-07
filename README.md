@@ -35,7 +35,8 @@ Guide for layers:
 * Look into the legality of using an MIT license with modified W3C assets
   * I am unable to find license/legal info on those specific images (the closest thing was https://www.w3.org/policies/logos/)
     * Can I edit parts of them? Can I include them in an MIT licensed project? Who knows!
-    
+* Most of the stuff in todo.txt
+
 ## Code Style Guide
 * 2 spaces per tab
 * semicolons after every line

@@ -1,0 +1,15 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="light-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+	</defs>
+  <path d="M 24 16.5 L 57 16.5 L 41 47.5 L 9 47.5 Z" fill="url(#light-grad)" stroke="black" stroke-width="1"/>
+  
+  <!-- shine line -->
+  <line x1="25" y1="17.5" x2="56" y2="17.5" stroke="#ffffff80" stroke-width="1"/>
+  <line x1="41" y1="46.5" x2="9" y2="46.5" stroke="#00000080" stroke-width="1"/>
+</svg>

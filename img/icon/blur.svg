@@ -1,0 +1,17 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="1-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="white"/>
+			<stop offset="100%" stop-color="#ffffff00"/>
+		</linearGradient>
+		<linearGradient id="2-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#202020"/>
+			<stop offset="100%" stop-color="#a0a0a0"/>
+		</linearGradient>
+	</defs>
+  
+  <path d="M 16.5 40.5 A 15.5 15.5 0 0 0 47.5 40.5 L 32 9.5 Z" fill="url(#2-grad)" stroke-width="1" stroke="black"/>
+  <circle cx="24" cy="40" r="4" fill="url(#1-grad)"/>
+</svg>

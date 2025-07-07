@@ -7,6 +7,7 @@
   --main-cont-h: calc(100% - var(--main-tit-h));
   --bg-cont: linear-gradient(180deg, var(--bg) 0, #202020 100%);
   --bg-trans: linear-gradient(180deg, var(--bg) 0, #202020b0 100%);
+  --bg-btn: linear-gradient(180deg, black 0, #404040 100%);
   --bg-dark: linear-gradient(180deg, black 0, var(--bg) 100%);
   --label-w: 96px;
 }
@@ -113,7 +114,7 @@ hr {
   background: var(--bg-cont);
 }
 .layer-highlight {
-  background-color: #404040;
+  background: linear-gradient(180deg, #404040 0, #606060 100%);
 }
 .sticky-header {
   user-select: none;
@@ -121,7 +122,7 @@ hr {
   top: 0;
   z-index: 1; /*prevent layer icons from overlapping this*/
   border-bottom: 1px solid var(--otln);
-  height: 18px;
+  height: 19px;
   background-color: var(--bg);
 }
 .save-box {
@@ -174,6 +175,7 @@ hr {
 }
 .layer-icon {
   mix-blend-mode: multiply;
+  background-color: black;
 }
 .layer-icon-tint {
   width: 64px;
@@ -333,6 +335,26 @@ button {
   height: 64px;
   border: white 1px solid;
 }
+.input-dial {
+  color: white;
+  background: /*url("img/ui/dial-bg.png"), */linear-gradient(180deg, black 0, #404040 100%);
+  border-bottom: 1px solid black;
+  border-top: 1px solid #808080;
+  outline: 1px solid var(--otln);
+  margin: 1px;
+  /*SOMETHING makes the dial 2 pixels smaller, idk what it is*/
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  padding: 0;
+}
+.input-dial-face {
+  background-image: url("img/ui/dial.png");
+  width: 62px;
+  height: 62px;
+  pointer-events: none;
+  margin-left: 1px;
+}
 /******** COLOR PICKER ********/
 .woke-bg {
   background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
@@ -388,6 +410,47 @@ button {
 .header-label {
   width: 128px;
 }
+/******** LAYER SELECT DROPDOWN ********/
+table {
+  /*REMOVE REDUNDANT STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+  outline: 1px solid #404040;
+  border-radius: 2px;
+  border-spacing: 0;
+  font-size: 0.75em;
+  font-family: sans-serif;
+  width: fit-content;
+  position: absolute;
+}
+tbody {
+  background: linear-gradient(180deg, black 0, #202020 100%);
+}
+th {
+  background-color: #ffffff20;
+  border-bottom: 1px solid black;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #606060;
+  border-right: 1px solid #202020;
+}
+td {
+  border-left: 1px solid #606060;
+  border-right: 1px solid #202020;
+  width: 33.33%;
+}
+.layer-select-dropdown-button {
+  width: 218px;
+}
+/*TODO: replace with svg background*/
+.layer-select-dropdown-button::after {
+  content: "v";
+  position: absolute;
+  right: 160px;
+}
+.layer-select-table-button {
+  background: none;
+}
+.layer-select-container {
+  width: 220px;
+}
 /******** MISC ********/
 .version-text {
   float: right;
@@ -409,7 +472,6 @@ button {
   background-repeat: no-repeat;
   margin-left: 0;
   display: inline-block;
-  width: 18px;
   height: 18px;
   border-right: 1px solid var(--otln);
 }
@@ -419,18 +481,23 @@ button {
   background-image: url("img/ui/clear.svg");
   border-right: 0;
   border-left: 1px solid var(--otln);
+  width: 18px;
 }
 #add-layer {
   background-image: url("img/ui/add.svg");
+  width: 18px;
 }
 #remove-layer {
   background-image: url("img/ui/remove.svg");
+  width: 18px;
 }
 #dupe-layer {
   background-image: url("img/ui/dupe.svg");
+  width: 18px;
 }
 #random-layer {
   background-image: url("img/ui/random.svg");
+  width: 18px;
 }
 .outline-invalid:active {
   outline: red 1px solid;
@@ -459,4 +526,19 @@ button {
 .credits-header {
   width: 100%;
   text-align: center;
+}
+.emboss-icon-container {
+  width: 128px;
+  height: 128px;
+  background-position: 2px 2px;
+}
+.emboss-icon {
+  opacity: 0.5;
+  filter: invert(1);
+}
+.unit-button {
+  width: 52px;
+  height: 24px;
+  border-bottom-right-radius: 24px;
+  border-bottom-left-radius: 24px;
 }

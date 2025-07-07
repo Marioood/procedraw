@@ -171,7 +171,7 @@ class InputColorControl {
     function onupdate() {
       if(colpGlobalUpdate != null) colpGlobalUpdate();
     }
-
+    //chris chan reference...????
     this.hexBox = InputText("000000ff", (e) => {
       const hex = e.target.value;
       let newCol;
@@ -349,8 +349,8 @@ class InputColorControl {
     this.greenSlider.style.background = `linear-gradient(90deg, rgb(${this.RGB[0]}, 0, ${this.RGB[2]}) 0%, rgb(${this.RGB[0]}, 255, ${this.RGB[2]}) 100%)`;
     this.blueSlider.style.background = `linear-gradient(90deg, rgb(${this.RGB[0]}, ${this.RGB[1]}, 0) 0%, rgb(${this.RGB[0]}, ${this.RGB[1]}, 255) 100%)`;
     const valByte = Math.floor(this.HSV[2] * 2.55);
-    const fullSatty = HSV2RGB([this.HSV[0], 100, this.HSV[2]]);
-    const fullVally = HSV2RGB([this.HSV[0], this.HSV[1], 100]);
+    const fullSatty = HSV2ByteRGB([this.HSV[0], 100, this.HSV[2]]);
+    const fullVally = HSV2ByteRGB([this.HSV[0], this.HSV[1], 100]);
     this.sattySlider.style.background = `linear-gradient(90deg, rgb(${valByte}, ${valByte}, ${valByte}) 0%, rgb(${fullSatty[0]}, ${fullSatty[1]}, ${fullSatty[2]}) 100%)`;
     this.valueSlider.style.background = `linear-gradient(90deg, black 0%, rgb(${fullVally[0]}, ${fullVally[1]}, ${fullVally[2]}) 100%)`;
     this.alphaSlider.style.background = `linear-gradient(90deg, transparent 0%, rgb(${this.RGB[0]}, ${this.RGB[1]}, ${this.RGB[2]}) 100%), url("img/ui/checker.png")`
@@ -388,7 +388,7 @@ class InputColorControl {
     if(colpGlobalOninput != null) colpGlobalOninput(newCol);
   }
   updateSlidersHSV() {
-    this.RGB = HSV2RGB(this.HSV);
+    this.RGB = HSV2ByteRGB(this.HSV);
     const hex = byteRGB2Hex(this.RGB);
     this.updateHexBox();
     if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
@@ -422,12 +422,12 @@ class Tether {
   previousLayer = 0;
   currentClass = LayerXorFractal;
   canvasScale = 4;
-  version = "VOLATILE 0.7";
+  version = "VOLATILE 0.8";
   renderOnUpdate = true;
-  forceRender = false;
   compressSaves = true;
   saveURL = false;
   tileView = false;
+  smoothView = false;
   
   constructor() {
     this.canvas = document.getElementById("render");
@@ -439,7 +439,7 @@ class Tether {
   
   generateLayerOptions(options, types, containerId) {
     //this grotesque hell creature needs comments
-    const container = document.getElementById(containerId);
+    const optionContainer = document.getElementById(containerId);
     const layer = img.layers[this.currentLayer];
     //change this later!!!! maybe?
     //const options = layer.defaults;
@@ -448,11 +448,13 @@ class Tether {
     if(optionKeys.length == 0) {
       const message = document.createElement("i");
       message.appendChild(document.createTextNode("layer has no parameters"));
-      container.appendChild(message);
+      optionContainer.appendChild(message);
       return;
     }
 
     for(let i = 0; i < optionKeys.length; i++) {
+      const container = document.createElement("div");
+      
       const id = containerId + "dyn-param-" + i + "-";
       let text = optionKeys[i];
       const label = Label(text);
@@ -560,24 +562,6 @@ class Tether {
           });
           container.appendChild(colBox);
           break;
-        case "dropdown":
-          input = document.createElement("select");
-          input.id = id;
-          
-          for(let i = 0; i < limits.items.length; i++) {
-            const option = document.createElement("option");
-            option.text = limits.items[i];
-            input.add(option);
-          }
-          //set the selected item to the default item
-          input.selectedIndex = limits.items.indexOf(options[optionKeys[i]]);
-          
-          input.addEventListener("change", function (e) {
-            options[optionKeys[i]] = limits.items[input.selectedIndex];
-            img.printImage();
-          });
-          container.appendChild(input);
-          break;
         case "keyvalues":
           input = document.createElement("select");
           input.id = id;
@@ -594,6 +578,18 @@ class Tether {
             options[optionKeys[i]] = limits.values[input.selectedIndex];
             img.printImage();
           });
+          input.onwheel = (e) => {
+            if(e.deltaY > 0) {
+              input.selectedIndex++;
+              if(input.selectedIndex >= input.children.length || input.selectedIndex == -1) input.selectedIndex = 0;
+            } else {
+              input.selectedIndex--;
+              if(input.selectedIndex < 0) input.selectedIndex = input.children.length - 1;
+            }
+            options[optionKeys[i]] = limits.values[input.selectedIndex];
+            img.printImage();
+            e.preventDefault();
+          };
           container.appendChild(input);
           break;
         case "layer":
@@ -645,9 +641,241 @@ class Tether {
           });
           container.appendChild(input);
           break;
+        case "length": {
+          let unitLength = options[optionKeys[i]]; //UnitLength object
+          const input2 = document.createElement("input");
+          let maxLen = 0;
+          
+          if(limits.subtype == "width") {
+            maxLen = img.w;
+          } else if(limits.subtype == "height") {
+            maxLen = img.h;
+          } else if(limits.subtype == "longest") {
+            maxLen = Math.min(img.w, img.h);
+          } else {
+            alert(JSON.stringify(limits) + " has invalid subtype!");
+          }
+          function setLengthRange() {
+            /*if(limits.subtype == "dimension") {
+              if(unitLength.unit == UNIT_PIXELS) {
+                input.min = 1;
+                input.max = img.w;
+                input2.min = 1;
+                input2.max = img.w;
+              } else {
+                input.min = 0;
+                input.max = 100;
+                input2.min = 0;
+                input2.max = 100;
+              }
+            } else if(limits.subtype == "position") {
+              if(unitLength.unit == UNIT_PIXELS) {
+                input.min = -img.w;
+                input.max = img.w;
+                input2.min = -img.w;
+                input2.max = img.w;
+              } else {
+                input.min = -100;
+                input.max = 100;
+                input2.min = -100;
+                input2.max = 100;
+              }
+            } else */
+            if(unitLength.unit == UNIT_PIXELS) {
+              input.min = maxLen;
+              input.max = maxLen;
+              input2.min = maxLen;
+              input2.max = maxLen;
+            } else {
+              input.min = 100;
+              input.max = 100;
+              input2.min = 100;
+              input2.max = 100;
+            }
+            if(limits.absoluteMin != undefined) {
+              input.min = limits.absoluteMin;
+              input2.min = limits.absoluteMin;
+            } else {
+              input.min *= limits.scaledMin;
+              input2.min *= limits.scaledMin;
+            }
+            input.max *= limits.scaledMax;
+            input2.max *= limits.scaledMax;
+            //on firefox the sliders act weirdly if the mins and maxes are changed without changing the values
+            input.value = input.value;
+            input2.value = input2.value;
+          }
+          
+          input.step = limits.step;
+          input2.step = limits.step;
+          
+          const unitButton = document.createElement("button");
+          unitButton.className = "unit-button aero-btn";
+          
+          unitButton.innerText = UnitLength.getUnitText(unitLength);
+          
+          unitButton.onclick = (e) => {
+            if(unitLength.unit == UNIT_PIXELS) {
+              unitLength.unit = UNIT_PERCENTAGE;
+            } else {
+              unitLength.unit = UNIT_PIXELS;
+            }
+            unitButton.innerText = UnitLength.getUnitText(unitLength);
+            setLengthRange();
+            img.printImage();
+          }
+          //slider
+          input.type = "range";
+          setLengthRange();
+          //doing this before setting the max and min makes the slider look all funky
+          input.value = Number(unitLength.value);
+          
+          let oldTime = 0;
+          input.oninput = (e) => {
+            unitLength.value = Number(input.value);
+            const valUnchanged = unitLength.value//UnitLength.getLength(unitLength, maxLen);
+            let val = valUnchanged;
+            //do a safety check on unsafe options
+            //"unsafe options" are ones that control loops (e.g. maxLines for wandering, thickness for border)
+            //having unsafe options too high can crash or freeze the browser!!
+            if(limits.unsafe) {
+              val = clamp(val, input.min, input.max);
+              //input.value = val;
+              //just dont update the number - cause it makes inputting small numbers a bitch
+              if(val != valUnchanged) {
+                return;
+              }
+            }
+            input2.value = Number(input.value);
+            //unitLength.value = Number(val);
+            //dont print too fast so your pc doesnt sound like a jet engine
+            let curTime = Math.round(Date.now() / 30);
+            if(oldTime != curTime) {
+              img.printImage();
+              oldTime = curTime;
+            }
+          };
+          //print the image when the user lets go of the input
+          //prevents visual desync between the input and canvas when the input changes rapidly
+          input.onmouseup = (e) => {img.printImage()};
+          //number box
+          input2.type = "number";
+          input2.value = unitLength.value;
+          
+          input2.oninput = (e) => {
+            unitLength.value = Number(input2.value);
+            const valUnchanged = unitLength.value//UnitLength.getLength(unitLength, maxLen);
+            let val = valUnchanged;
+            //do a safety check on unsafe options
+            //"unsafe options" are ones that control loops (e.g. maxLines for wandering, thickness for border)
+            //having unsafe options too high can crash or freeze the browser!!
+            if(limits.unsafe) {
+              val = clamp(val, input2.min, input2.max);
+              //just dont update the number - cause it makes inputting small numbers a bitch
+              if(val != valUnchanged) {
+                input2.classList.add("input-invalid");
+                return;
+              } else {
+                input2.classList.remove("input-invalid");
+              }
+            }
+            input.value = Number(input2.value);
+            img.printImage();
+          };
+          //TODO:
+          container.style.height = "64px";
+          const buttonContainer = document.createElement("div");
+          buttonContainer.style.width = "52px";
+          buttonContainer.style.display = "inline-block";
+          container.style.transform = "translate(0, -24px)";
+          buttonContainer.style.transform = "translate(0, 24px)";
+          container.style.pointerEvents = "none";
+          input.style.pointerEvents = "auto";
+          input2.style.pointerEvents = "auto";
+          unitButton.style.pointerEvents = "auto";
+          container.appendChild(input);
+          buttonContainer.appendChild(input2);
+          buttonContainer.appendChild(unitButton);
+          container.appendChild(buttonContainer);
+          break;
+        }
+        case "direction": {
+          const dial = document.createElement("button");
+          const dialFace = document.createElement("div");
+          dial.className = "input-dial";
+          dialFace.className = "input-dial-face";
+          dialFace.style.transform = "rotate(" + (360 - options[optionKeys[i]]) + "deg)"; //360 - theta -- convert between web degrees to renderer degrees
+          //web degrees -- clockwise+, counterclockwise-
+          //renderer degrees -- clockwise-, counterclockwise+
+          
+          let startDir = options[optionKeys[i]]; //used to make the dial feel more realistic
+          let dir;
+          
+          dial.onmousedown = (e) => {
+            //capture the starting direction for laterrrr
+            //get position of the target element
+            //the web was well designed
+            const rect = e.target.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const midX = rect.width / 2;
+            const midY = rect.height / 2;
+            dir = dirFrom(mouseX, mouseY, midX, midY);
+            startDir = dir - (360 - options[optionKeys[i]]);
+            e.target.setPointerCapture(e.pointerId);
+          };
+
+          let oldTime = 0;
+          dial.onmousemove = (e) => {
+            if(e.buttons != 1) return; //holding primary mouse button
+            //https://stackoverflow.com/a/42111623 -- thanks bro
+            //get position of the target element
+            //the web was well designed
+            const rect = e.target.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const midX = rect.width / 2;
+            const midY = rect.height / 2;
+            dir = mod(dirFrom(mouseX, mouseY, midX, midY) - startDir, 360);
+            dialFace.style.transform = "rotate(" + dir + "deg)";
+            const outputDir = 360 - Math.floor(dir); //convert between web degrees to renderer degrees
+            options[optionKeys[i]] = outputDir;
+            input.value = outputDir;
+            //dont print too fast so your pc doesnt sound like a jet engine
+            let curTime = Math.round(Date.now() / 30);
+            if(oldTime != curTime) {
+              img.printImage();
+              oldTime = curTime;
+            }
+          };
+          //print the image when the user lets go of the input
+          //prevents visual desync between the input and canvas when the input changes rapidly
+          dial.onmouseup = (e) => {
+            options[optionKeys[i]] = 360 - Math.floor(dir); //convert between web degrees to renderer degrees
+            img.printImage();
+          };
+          //number box
+          input.type = "number";
+          input.value = options[optionKeys[i]];
+          input.step = 1;
+          input.min = 0;
+          input.max = 360;
+          
+          input.oninput = (e) => {
+            let val = input.value;
+            options[optionKeys[i]] = Number(input.value);
+            dialFace.style.transform = "rotate(" + (360 - options[optionKeys[i]]) + "deg)"; //convert between web 
+            img.printImage();
+          };
+          dial.appendChild(dialFace);
+          container.appendChild(dial);
+          container.appendChild(input);
+          break;
+        }
       }
       //spacing
-      container.appendChild(document.createElement("br"));
+      //optionContainer.appendChild(document.createElement("br"));
+      optionContainer.appendChild(container);
     }
   }
   
@@ -737,7 +965,7 @@ class Tether {
       layerContainer.appendChild(buttonContainer);
       
       const layerSelect = document.createElement("div");
-      layerSelect.className = "layer-select";
+      layerSelect.classList.add("layer-select");
       
       const iconContainer = document.createElement("div");
       iconContainer.className = "layer-icon-container";
@@ -755,6 +983,12 @@ class Tether {
         
         if(layer.od.base == KEY_CANVAS) {
           icon.style.backgroundImage = "url(img/icon/canvas.svg)";
+        } else if(layer.name == "emboss, but it's broken so this will intentionally never be done") {
+          const baseName = img.layers[img.layerKeys[layer.od.base]].name;
+          icon.classList.add = "emboss-icon";
+          iconContainer.classList.add = "emboss-icon-container";
+          iconContainer.style.backgroundImage = `url(img/icon/${baseName}.svg)`;
+          icon.src = "img/icon/" + baseName + ".svg"
         } else {
           const baseName = img.layers[img.layerKeys[layer.od.base]].name;
           icon.style.backgroundImage = `url(img/icon/${baseName}.svg)`;

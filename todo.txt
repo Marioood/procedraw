@@ -5,7 +5,6 @@ image layer that has is an embedded image
 test browser support (and provide appropriate taxes)
 //could be a "map" filter?
 //overlap option (see wandering lines)
-//brightness tolerance
 "no layers exist" text
 decompress thing for save repair
 //color ramp
@@ -21,24 +20,37 @@ fix tiling for worley (none powers of 2)
 PBR material creation (???)
 remove some mix types? a couple of them feel like filler
 bring back direction inputs!!!
-rotate filter
 quantize filter
-contrast filter (can be achieved with a tweak layer set to canvas with the overlay blend mode)
-make a not-wandering layer
 disable corners or edges
 merge liney and noise layers? a lot of their options are awfully similar...
 mix options for the blobs layer (col0 -> col1)
 embed pdimg data into a png, have that png be from procedraw (static, obviously) but have that png be able to be loaded into procedraw
+random tile export option (several different renders of the image put together)
+merge layer should merge several layers (?)
+strict input for width (FORCE it to go below 0. maybe this could be an input box function option?)
 
 dent and crystal filters (see: paint.net)
+enums should probably maybe be moved to their own file. makes stuff less cluttered
+noisy blobs // fractal blobs? mess with distance function?? clustered blobs???
+description for pictures
 
 URGENT
+push updates sooon...... there are a lot
 
+proper layer icons
+
+
+unsafe number and length inputs stay red when the slider is changed
+good emboss
+rgb normal for contrast layer
+lacunarity for noise layers? 
+easeMode for wandering
+option for wandering lines to stay proportional (like errrrr when rotated they stay the same euclidean length)
+crop filter
 ctrl + scroll to zoom in and out
 scroll to move up and down
 shift + scroll to move left and right
 blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
-value noise layer
 perlin noise layer
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
 edit tint switch layer dont switch color edit color SEE BUG
@@ -47,21 +59,11 @@ proper direction input... again!
 the code is getting stale! rewrite it soon....
 merge the blend modes and mix modes? some of them are quite similar in purpose and functionality...
 make controls more visible on mobile (see: firefox device simulation mode)
-proper layer icons
-anti aliasing for blobs layer
-sharpen filter
-blur filter
-saturation OR black and white filter
 actual documentation / tutorials
 better width and height customization (set limit, with warning)
-proper negative offs
-dimension dependent options
-
-round and sharp easing function
-repurpose unfinished maps as a ttt map???
-
-normalize filter - scales a layer's brightness to between 0 and 1
-
+rotate filter
+ehhhhh astroids preset is broken for worley noise
+layer presets
 restructure code to allow for the image/layer renderer to be used on it's own (without the editor). people (kit) have told me that procedraw could be useful for html5 game textures.....
   layer wrappers
 
@@ -72,8 +74,52 @@ clean up unused garbage
 //the set color function sucked it was like 4 times slower
 //take a break! work on the programmer art thing
 //snap! image editor
-fix layer key bugs! there's still a bunch.....
 
 is the "color picker style" code too voodoolicious? would it be too confusing for someone unfamiliar with those functions, even if they learned about them? is it unecessary abstraction?
 
 floating point bitwise operators? could be interesting
+
+"invalid" colors (brighter than 1 and darker than 0) can be very useful
+
+normal maps are a huge, gigantic can of worms. adding too many features related to them MAY make procedraw incomprehensible
+
+consider how colorblind people might view the layer icons
+
+
+
+VOLATILE 0.8 changes:
+* layers:
+  * added emboss filter
+  * added sharpen filter
+  * added HSV filter
+  * added blur filter
+  * added contrast filter
+  * more options for the blobs layer
+  * more options for the worley layer
+  * more layer icons
+  * overblown test, bayer, and halftone blend modes
+* ui:
+  * unit length input for most layers (position/dimensions can be in pixels or % relative to the image dimensions)
+  * rotation input
+  * new layer selection input
+  * fixed some bugs from the ui design
+  * fixed t.renderOnUpdate not doing anything
+  * added t.smoothCanvas
+* debug:
+  * the 'l' key prints img.layers
+  * the 'd' key prints the image data and anything wrong with it
+  
+  
+  
+  
+  
+  
+  
+   -tools -nop4
+  
+  
+  
+  
+  mat_texture_limit 25000
+  
+  look into what the unit length stuff is actually doing... some results seem funky when printed out

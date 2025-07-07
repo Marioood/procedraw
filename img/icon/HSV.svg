@@ -1,0 +1,11 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="24" cy="25" r="16" fill="black"/>
+  <circle cx="40" cy="25" r="16" fill="black"/>
+  <circle cx="32" cy="38" r="16" fill="black"/>
+  
+  <circle cx="24" cy="25" r="15" fill="#ff0000" style="mix-blend-mode: screen"/>
+  <circle cx="40" cy="25" r="15" fill="#00ff00" style="mix-blend-mode: screen"/>
+  <circle cx="32" cy="38" r="15" fill="#0000ff" style="mix-blend-mode: screen"/>
+</svg>

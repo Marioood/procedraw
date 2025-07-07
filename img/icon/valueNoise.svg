@@ -1,0 +1,39 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="64" height="64" fill="black"/>
+	<defs>
+		<linearGradient id="1-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+		<linearGradient id="2-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#606060"/>
+			<stop offset="100%" stop-color="#808080"/>
+		</linearGradient>
+		<linearGradient id="3-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#202020"/>
+			<stop offset="100%" stop-color="#303030"/>
+		</linearGradient>
+	</defs>
+  <rect x="1" y="1" width="14" height="14" fill="url(#3-grad)"/>
+  <rect x="17" y="1" width="14" height="14" fill="url(#2-grad)"/>
+  <rect x="33" y="1" width="14" height="14" fill="url(#2-grad)"/>
+  
+  <rect x="1" y="17" width="14" height="14" fill="url(#2-grad)"/>
+  <rect x="17" y="17" width="14" height="14" fill="url(#2-grad)"/>
+  <rect x="33" y="17" width="14" height="14" fill="url(#3-grad)"/>
+  <rect x="49" y="17" width="14" height="14" fill="url(#2-grad)"/>
+  
+  <rect x="17" y="33" width="14" height="14" fill="url(#3-grad)"/>
+  <rect x="33" y="33" width="14" height="14" fill="url(#2-grad)"/>
+  
+  <rect x="1" y="49" width="14" height="14" fill="url(#2-grad)"/>
+  <rect x="17" y="49" width="14" height="14" fill="url(#2-grad)"/>
+  <rect x="49" y="49" width="14" height="14" fill="url(#2-grad)"/>
+  
+  <text x="21" y="48" fill="url(#1-grad)" font-size="48" style="text-shadow: 0 -1px white, 0 1px #404040, 2px 0 black, 0 2px black, -2px 0 black, 0 -2px black">$</text>
+  <!-- shine line -->
+  <line x1="1" y1="1.5" x2="63" y2="1.5" stroke="#ffffff80" stroke-width="1"/>
+  <line x1="1" y1="62.5" x2="63" y2="62.5" stroke="#00000080" stroke-width="1"/>
+</svg>

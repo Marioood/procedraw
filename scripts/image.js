@@ -12,7 +12,30 @@ const BLEND_SUBTRACT = 5;
 const BLEND_CHANNEL_DISSOLVE = 6;
 const BLEND_DISSOLVE = 7;
 const BLEND_SHIFT_OVERLAY = 8;
+const BLEND_OVERBLOWN_TEST = 9;
+const BLEND_BAYER = 10;
+const BLEND_HALFTONE = 11;
 
+//https://en.wikipedia.org/wiki/Ordered_dithering
+//be happy that i manually aligned the tables... it looks pretty
+const BLEND_TABLE_BAYER = [
+  0,      0.5,    0.125,  0.625,
+  0.75,   0.25,   0.875,  0.375,
+  0.1875, 0.6875, 0.0625, 0.5625,
+  0.9375, 0.4375, 0.8125, 0.3125
+];
+
+const BLEND_TABLE_HALFTONE = [
+  0.9375, 0.875, 0.75,  0.625,  0.625,  0.75,  0.875, 0.9375,
+  0.875,  0.75,  0.625, 0.5,    0.5,    0.625, 0.75,  0.875,
+  0.75,   0.625, 0.5,   0.25,   0.25,   0.5,   0.625, 0.75,
+  0.625,  0.5,   0.25,  0,      0.0625, 0.25,  0.5,   0.625,
+  0.625,  0.5,   0.25,  0.0625, 0.0625, 0.25,  0.5,   0.625,
+  0.75,   0.625, 0.5,   0.25,   0.25,   0.5,   0.625, 0.75,
+  0.875,  0.75,  0.625, 0.5,    0.5,    0.625, 0.75,  0.875,
+  0.9375, 0.875, 0.75,  0.625,  0.625,  0.75,  0.875, 0.9375
+];
+        
 const MIX_PLAIN = 0;
 const MIX_HALF = 1;
 const MIX_RANDOM = 2;
@@ -22,14 +45,25 @@ const MIX_DAFT_X = 5;
 const MIX_DAFT_Y = 6;
 const MIX_HALF_DITHER = 7;
 
+const INTERP_NEAREST = 0;
+const INTERP_BILINEAR = 1;
+const INTERP_BILINEAR_COS = 2;
+
 const KEY_FREED = -1;
 const KEY_CANVAS = -2;
 
 class ImageManager {
+  //height and width
   w = 64;
   h = 64;
+  //max height and width
+  wMax = 512;
+  hMax = 512;
+  //the canvas pixel data
   data = [];
+  //the current layer being printed
   layer = null;
+  //the background color (grey)
   bg = [0.5, 0.5, 0.5, 1];
   layers = [];
   //woot woot! memory management in javascript!!!
@@ -41,8 +75,10 @@ class ImageManager {
   //layerKey -> layerIndex
   //layers[layerIndex] -> LayerSomeExampleLayer
   
-  author = "you!";
+  //image title
   name = "our beauty";
+  //image author
+  author = "you!";
   
   layerClasses = {
     //regular layers
@@ -57,6 +93,8 @@ class ImageManager {
     worley: LayerWorley,
     gradient: LayerGradient,
     valueNoise: LayerValueNoise,
+    waveTable: LayerWaveTable,
+    //filters
     tweak: FilterTweak,
     tile: FilterTile,
     invert: FilterInvert,
@@ -64,10 +102,22 @@ class ImageManager {
     sine: FilterSine,
     merge: FilterMerge,
     repeat: FilterRepeat,
-    mask: FilterMask
+    mask: FilterMask,
+    emboss: FilterEmboss,
+    contrast: FilterContrast,
+    blur: FilterBlur,
+    HSV: FilterHSV,
+    sharpen: FilterSharpen,
+    offset: FilterOffset,
+    vectorize: FilterVectorize,
+    sunlight: FilterSunlight,
+    shear: FilterShear
   };
   
-  printImage() {
+  printImage(forceRender = false) {
+    //dont render
+    if(!t.renderOnUpdate && !forceRender) return;
+    
     let startTime = Date.now();
     //write the background color
     for(let i = 0; i < this.w * this.h; i++) {
@@ -78,7 +128,7 @@ class ImageManager {
     }
     //layer the layers
     for(let i = 0; i < this.layers.length; i++) {
-      if(this.layers[i].od.shown) {
+      if(this.layers[i].od.shown || this.layers[i].linkCount > 0) {
         this.layer = this.layers[i];
         if(this.layer.linkCount > 0) {
           this.layer.data = new Array(img.w * img.h);
@@ -134,14 +184,14 @@ class ImageManager {
     //[red, blue, green, alpha]
 
     //wrap around image
-    x = mod(x + this.layer.od.x, this.w);
-    y = mod(y + this.layer.od.y, this.h);
+    x = mod(x + UnitLength.getLength(this.layer.od.x, this.w, true), this.w);
+    y = mod(y + UnitLength.getLength(this.layer.od.y, this.h, true), this.h);
     //get alpha n blend from global memory... its less to type
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
     const pos = x + y * this.w;
-    
-    const alpha = this.layer.od.alpha * color[3];
+    //this is for when the data layer gets written to but we still don't want the layer displayed (filters)
+    const alpha = this.layer.od.shown ? this.layer.od.alpha * color[3] : 0;
     //color offsets
     const rOffs = pos * 4;
     const gOffs = pos * 4 + 1;
@@ -158,9 +208,9 @@ class ImageManager {
     //moved from combinePixel(), gained ~10 ms on a 512x512 image by doing this -- nice!!
     switch(blend) {
       case BLEND_ADD:
-        this.data[rOffs] = (rl * alpha) + rb;
-        this.data[gOffs] = (gl * alpha) + gb;
-        this.data[bOffs] = (bl * alpha) + bb;
+        this.data[rOffs] = rl * alpha + rb;
+        this.data[gOffs] = gl * alpha + gb;
+        this.data[bOffs] = bl * alpha + bb;
         break;
       case BLEND_MULTIPLY:
         this.data[rOffs] = (rl * alpha + 1 - alpha) * rb;
@@ -230,6 +280,56 @@ class ImageManager {
           this.data[bOffs] = (bl - 0.5) * 2 * alpha + bb;
         }
         break;
+      case BLEND_OVERBLOWN_TEST:
+        //the layer color is displayed as magenta if it's is overblown
+        const isOverblown = rl > 1 || gl > 1 || bl > 1;
+        //the color is displayed as green if it's underblown
+        const isUnderblown = rl < 0 || gl < 0 || bl < 0;
+        //the color is displayed as yellow if it's NaN
+        const isNaN = rl != rl || gl != gl || bl != bl;
+        
+        if(isOverblown) {
+          this.data[rOffs] = 1;
+        } else if(isUnderblown) {
+          this.data[rOffs] = 0;
+        } else if(isNaN) {
+          this.data[rOffs] = 1;
+        } else {
+          this.data[rOffs] = rb + alpha * (rl - rb);
+        }
+        if(isOverblown) {
+          this.data[gOffs] = 0;
+        } else if(isUnderblown) {
+          this.data[gOffs] = 1;
+        } else if(isNaN) {
+          this.data[gOffs] = 1;
+        } else {
+          this.data[gOffs] = gb + alpha * (gl - gb);
+        }
+        if(isOverblown) {
+          this.data[bOffs] = 1;
+        } else if(isUnderblown) {
+          this.data[bOffs] = 0;
+        } else if(isNaN) {
+          this.data[bOffs] = 0;
+        } else {
+          this.data[bOffs] = bb + alpha * (bl - bb);
+        }
+        break;
+      case BLEND_BAYER:
+        if(alpha > BLEND_TABLE_BAYER[x % 4 + y % 4 * 4]) {
+          this.data[rOffs] = rl;
+          this.data[gOffs] = gl;
+          this.data[bOffs] = bl;
+        }
+        break;
+      case BLEND_HALFTONE:
+        if(alpha > BLEND_TABLE_HALFTONE[x % 8 + y % 8 * 8]) {
+          this.data[rOffs] = rl;
+          this.data[gOffs] = gl;
+          this.data[bOffs] = bl;
+        }
+        break;
       default:
         console.error(`unknown blend mode ${blend}`);
     }
@@ -249,24 +349,93 @@ class ImageManager {
     }
   }
   
-  blend(col0, col1, percent) {
-    const a = col0[3] + percent * (col1[3] - col0[3]);
-    //do this so the transition between opaque and transparent colors doesnt look weird and muddy
-    //if the second color's alpha is larger than the first colors then the colors will look all messed up. its better to leave it muddy for now until i figure out how to fix it
-    if(col0[3] < col1[3]) {
-      percent /= a;
+  getPixelFromData(x, y, baseData, interpMode) {
+    switch(interpMode) {
+      case INTERP_NEAREST:
+        const idx = Math.floor(x) + Math.floor(y) * this.w;
+        const r = baseData[idx * 4];
+        const g = baseData[idx * 4 + 1];
+        const b = baseData[idx * 4 + 2];
+        const a = baseData[idx * 4 + 3];
+        
+        return [r, g, b, a];
+      case INTERP_BILINEAR: {
+        const xFloor = Math.floor(x);
+        const yFloor = Math.floor(y);
+        const xCeil = mod(Math.ceil(x), this.w);
+        const yCeil = mod(Math.ceil(y), this.h);
+        //corners are ordered like this:
+        //0, 1
+        //2, 3
+        const idx0 = xFloor + yFloor * this.w;
+        const r0 = baseData[idx0 * 4];
+        const g0 = baseData[idx0 * 4 + 1];
+        const b0 = baseData[idx0 * 4 + 2];
+        const a0 = baseData[idx0 * 4 + 3];
+        
+        const idx1 = xCeil + yFloor * this.w;
+        const r1 = baseData[idx1 * 4];
+        const g1 = baseData[idx1 * 4 + 1];
+        const b1 = baseData[idx1 * 4 + 2];
+        const a1 = baseData[idx1 * 4 + 3];
+        
+        const idx2 = xFloor + yCeil * this.w;
+        const r2 = baseData[idx2 * 4];
+        const g2 = baseData[idx2 * 4 + 1];
+        const b2 = baseData[idx2 * 4 + 2];
+        const a2 = baseData[idx2 * 4 + 3];
+        
+        const idx3 = xCeil + yCeil * this.w;
+        const r3 = baseData[idx3 * 4];
+        const g3 = baseData[idx3 * 4 + 1];
+        const b3 = baseData[idx3 * 4 + 2];
+        const a3 = baseData[idx3 * 4 + 3];
+        
+        const xBias = x - xFloor;
+        const yBias = y - yFloor;
+        //THANK YOU wikipedia user Cmglee for making an amazing diagram that helped me FINALLY implement bilinear interpolation
+        //TODO (?): this could be optimized a little (inline the functions), but it's pretty fast as it is
+        const col0 = colorMix([r0, g0, b0, a0], [r1, g1, g1, a1], xBias);
+        const col2 = colorMix([r2, g2, g2, a2], [r3, g3, b3, a3], xBias);
+        
+        return colorMix(col0, col2, yBias);
+      }
+      case INTERP_BILINEAR_COS: {
+        const xFloor = Math.floor(x);
+        const yFloor = Math.floor(y);
+        const xCeil = mod(Math.ceil(x), this.w);
+        const yCeil = mod(Math.ceil(y), this.h);
+        const idx0 = xFloor + yFloor * this.w;
+        const r0 = baseData[idx0 * 4];
+        const g0 = baseData[idx0 * 4 + 1];
+        const b0 = baseData[idx0 * 4 + 2];
+        const a0 = baseData[idx0 * 4 + 3];
+        const idx1 = xCeil + yFloor * this.w;
+        const r1 = baseData[idx1 * 4];
+        const g1 = baseData[idx1 * 4 + 1];
+        const b1 = baseData[idx1 * 4 + 2];
+        const a1 = baseData[idx1 * 4 + 3];
+        const idx2 = xFloor + yCeil * this.w;
+        const r2 = baseData[idx2 * 4];
+        const g2 = baseData[idx2 * 4 + 1];
+        const b2 = baseData[idx2 * 4 + 2];
+        const a2 = baseData[idx2 * 4 + 3];
+        const idx3 = xCeil + yCeil * this.w;
+        const r3 = baseData[idx3 * 4];
+        const g3 = baseData[idx3 * 4 + 1];
+        const b3 = baseData[idx3 * 4 + 2];
+        const a3 = baseData[idx3 * 4 + 3];
+        //only change from bilinear
+        const xBias = easeCos(x - xFloor);
+        const yBias = easeCos(y - yFloor);
+        const col0 = colorMix([r0, g0, b0, a0], [r1, g1, g1, a1], xBias);
+        const col2 = colorMix([r2, g2, g2, a2], [r3, g3, b3, a3], xBias);
+        
+        return colorMix(col0, col2, yBias);
+      }
+      default:
+        console.log("unknown interp mode: " + interpMode);
     }
-    /*
-    if(percent < 0 || a < 0 || aBlend < 0) {
-      console.log(a);
-      console.log(aBlend);
-      console.log(percent);
-      console.log("---");
-    }*/
-    const r = col0[0] + percent * (col1[0] - col0[0]);
-    const g = col0[1] + percent * (col1[1] - col0[1]);
-    const b = col0[2] + percent * (col1[2] - col0[2]);
-    return [r, g, b, a];
   }
   
   godLayer() {
@@ -290,19 +459,20 @@ class ImageManager {
             opts[key] *= 1e10;
             opts[key] = Math.floor(opts[key]);
             opts[key] /= 1e10;
-          } break;
+            break;
+          } 
           case 'boolean':
             opts[key] = Math.random() > 0.5;
-          break;
+            break;
           case 'color':
             opts[key] = Array(4).fill(1).map(m => Math.random() * m);
-          break;
+            break;
           case 'dropdown':
             opts[key] = choice(d.items);
-          break;
+            break;
           case 'keyvalues':
             opts[key] = choice(d.values);
-          break;
+            break;
           case 'layer':
             let layerKey = KEY_FREED;
             if(layer.isFilter) {
@@ -311,7 +481,7 @@ class ImageManager {
               for(let safety = 0; layerIdx == KEY_FREED; safety++) {
                 layerKey = Math.floor(Math.random() * jsIsDumb.layerKeys.length)
                 layerIdx = jsIsDumb.layerKeys[layerKey];
-                if(safety > 64) {
+                if(safety > 4) {
                   console.error("failed to create layer; could not find a valid layer key");
                   layerIdx = KEY_CANVAS;
                 }
@@ -319,7 +489,31 @@ class ImageManager {
               jsIsDumb.layers[layerIdx].linkCount++;
             }
             opts[key] = layerKey;
-          break;
+            break;
+          case 'direction':
+            opts[key] = Math.floor(Math.random() * 360);
+            break;
+          case 'length': {
+            const unit = (Math.random() > 0.5) ? UNIT_PIXELS : UNIT_PERCENTAGE;
+            let min, max;
+            
+            if(unit == UNIT_PIXELS) {
+              const shortest = Math.max(img.w, img.h);
+              min = d.scaledMin * shortest;
+              max = d.scaledMax * shortest;
+            } else {
+              min = d.scaledMin * 100;
+              max = d.scaledMax * 100;
+            }
+            if(d.absoluteMin != undefined) {
+              min = d.absoluteMin;
+            }
+            let len = Math.random() * (max - min) + min;
+            len = Math.floor(len / d.step) * d.step; //round
+            
+            opts[key] = new UnitLength(len, unit);
+            break;
+          }
           default:
             console.error(`Unsupported option type ${d.type}`);
         }

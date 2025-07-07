@@ -1,0 +1,35 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="top-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+		<linearGradient id="bottom-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#101010"/>
+			<stop offset="100%" stop-color="#404040"/>
+		</linearGradient>
+		<linearGradient id="left-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#606060"/>
+			<stop offset="100%" stop-color="#808080"/>
+		</linearGradient>
+		<linearGradient id="right-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#202020"/>
+			<stop offset="100%" stop-color="#404040"/>
+		</linearGradient>
+	</defs>
+  <!-- outline -->
+  <rect x="16" y="16" width="32" height="32" fill="black"/>
+  <!-- light edges -->
+  <path d="M 17 17 L 46 17 L 40 23 L 23 23 L 23 40 L 17 45 Z" fill="url(#top-grad)"/>
+  <!-- dark edges -->
+  <path d="M 47 19 L 41 24 L 41 39 L 47 39 Z" fill="url(#right-grad)"/>
+  <path d="M 18 46 L 23 41 L 39 41 L 39 47 L 18 47 Z" fill="url(#right-grad)"/>
+  <rect x="41" y="41" width="6" height="6" fill="url(#right-grad)"/>
+  <!-- middle grey bit -->
+  <rect x="25" y="25" width="14" height="14" fill="url(#left-grad)"/>
+  <!-- shine line -->
+  <line x1="17" y1="17.5" x2="47" y2="17.5" stroke="#ffffff80" stroke-width="1"/>
+  <line x1="17" y1="46.5" x2="47" y2="46.5" stroke="#00000080" stroke-width="1"/>
+</svg>

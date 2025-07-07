@@ -69,7 +69,11 @@ function HSV2RGB(col) { //[H, S, V] array
     r += m;
     g += m;
     b += m;
-    return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
+    return [r, g, b];
+}
+function HSV2ByteRGB(col) {
+  let rgb = HSV2RGB(col);
+  return [Math.floor(rgb[0] * 255), Math.floor(rgb[1] * 255), Math.floor(rgb[2] * 255)]
 }
 function byteRGB2HSV(col) {
   return RGB2HSV([col[0] / 255, col[1] / 255, col[2] / 255]);
@@ -126,6 +130,40 @@ function limitDarkness(color) {
   }
   return '#' + RGB2Hex(newCol);
 }
+function colorMix(col0, col1, percent/*, mode = MIX_PLAIN*/) {
+  const a = col0[3] + percent * (col1[3] - col0[3]);
+  //do this so the transition between opaque and transparent colors doesnt look weird and muddy
+  //if the second color's alpha is larger than the first colors then the colors will look all messed up. its better to leave it muddy for now until i figure out how to fix it
+  if(col0[3] < col1[3]) {
+    percent /= a;
+  }
+  /*
+  if(percent < 0 || a < 0 || aBlend < 0) {
+    console.log(a);
+    console.log(aBlend);
+    console.log(percent);
+    console.log("---");
+  }*/
+  const r = col0[0] + percent * (col1[0] - col0[0]);
+  const g = col0[1] + percent * (col1[1] - col0[1]);
+  const b = col0[2] + percent * (col1[2] - col0[2]);
+  return [r, g, b, a];
+}
+
+/*add(col0, col1, percent) {
+  const r = (col0[0] + col1[0] * percent);
+  const g = (col0[1] + col1[1] * percent);
+  const b = (col0[2] + col1[2] * percent);
+  const r = col0[0] * (1 - percent) + col1[0] * percent;
+  const g = col0[1] * (1 - percent) + col1[1] * percent;
+  const b = col0[2] * (1 - percent) + col1[2] * percent;
+  const r = col1[0] * percent + col0[0];
+  const g = col1[1] * percent + col0[1];
+  const b = col1[1] * percent + col0[2];
+  
+  const a = col0[3];
+  return [r, g, b, a];
+}*/
 //trig stuff//
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
@@ -133,14 +171,34 @@ const RAD2DEG = 180 / Math.PI;
 function dirFrom(x1, y1, x2, y2) {
   const adjacent = x2 - x1;
   const opposite = y2 - y1;
-  
-  return Math.atan(opposite / adjacent) * RAD2DEG;
+  //is this wrong? might have something to do with the wandering layer being backwards
+  let dir = Math.atan(opposite / adjacent) * RAD2DEG + 90;
+
+  if(x2 >= x1) {
+    dir += 180
+  }
+  return dir;
 }
 //misc//
 function mod(dividend, divisor) {
     //% is remainder and there's no built in mod function...
     //thanks https://stackoverflow.com/a/17323608
     return ((dividend % divisor) + divisor) % divisor;
+}
+function clamp(num, min, max) {
+  if(num > max) {
+    return max;
+  } else if(num < min) {
+    return min;
+  } else {
+    return num;
+  }
+}
+function lerp(n1, n2, bias) {
+  return n1 + bias * (n2 - n1)
+}
+function easeCos(n) {
+  return Math.cos(n * Math.PI + Math.PI) / 2 + 0.5;
 }
 function deepArrayCopy(oldArr) {
   const newArr = new Array(oldArr.length);
@@ -195,4 +253,59 @@ function godText(max) {
     if(i < wordCount) text = text + ' ';
   }
   return text;
+}
+//do NOT change these values! they are used in saves
+const UNIT_PIXELS = 0;
+const UNIT_PERCENTAGE = 1;
+const UNIT_RATIO = 3;
+          
+class UnitLength {
+  //ALL FUNCTIONS IN THIS CLASS __HAVE__ TO BE STATIC; OTHERWISE, LAYER DUPLICATION WILL NOT WORK
+  value;
+  unit;
+  //lengthType;
+  
+  constructor(value, unit) {
+    this.value = value;
+    this.unit = unit;
+    //this.lengthType = lengthType;
+  }
+  //returns the current length (in pixels)
+  static getLength(unitLength, maxLength, isRounded) {
+    let length;
+    
+    switch(unitLength.unit) {
+      case UNIT_PIXELS:
+        length = unitLength.value;
+        break;
+      case UNIT_PERCENTAGE:
+        length = unitLength.value / 100 * maxLength;
+        break;
+      default:
+        console.error("error in 'getLength()': unknown unit " + unitLength.unit);
+        length = 0;
+        break;
+    }
+    if(length == NaN) {
+      alert("unit length returned as not a number (!!!)\n\n" + unitLength);
+      return 1;
+    }
+    if(isRounded) {
+      return Math.floor(length);
+    } else {
+      return length;
+    }
+  }
+  //returns the name of the current unit
+  static getUnitText(unitLength) {
+    switch(unitLength.unit) {
+      case UNIT_PIXELS:
+        return "pixels";
+      case UNIT_PERCENTAGE:
+        return "%";
+      default:
+        console.error("error in 'getUnitText()': unknown unit " + unitLength.unit);
+        return "undefined";
+    }
+  }
 }

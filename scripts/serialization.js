@@ -1,6 +1,7 @@
 "use strict";
 
 class Serialization {
+  //this gets changed when the SAVE FORMAT is changed, not when layer paramters are changed
   format = 0;
   
   save() {
@@ -31,6 +32,8 @@ class Serialization {
           let val = oldOptions[key];
           let refVal = refOptions[key];
           const type = types[key].type;
+          let refIsEqual = val == refVal;
+          
           if(type == "color") {
             //colors are arrays during runtime - but theyre smaller as hex strings
             val = RGBA2Hex(val);
@@ -39,8 +42,13 @@ class Serialization {
             //save layer index, because the keys get lost after saving
             val = img.layerKeys[val];
             refVal = img.layerKeys[refVal];
+          } else if(type == "length") {
+            refIsEqual = val.value == refVal.value && val.unit == refVal.unit;
+            //arrays are smaller than objects
+            val = [val.value, val.unit];
+            refVal = [refVal.value, refVal.unit];
           }
-          if(refVal == val) continue;
+          if(refIsEqual) continue;
           newOptions[key] = val;
         }
         return newOptions;
@@ -125,6 +133,14 @@ class Serialization {
             //prevent filters from shitting themselves
             //because layer data only gets defined when the link count is > 0
             img.layers[img.layerKeys[val]].linkCount++;
+          } else if(type == "length") {
+            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer (e.g. after the default values got stripped)
+            if(Array.isArray(val)) {
+              //[value, units]
+              newOptions[key] = new UnitLength(val[0], val[1]);
+            } else {
+              newOptions[key] = val;
+            }
           } else {
             newOptions[key] = val;
           }

@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>procedraw</title>
+    <title>procedraw | our beauty</title>
     <meta charset="UTF-8">
+    <meta name="description" content="A procedural image editor.">
+    <meta name="keywords" content="procedural, image, editor, maker, layers, draw, creator, program">
+    <meta name="author" content="marioood">
+    <meta name="application-name" content="Procedraw">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <link rel="icon" type="image/x-icon" href="img/favicon.ico">
     <link rel="stylesheet" href="style.css">
   </head>
@@ -19,11 +24,38 @@
       </div>
     </div>
     <div class="right-container">
+      <!--<div style="background-image: url(img/icon/canvas.svg); width: 64px; height: 64px; background-position: 2px 2px">
+        <img src="img/icon/canvas.svg" style="opacity: 0.5; filter: invert(1);"></img>
+      </div>-->
       <div class="layer-control-container">
         <div class="sticky-header">
-          <select id="layer-class-select"></select>
+          <span class="layer-select-container">
+            <button id="layer-select-dropdown-button" class="layer-button layer-select-dropdown-button" title="Select the type of layer to create.">xorFractal</button>
+            <table id="layer-select-table">
+              <tbody id="layer-select-render-layers">
+                <tr>
+                  <th colspan="3">render layers</th>
+                </tr>
+                <tr>
+                  <th>static</th>
+                  <th>noise</th>
+                  <th>shapes</th>
+                </tr>
+              </tbody>
+              <tbody id="layer-select-filter-layers">
+                <tr>
+                  <th colspan="3">filter layers</th>
+                </tr>
+                <tr>
+                  <th>transform</th>
+                  <th>color</th>
+                  <th>depth</th>
+                </tr>
+              </tbody>
+            </table>
+          </span>
           <!-- vertical margins are weird when theres no text in the buttons -->
-          <button id="add-layer" class="box-16 layer-button">+</button><button id="remove-layer" class="box-16 layer-button">-</button><button id="dupe-layer" class="box-16 layer-button">D</button><button id="random-layer" class="box-16 layer-button">R</button><button id="clear-layer" class="box-16 layer-button">C</button>
+          <button id="add-layer" class="box-16 layer-button" title="Create a new layer.">+</button><button id="remove-layer" class="box-16 layer-button" title="Remove selected layer.">-</button><button id="dupe-layer" class="box-16 layer-button" title="Duplicate selected layer.">D</button><button id="random-layer" class="box-16 layer-button" title="Create a new randomized layer.">R</button><button id="clear-layer" class="box-16 layer-button" title="Delete all layers.">C</button>
         </div>
         <div id="layer-list-container">
           <!-- layers go here -->
@@ -57,7 +89,7 @@
         <li>Netscape: the worst programming language ever</li>
         <li>Tim Berners-Lee: the internet</li>
         <li>Tom Cruise: reducing my thetan levels</li>
-        <li><a href="https://www.youtube.com/watch?v=7YmlxbzS338">https://www.youtube.com/watch?v=7YmlxbzS338</a></li>
+        <li>Inkscape: the worst svg editor ever</li>
       </ol>
       <div class="github-icon-container">
         <a href="https://github.com/Marioood/procedraw">github repo</a>
