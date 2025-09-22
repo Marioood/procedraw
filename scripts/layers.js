@@ -1,115 +1,28 @@
+//////////////////////////////////////////////
+//    All Procedraw Material is Licensed    //
+//     December, 2024-???? under MIT by.    //
+//         Backshot Betty #killtf2.         //
+//                 _______                  //
+//                |   |_|+|                 //
+//                |___|+|_|                 //
+//                |_|+|   |                 //
+//                |+|_|___|                 //
+//                                          //
+//   *Any names, or persons, illustrated    //
+// in any of the Procedraw Programs, except //
+//     that of Backshot Betty #killtf2,     //
+//          that may seem similar           //
+//               to anyone                  //
+//   in real life, are purely coincidental, //
+//         or otherwise parodic.*           //
+//////////////////////////////////////////////
+
 "use strict";
 //layer classes (data processing)
 /*
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
 */
-
-//NEVER change these values!
-//they are used in save files, so changing them WILL break save files!!!
-const O_FADE_NONE = 0;
-const O_FADE_NEAR_END = 1;
-const O_FADE_NEAR_START = 2;
-const O_FADE_NEAR_END_SQUARED = 3;
-const O_FADE_NEAR_START_SQUARED = 4;
-const O_FADE_NEAR_END_SQRT = 5;
-const O_FADE_NEAR_START_SQRT = 6;
-
-const O_WRAP = 0;
-const O_CLAMP = 1;
-const O_VOID = 2;
-const O_REFLECT = 3;
-
-const O_GREATER_THAN = 0;
-const O_LESS_THAN = 1;
-const O_EQUAL_TO = 2;
-const O_NOT_EQUAL_TO = 3;
-const O_GREATER_THAN_OR_EQUAL_TO = 4;
-const O_LESS_THAN_OR_EQUAL_TO = 5;
-
-const O_LINEAR = 0;
-const O_SQUARE = 1;
-const O_INVERSE_SQUARE = 2;
-
-const O_BLUR_BOX = 0;
-const O_BLUR_BOKEH = 1;
-const O_BLUR_GAUSSIAN = 2;
-
-const O_METRIC_EUCLIDEAN = 0;
-const O_METRIC_TAXICAB = 1;
-const O_METRIC_CHEBYSHEV = 2;
-const O_METRIC_INVERSE_EUCLIDEAN = 3;
-const O_METRIC_SQUARE_OIL = 4;
-
-const LIMITS_BLEND = {
-  type: "keyvalues",
-  keys: [
-    "plain",
-    "add",
-    "multiply",
-    "subtract",
-    "screen",
-    "overlay",
-    "shift overlay",
-    "dissolve",
-    "channel dissolve",
-    "(DEBUG) overblown test",
-    "bayer",
-    "halftone"
-  ],
-  values: [
-    BLEND_PLAIN,
-    BLEND_ADD,
-    BLEND_MULTIPLY,
-    BLEND_SUBTRACT,
-    BLEND_SCREEN,
-    BLEND_OVERLAY,
-    BLEND_SHIFT_OVERLAY,
-    BLEND_DISSOLVE,
-    BLEND_CHANNEL_DISSOLVE,
-    BLEND_OVERBLOWN_TEST,
-    BLEND_BAYER,
-    BLEND_HALFTONE
-  ]
-}
-
-const LIMITS_MIX = {
-  type: "keyvalues",
-  keys: [
-    "plain",
-    "hard 50%",
-    "random",
-    "bayer",
-    "halftone",
-    "daft (horizontal)",
-    "daft (vertical)",
-    "dither 50%"
-  ],
-  values: [
-    MIX_PLAIN,
-    MIX_HALF,
-    MIX_RANDOM,
-    MIX_BAYER,
-    MIX_HALFTONE,
-    MIX_DAFT_X,
-    MIX_DAFT_Y,
-    MIX_HALF_DITHER
-  ]
-}
-
-const LIMITS_INTERP = {
-  type: "keyvalues",
-  keys: [
-    "nearest neighbo(u)r",
-    "bilinear",
-    "bilinear (cosine easing)"
-  ],
-  values: [
-    INTERP_NEAREST,
-    INTERP_BILINEAR,
-    INTERP_BILINEAR_COS
-  ]
-}
 
 class Layer {
   //class name
@@ -134,15 +47,14 @@ class Layer {
     //the translucency of the layer (0 is transparent, 1 is opaque)
     alpha: 1,
     //blend mode
-    blend: BLEND_PLAIN,
+    blend: O_BLEND_PLAIN,
     //multiply the image by a color
     tint: [1, 1, 1, 1],
-    //depth: 255,
     shown: true,
     //position offsets
     x: new UnitLength(0, UNIT_PIXELS),
     y: new UnitLength(0, UNIT_PIXELS),
-    //layer key used for filters
+    //layer key used by filters (hidden for non-filters)
     base: KEY_CANVAS
   };
   
@@ -183,8 +95,10 @@ class Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
+    //img is where the height and width are stored
     //o is short for "options"
+    //TODO: create layer wrappers
     //maybe remove? options will always be taken from this object.... so its kinda redundant
     //these aint static and are created AS the layers, so im not sure why i did it like that
   }
@@ -222,7 +136,7 @@ class LayerXorFractal extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const xScale = 256 / UnitLength.getLength(o.width, img.w);
     const yScale = 256 / UnitLength.getLength(o.height, img.h);
     
@@ -264,7 +178,7 @@ class LayerSolid extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     let width = UnitLength.getLength(o.width, img.w);
     let height = UnitLength.getLength(o.height, img.h);
     
@@ -306,7 +220,7 @@ class LayerNoise extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         if(o.coverage > Math.random()) {
@@ -395,7 +309,7 @@ class LayerBorder extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     function blend(c1, c2, alp) {
       return colorMix([c1[0], c1[1], c1[2], c1[3] * alp], [c2[0], c2[1], c2[2], c2[3] * alp], 0.5);
     }
@@ -459,7 +373,7 @@ class LayerLiney extends Layer {
   
   options = {
     breaks: 0.5,
-    depth: 3,
+    depth: 255,
     bias: 1,
     dir: true,
     coverage: 1,
@@ -503,7 +417,7 @@ class LayerLiney extends Layer {
     }
   }
   
-  generate(o) {
+  generate(img, o) {
     let maxL, maxI;
 
     if(o.dir) {
@@ -652,7 +566,7 @@ class LayerWandering extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const refLength = Math.min(img.w, img.h);
     const spacing = UnitLength.getLength(o.spacing, refLength);
     const minLength = UnitLength.getLength(o.minLength, refLength, true);
@@ -782,7 +696,7 @@ class LayerCheckers extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const xScale = UnitLength.getLength(o.xScale, img.w);
     const yScale = UnitLength.getLength(o.yScale, img.h);
     const xShift = UnitLength.getLength(o.xShift, img.w);
@@ -799,7 +713,6 @@ class LayerCheckers extends Layer {
 
 class LayerBlobs extends Layer {
   name = "blobs";
-  //manhatten distance
   static description = "A layer of randomly positioned circles.";
   
   options = {
@@ -809,9 +722,9 @@ class LayerBlobs extends Layer {
     maxDiameter: new UnitLength(8, UNIT_PIXELS),
     minAlpha: 1,
     hardness: 1,
-    antiAlias: true,
+    antiAlias: false,
     fadeNearEdge: true,
-    easeMode: O_LINEAR,
+    easeMode: O_EASE_LINEAR,
     metricMode: O_METRIC_EUCLIDEAN
   };
   
@@ -860,12 +773,14 @@ class LayerBlobs extends Layer {
       keys: [
         "linear",
         "sharp square",
-        "soft square"
+        "soft square",
+        "cosine"
       ],
       values: [
-        O_LINEAR,
-        O_SQUARE,
-        O_INVERSE_SQUARE
+        O_EASE_LINEAR,
+        O_EASE_SQUARE,
+        O_EASE_INVERSE_SQUARE,
+        O_EASE_COSINE
       ]
     },
     metricMode: {
@@ -896,7 +811,7 @@ class LayerBlobs extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const spacing = UnitLength.getLength(o.spacing, Math.min(img.w, img.h));
     const minDiameter = UnitLength.getLength(o.minDiameter, Math.min(img.w, img.h));
     const maxDiameter = UnitLength.getLength(o.maxDiameter, Math.min(img.w, img.h));
@@ -948,36 +863,42 @@ class LayerBlobs extends Layer {
                 
                 if(o.fadeNearEdge) {
                   switch(o.easeMode) {
-                    case O_LINEAR:
+                    case O_EASE_LINEAR:
                       hardnessDist = (r - dist) / r;
                       break;
-                    case O_SQUARE:
+                    case O_EASE_SQUARE:
                       hardnessDist = (r - dist) / r;
                       hardnessDist *= hardnessDist;
                       break;
-                    case O_INVERSE_SQUARE:
+                    case O_EASE_INVERSE_SQUARE:
                       hardnessDist = dist / r;
                       hardnessDist = 1 - (hardnessDist * hardnessDist);
                       break;
+                    case O_EASE_COSINE:
+                      hardnessDist = easeCos((r - dist) / r);
+                      break;
                     default:
-                      console.log("unknown ease mode " + o.easeMode);
+                      throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
                   img.plotPixel([1, 1, 1, clamp((r - dist) * o.hardness, hardnessDist, 1) * alpha], x, y);
                 } else {
                   switch(o.easeMode) {
-                    case O_LINEAR:
+                    case O_EASE_LINEAR:
                       hardnessDist = dist / r;
                       break;
-                    case O_SQUARE:
+                    case O_EASE_SQUARE:
                       hardnessDist = dist / r;
                       hardnessDist *= hardnessDist;
                       break;
-                    case O_INVERSE_SQUARE:
+                    case O_EASE_INVERSE_SQUARE:
                       hardnessDist = (r - dist) / r;
                       hardnessDist = 1 - (hardnessDist * hardnessDist);
                       break;
+                    case O_EASE_COSINE:
+                      hardnessDist = easeCos(dist / r);
+                      break;
                     default:
-                      console.log("unknown ease mode " + o.easeMode);
+                      throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
                   img.plotPixel([1, 1, 1, clamp(r - dist, (dist / r) / r, 1) * Math.min(hardnessDist + o.hardness, 1) * alpha], x, y);
                 }
@@ -1016,36 +937,36 @@ class LayerBlobs extends Layer {
                 let hardnessDist;
                 if(o.fadeNearEdge) {
                   switch(o.easeMode) {
-                    case O_LINEAR:
+                    case O_EASE_LINEAR:
                       hardnessDist = (r - dist) / r;
                       break;
-                    case O_SQUARE:
+                    case O_EASE_SQUARE:
                       hardnessDist = (r - dist) / r;
                       hardnessDist *= hardnessDist;
                       break;
-                    case O_INVERSE_SQUARE:
+                    case O_EASE_INVERSE_SQUARE:
                       hardnessDist = dist / r;
                       hardnessDist = 1 - (hardnessDist * hardnessDist);
                       break;
                     default:
-                      console.log("unknown ease mode " + o.easeMode);
+                      throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
                   img.plotPixel([1, 1, 1, Math.min(hardnessDist + o.hardness, 1) * alpha], x, y);
                 } else {
                   switch(o.easeMode) {
-                    case O_LINEAR:
+                    case O_EASE_LINEAR:
                       hardnessDist = dist / r;
                       break;
-                    case O_SQUARE:
+                    case O_EASE_SQUARE:
                       hardnessDist = dist / r;
                       hardnessDist *= hardnessDist;
                       break;
-                    case O_INVERSE_SQUARE:
+                    case O_EASE_INVERSE_SQUARE:
                       hardnessDist = (r - dist) / r;
                       hardnessDist = 1 - (hardnessDist * hardnessDist);
                       break;
                     default:
-                      console.log("unknown ease mode " + o.easeMode);
+                      throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
                   img.plotPixel([1, 1, 1, Math.min(hardnessDist + o.hardness, 1) * alpha], x, y);
                 }
@@ -1159,7 +1080,7 @@ class LayerWorley extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     let output = new Array(img.w * img.h); //for multiple octaves
 
     let xSpacing = UnitLength.getLength(o.xSpacing, img.w);
@@ -1202,6 +1123,7 @@ class LayerWorley extends Layer {
       let yGrid = Math.ceil(img.h / ySpacing);
       let points = new Array(xGrid * yGrid);
       let colors = new Array(xGrid * yGrid);
+      let coverageChances = new Array(xGrid * yGrid);
       let distMults;
     
       for(let y = 0; y < yGrid; y++) {
@@ -1290,8 +1212,8 @@ class LayerWorley extends Layer {
             if(o.normalized) dist /= normalDivisor;
             if(o.squareDistance) dist *= dist;
           }
-          
           dist = lerp(dist, colors[closestPoint], o.voronoiBias);
+          
           if(oi == 0) {
             //first octave
             output[x + y * img.w] = dist;
@@ -1333,8 +1255,8 @@ class LayerGradient extends Layer {
     col2: [0, 0, 0, 1],
     xBounds: new UnitLength(100, UNIT_PERCENTAGE),
     yBounds: new UnitLength(100, UNIT_PERCENTAGE),
-    mix: MIX_PLAIN,
-    easeMode: O_LINEAR,
+    mix: O_MIX_PLAIN,
+    easeMode: O_EASE_LINEAR,
     edgeMode: O_WRAP
   };
   
@@ -1371,9 +1293,9 @@ class LayerGradient extends Layer {
         "inverse square"
       ],
       values: [
-        O_LINEAR,
-        O_SQUARE,
-        O_INVERSE_SQUARE
+        O_EASE_LINEAR,
+        O_EASE_SQUARE,
+        O_EASE_INVERSE_SQUARE
       ]
     },
     edgeMode: {
@@ -1395,7 +1317,7 @@ class LayerGradient extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     let xChange;
     let yChange;
     let xStart;
@@ -1513,44 +1435,44 @@ class LayerGradient extends Layer {
         }
         
         switch(o.easeMode) {
-          case O_LINEAR:
+          case O_EASE_LINEAR:
             break;
-          case O_SQUARE:
+          case O_EASE_SQUARE:
             bias *= bias;
             break;
-          case O_INVERSE_SQUARE:
+          case O_EASE_INVERSE_SQUARE:
             bias = 1 - (1 - bias) * (1 - bias);
             break;
         }
         
         let col;
         switch(o.mix) {
-          case MIX_PLAIN:
+          case O_MIX_PLAIN:
             col = colorMix(o.col1, o.col2, bias);
             break;
-          case MIX_HALF:
+          case O_MIX_HALF:
             col = (bias < 0.5) ? o.col1 : o.col2;
             break;
-          case MIX_RANDOM:
+          case O_MIX_RANDOM:
             col = (bias < Math.random()) ? o.col1 : o.col2;
             break;
-          case MIX_BAYER:
+          case O_MIX_BAYER:
             col = (bias < BLEND_TABLE_BAYER[x % 4 + y % 4 * 4]) ? o.col1 : o.col2;
             break;
-          case MIX_HALFTONE:
+          case O_MIX_HALFTONE:
             col = (bias < BLEND_TABLE_HALFTONE[x % 8 + y % 8 * 8]) ? o.col1 : o.col2;
             break;
-          case MIX_DAFT_X:
+          case O_MIX_DAFT_X:
             col = (bias < y % 2 / 3 + 0.333) ? o.col1 : o.col2;
             break;
-          case MIX_DAFT_Y:
+          case O_MIX_DAFT_Y:
             col = (bias < x % 2 / 3 + 0.333) ? o.col1 : o.col2;
             break;
-          case MIX_HALF_DITHER:
+          case O_MIX_HALF_DITHER:
             col = (bias < (x + y) % 2 / 3 + 0.333) ? o.col1 : o.col2;
             break;
           default:
-            console.error(`unknown mix mode ${o.mix}`);
+            throw new ProcedrawError(`unknown mix mode ${o.mix}`);
         }
         //const col = mix(col1, col2, Math.floor(bias * 4) / 4);
         if(o.edgeMode == O_VOID) {
@@ -1579,8 +1501,10 @@ class LayerValueNoise extends Layer {
     ySpacing: new UnitLength(16, UNIT_PIXELS),
     lowColor: [0, 0, 0, 1],
     highColor: [1, 1, 1, 1],
-    interpMode: INTERP_BILINEAR,
-    octavesShrink: true
+    interpMode: O_INTERP_BILINEAR_COS,
+    octavesShrink: true,
+    lockXSpacing: false,
+    lockYSpacing: false
   };
   
   types = {
@@ -1616,10 +1540,16 @@ class LayerValueNoise extends Layer {
     interpMode: LIMITS_INTERP,
     octavesShrink: {
       type: "boolean"
+    },
+    lockXSpacing: {
+      type: "boolean"
+    },
+    lockYSpacing: {
+      type: "boolean"
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     let fractalNoise = new Array(img.w * img.h);
     
     let xSpacing = UnitLength.getLength(o.xSpacing, img.w, true);
@@ -1645,11 +1575,11 @@ class LayerValueNoise extends Layer {
           
              
           switch(o.interpMode) {
-            case INTERP_NEAREST:
+            case O_INTERP_NEAREST:
               let scaledIdx = Math.floor(xScaled) + Math.floor(yScaled) * dataWidth;
               curValue = tempNoise[scaledIdx];
               break;
-            case INTERP_BILINEAR: {
+            case O_INTERP_BILINEAR: {
               const xFloor = Math.floor(xScaled);
               const yFloor = Math.floor(yScaled);
               const xCeil = mod(Math.ceil(xScaled), dataWidth);
@@ -1671,7 +1601,7 @@ class LayerValueNoise extends Layer {
               curValue = lerp(col0, col2, yBias);
               break;
             }
-            case INTERP_BILINEAR_COS: {
+            case O_INTERP_BILINEAR_COS: {
               const xFloor = Math.floor(xScaled);
               const yFloor = Math.floor(yScaled);
               const xCeil = mod(Math.ceil(xScaled), dataWidth);
@@ -1694,7 +1624,7 @@ class LayerValueNoise extends Layer {
               break;
             }
             default:
-              console.log("unknown interp mode: " + o.interpMode);
+              throw new ProcedrawError("unknown interp mode: " + o.interpMode);
           }
           
           //trying to average the noise together doesnt work on the first octave because there is no pre-existing noise
@@ -1707,13 +1637,17 @@ class LayerValueNoise extends Layer {
         }
       }
       if(o.octavesShrink) {
-        xSpacing /= 2;
-        ySpacing /= 2;
+        if(!o.lockXSpacing) xSpacing /= 2;
+        if(!o.lockYSpacing) ySpacing /= 2;
       } else {
-        xSpacing *= 2;
-        ySpacing *= 2;
-        xSpacing = Math.min(xSpacing, img.w);
-        ySpacing = Math.min(ySpacing, img.h);
+        if(!o.lockXSpacing) {
+          xSpacing *= 2;
+          xSpacing = Math.min(xSpacing, img.w);
+        }
+        if(!o.lockYSpacing) {
+          ySpacing *= 2;
+          ySpacing = Math.min(ySpacing, img.h);
+        }
       }
       alpha /= 2;
     }
@@ -1731,7 +1665,7 @@ class LayerValueNoise extends Layer {
 class LayerWaveTable extends Layer {
   name = "waveTable";
   //TODO: like ehhhhhhhh options like noise layer
-  static description = "A filter that duplicates a base layer.";
+  static description = "A layer of sine waves.";
   
   options = {
     xPeriod: new UnitLength(8, UNIT_PIXELS),
@@ -1777,7 +1711,7 @@ class LayerWaveTable extends Layer {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     let xPeriod = UnitLength.getLength(o.xPeriod, img.w);
     let yPeriod = UnitLength.getLength(o.yPeriod, img.h);
     
@@ -1794,42 +1728,284 @@ class LayerWaveTable extends Layer {
     }
   }
 }
-
-/*class LayerEmbed extends Layer {
-  //javascript is ultra mega super stupid
-  name = "embed";
+//TODO: TABS
+//TODO: title case
+class LayerBitmapText extends Layer {
+  name = "bitmapText";
   
-  static description = "A layer of solid color.";
+  static description = "A layer of text using a bitmap (pixel art) font.\n\nThe font (named 'ClASCII') currently supports all ASCII characters (minus control characters and tab) and 4 unicode block characters (\u2588\u2593\u2592\u2591).";
   
   options = {
+    text: "An idiot admires complexity, a genius admires simplicity.",
+    wrap: true,
+    glyphWidth: new UnitLength(8, UNIT_PIXELS),
+    glyphHeight: new UnitLength(8, UNIT_PIXELS),
+    maxWidth: new UnitLength(100, UNIT_PERCENTAGE),
+    //maxHeight
+    //overflowMode
+    //kerning
+    //lineHeight
+    caseMode: O_CASE_NONE,
+    oracleMode: O_ORACLE_NONE,
+    oracleLength: 8
   };
   
   types = {
+    text: {
+      type: "string",
+      unsafe: true
+    },
+    wrap: {
+      type: "boolean"
+    },
+    glyphWidth: {
+      type: "length",
+      subtype: "width",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1,
+      unsafe: true
+    },
+    glyphHeight: {
+      type: "length",
+      subtype: "height",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1,
+      unsafe: true
+    },
+    maxWidth: {
+      type: "length",
+      subtype: "width",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1
+    },
+    caseMode: {
+      type: "keyvalues",
+      keys: [
+        "None",
+        "FORCE UPPERCASE",
+        "force lowercase",
+        "FoRCe spoNGeCaSE",
+        "fORCE INVERTED",
+        "f0rc3 l33tspeak"
+      ],
+      values: [
+        O_CASE_NONE,
+        O_CASE_UPPER,
+        O_CASE_LOWER,
+        O_CASE_SPONGE,
+        O_CASE_INVERTED,
+        O_CASE_LEET
+      ]
+    },
+    oracleMode: {
+      type: "keyvalues",
+      keys: [
+        "none",
+        "God",
+        "monkey",
+        "letters",
+        "numbers",
+        "maze"
+      ],
+      values: [
+        O_ORACLE_NONE,
+        O_ORACLE_GOD,
+        O_ORACLE_MONKEY,
+        O_ORACLE_LETTERS,
+        O_ORACLE_NUMBERS,
+        O_ORACLE_MAZE
+      ]
+    },
+    oracleLength: {
+      type: "number",
+      min: 1,
+      max: 1024,
+      step: 1,
+      unsafe: true
+    }
   };
   
-  generate(o) {
-    //fucking quora had this...?
-    //https://www.quora.com/How-do-I-get-the-image-pixel-in-JavaScript
-    async function getImage() {
-      const image = new Image();
-      image.src = "img/illegal.png";
-      return await image;
+  generate(img, o) {
+    let text = o.text;
+    
+    switch(o.oracleMode) {
+      case O_ORACLE_NONE:
+        break;
+      case O_ORACLE_GOD:
+        text += godText(o.oracleLength);
+        break;
+      case O_ORACLE_MONKEY:
+        text += monkeyText(o.oracleLength);
+        break;
+      case O_ORACLE_MAZE:
+        for(let i = 0; i < o.oracleLength; i++) {
+          text += (Math.random() > 0.5) ? '/' : '\\';
+        }
+        break;
+      case O_ORACLE_NUMBERS:
+        for(let i = 0; i < o.oracleLength; i++) {
+          text += Math.floor(Math.random() * 10);
+        }
+        break;
+      case O_ORACLE_LETTERS:
+        for(let i = 0; i < o.oracleLength; i++) {
+          let code = 0;
+          //randomly select between lower and upper case
+          if(Math.random() > 0.5) {
+            code = 'a'.codePointAt(0);
+          } else {
+            code = 'A'.codePointAt(0);
+          }
+          //ascii magic
+          text += String.fromCodePoint(code + Math.floor(Math.random() * 26));
+        }
+        break;
+      default:
+        throw new ProcedrawError(`Unknown oracleMode ${o.oracleMode}.`);
     }
-    const embed = getImage();
-    console.log(embed);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+    let newText = "";
     
-    canvas.width = embed.width;
-    canvas.height = embed.height;
-    ctx.drawImage(embed);
+    switch(o.caseMode) {
+      case O_CASE_NONE:
+        break;
+      case O_CASE_UPPER:
+        text = text.toUpperCase();
+        break;
+      case O_CASE_LOWER:
+        text = text.toLowerCase();
+        break;
+      case O_CASE_INVERTED:
+        for(let i = 0; i < text.length; i++) {
+          let char = text[i];
+          //this would be A LOT simpler to do in C... just saying
+          //also, this does not work for unicode. lul!
+          let charCode = char[0].charCodeAt(0);
+          //ascii is nice, because the characters between a and z are all of the lowercase ones
+          let isLower = charCode >= 'a'.charCodeAt(0) && charCode <= 'z'.charCodeAt(0);
+          //ascii is nice, because the characters between A and Z are all of the uppercase ones
+          let isUpper = charCode >= 'A'.charCodeAt(0) && charCode <= 'Z'.charCodeAt(0);
+          
+          if(isLower == isUpper) {
+            //not a letter
+            newText += char;
+          } else if(isLower) {
+            newText += char.toUpperCase();
+          } else if(isUpper) {
+            newText += char.toLowerCase();
+          }
+        }
+        text = newText
+        break;
+      case O_CASE_LEET:
+        for(let i = 0; i < text.length; i++) {
+          let char = text[i];
+         
+          switch(char.toLowerCase()) {
+            case 'a':
+              if(char == 'a') {
+                newText += '@';
+              } else {
+                newText += '4';
+              }
+              break;
+            case 'b':
+              newText += '8';
+              break;
+            case 'e':
+              newText += '3';
+              break;
+            case 'g':
+              newText += '6';
+              break;
+            case 'l':
+              newText += '1';
+              break;
+            case 's':
+              newText += '5';
+              break;
+            case 't':
+              newText += '7';
+              break;
+            case 'o':
+              newText += '0';
+              break;
+            case 'p':
+              newText += '9';
+              break;
+            case 'u':
+              if(char == 'u') {
+                newText += 'v';
+              } else {
+                newText += 'V';
+              }
+              break;
+            case 'z':
+              newText += '2';
+              break;
+            default:
+              newText += char;
+          }
+        }
+        text = newText;
+        break;
+      case O_CASE_SPONGE:
+        for(let i = 0; i < text.length; i++) {
+          let char = text[i];
+         
+          if(Math.random() > 0.5) {
+            newText += char.toUpperCase();
+          } else {
+            newText += char.toLowerCase();
+          }
+        }
+        text = newText;
+        break;
+      default:
+        throw new ProcedrawError(`Unknown caseMode ${o.oracleMode}.`);
+    }
     
-    const imageData = ctx.getImageData(0, 0, embed.width, embed.height).data;
-    console.log(imageData);
-    for(let y = 0; y < height; y++) {
-      for(let x = 0; x < width; x++) {
-        img.plotPixel([1, 1, 1, 1], x, y);
+    let glyphWidth = UnitLength.getLength(o.glyphWidth, img.w);
+    let glyphHeight = UnitLength.getLength(o.glyphHeight, img.w);
+    let maxWidth = UnitLength.getLength(o.maxWidth, img.w);
+    let xText = 0;
+    let yText = 0;
+    
+    for(let i = 0; i < text.length; i++) {
+      let char = text[i];
+      
+      if(char == ' ') {
+        xText += glyphWidth;
+      } else if(char == '\n') {
+        xText = 0;
+        yText += glyphHeight;
+      } else /*char is not a space or newline*/ {
+        let glyphData = GLYPHS_CLASCII[char]; //is this safe? who knows!
+        
+        if(glyphData == undefined) {
+          glyphData = GLYPHS_CLASCII.unknown;
+        }
+        for(let yi = 0; yi < glyphHeight; yi++) {
+          for(let xi = 0; xi < glyphWidth; xi++) {
+            if(glyphData[Math.floor(yi / glyphHeight * 8)][Math.floor(xi / glyphWidth * 8)] != ' ') {
+              img.plotPixel([1, 1, 1, 1], xi + xText, yi + yText);
+            }
+          }
+        }
+        xText += glyphWidth;
+      }
+      if(o.wrap) {
+        //subtract the glyphWidth to prevent the glyphs from going past the maxWidth
+        if(xText > maxWidth - glyphWidth) {
+          xText = 0;
+          yText += glyphHeight;
+          if(text[i + 1] == ' ' || text[i + 1] == '\n') {
+            i++;
+          }
+        }
       }
     }
   }
-}*/
+}

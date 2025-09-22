@@ -31,7 +31,7 @@
         <div class="sticky-header">
           <span class="layer-select-container">
             <button id="layer-select-dropdown-button" class="layer-button layer-select-dropdown-button" title="Select the type of layer to create.">xorFractal</button>
-            <table id="layer-select-table">
+            <table id="layer-select-table" class="layer-select-table">
               <tbody id="layer-select-render-layers">
                 <tr>
                   <th colspan="3">render layers</th>
@@ -103,7 +103,13 @@
         </a>
       </div>
     </div>
+    <div class="palette-container" id="palette-container">
+      <!-- PALETTE GOES HERE -->
+    </div>
+    <!-- THE ORDER OF THIS MATTERS! don't change it unless you know what you're doing!!! -->
     <script src="scripts/helper.js"></script>
+    <script src="scripts/uihelper.js"></script>
+    <script src="scripts/constants.js"></script>
     <script src="scripts/tether.js"></script>
     <script src="scripts/image.js"></script>
     <script src="scripts/layers.js"></script>

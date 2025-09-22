@@ -1,93 +1,29 @@
+//////////////////////////////////////////////
+//    All Procedraw Material is Licensed    //
+//     December, 2024-???? under MIT by.    //
+//         Backshot Betty #killtf2.         //
+//                 _______                  //
+//                |   |_|+|                 //
+//                |___|+|_|                 //
+//                |_|+|   |                 //
+//                |+|_|___|                 //
+//                                          //
+//   *Any names, or persons, illustrated    //
+// in any of the Procedraw Programs, except //
+//     that of Backshot Betty #killtf2,     //
+//          that may seem similar           //
+//               to anyone                  //
+//   in real life, are purely coincidental, //
+//         or otherwise parodic.*           //
+//////////////////////////////////////////////
+
 "use strict";
 //intermingling of html and js - scary!! (data output n input)
-//very simple "framework" (ew...) to make intermingling js with html slightly more bearable
-//this is basically just a ripoff of gretcha.js by Tsoding (https://github.com/tsoding/grecha.js)
-function Tag(tagName, className) {
-  let tag = document.createElement(tagName);
-  if(className != undefined) {
-      tag.className = className;
-  }
-  return tag;
-}
-function Text(text, className) {
-  let span = Tag("span", className);
-  span.innerText = text;
-  return span;
-}
-function divWrap(...tags) {
-  let div = Tag("div");
-  let i = 0;
-  //hack to have the args be (...tags) OR (className, ...tags)
-  //operator overloading wouldn't work because you can't require specific types in javascript
-  if(typeof(tags[0]) == "string") {
-      i++;
-      div.className = tags[0];
-  }
-  for(; i < tags.length; i++) {
-      div.appendChild(tags[i]);
-  }
-  return div;
-}
-function Button(text, onclick, className) {
-  let button = Tag("button", className);
-  button.innerText = text;
-  button.onclick = onclick;
-  return button;
-}
-function Input(type, value, oninput, className) {
-  let input = Tag("input", className);
-  input.type = type;
-  input.oninput = oninput;
-  input.value = value;
-  return input;
-}
-function InputRange(min, max, value, oninput, className) {
-  let range = Input("range", value, oninput, className);
-  range.min = min;
-  range.max = max;
-  return range;
-}
-function Label(text, className) {
-  let label = Tag("label", className);
-  label.innerText = text;
-  return label;
-}
-function InputNumber(min, max, value, oninput, className) {
-  let input = Input("number", value, oninput, className);
-  input.min = min;
-  input.max = max;
-  return input;
-}
-function InputText(value, oninput, className) {
-  let input = Input("text", value, oninput, className);
-  return input;
-}
-function InputCheckbox(value, oninput) {
-  //normal checkbox inputs are annoying to style, so dont bother with em
-  let checked = value;
-  
-  const input = Button("", (e) => {
-    checked = !checked;
-    if(checked) {
-      e.target.classList = "aero-btn checkbox-true";
-    } else {
-      e.target.classList = "aero-btn checkbox-false";
-    }
-    oninput(checked, e);
-  }, (checked) ? "aero-btn checkbox-true" : "aero-btn checkbox-false");
-  return input;
-}
-function Textarea(hint, oninput, className) {
-  const textarea = Tag("textarea", className);
-  textarea.placeholder = hint;
-  textarea.oninput = oninput;
-  return textarea;
-}
-function killChildren(container) {
-  while(container.firstChild) {
-    container.removeChild(container.lastChild);
-  }
-}
+
+
+//TODO: also just rewrite A LOT of the ui code, it is garbo
+
+//REMINDER: DON'T MOVE THIS STUFF TO HELPER.JS! that is for minor functions that are used everywhere, including image processing. Maybe make a "mathhelper.js" and "uihelper.js?"
 
 //something i hate about javascript and just the web in general is that they started out with these super high level abstractions
 //creating good abstractions is quite hard (see: web development)
@@ -95,8 +31,13 @@ function killChildren(container) {
 //if you start out with super high level abstractions, or creating abstractions to ANTICIPATE code, instead of creating abstractions based off of useful code, then those abstractions are gonna suck 9 times out of 10
 //another thing with abstractions is that they can lead to super ugly, hack-y, or illegable code if no low-level alternatives exist and you have to make something that those abstractions do not support (example: custom html elements; see InputColor and InputColorControl code)
 
+//TODO: what are these? i forgot
+//TODO: cut down on global variables. also, this whole stuff is just jank
+//this is the current selected color input
 let colpGlobalDisplay = null;
+//this is what happens when the color picker changes
 let colpGlobalOninput = null;
+//???
 let colpGlobalUpdate = null;
 
 function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
@@ -118,22 +59,75 @@ function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
       }
     }
     colpGlobalUpdate = onupdate;
+    colp.externalUpdate(inputCol);
     
-    colp.RGB[0] = Math.floor(inputCol[0] * 255);
-    colp.RGB[1] = Math.floor(inputCol[1] * 255);
-    colp.RGB[2] = Math.floor(inputCol[2] * 255);
-    colp.alpha = Math.floor(inputCol[3] * 255);
-    colp.HSV = RGB2HSV(inputCol);
-    
-    colp.setSlidersRGB();
-    colp.setSlidersHSV();
-    colp.setSlidersAlpha();
-    colp.updateColors();
-    colp.localDisplay.style.backgroundColor = '#' + RGB2Hex(inputCol);
-    colp.hexBox.value = RGB2Hex(inputCol);
   },"aero-btn colp-input");
   
-  colpDisplay.style.backgroundColor = "#" + RGB2Hex(inputCol);
+  let byteInputCol = [Math.floor(inputCol[0] * 255), Math.floor(inputCol[1] * 255), Math.floor(inputCol[2] * 255)];
+  let trans = `rgba(${byteInputCol[0]}, ${byteInputCol[1]}, ${byteInputCol[2]}, ${inputCol[3]})`;
+  let opaque = `rgb(${byteInputCol[0]}, ${byteInputCol[1]}, ${byteInputCol[2]})`;
+  colpDisplay.style.background = `linear-gradient(0deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
+  
+  //left click (show palette)
+  let isShown = false;
+  
+  colpDisplay.oncontextmenu = (e) => {
+    const palCont = document.getElementById("palette-container");
+    
+    if(palCont.style.display != "none") {
+      //if the palette was displayed by this input, hide it if it's left clicked again
+      palCont.style.display = "none";
+      isShown = false;
+      return false;
+    }
+    isShown = true;
+    
+    palCont.style.display = "initial";
+    //have position based off of screen quadrents, so the palette doesn't clip off the screen
+    const inputBounds = e.target.getBoundingClientRect();
+    //FUCKING KILL ALL PEOPLE INVOLVED WITH THE CREATION OF THE WEB FUCK YOU YOU MADE FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU I HATE YOU FUCK YOU WWW CONSORTIUM FUCK YOU TIM BERNERS LEE FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU
+    //set the positions to initial, otherwise clicking on the bg input will fuck the position when you try viewing the palette with other color inputs!! FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU
+    if(e.pageX > window.innerWidth / 2) {
+      //on the right side
+      palCont.style.left = "initial";
+      palCont.style.right = (window.innerWidth - inputBounds.left) + "px";
+    } else { //FUCK YOU NETSCAPE FUCK YOU MICROSOFT FUCK YOU APPLE FUCK YOU LINUS TORVALDS FUCK YOU TIM APPLE FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU
+      //on the left side
+      palCont.style.right = "initial";
+      palCont.style.left = (inputBounds.left + inputBounds.width) + "px";
+    }
+    
+    if(e.pageY > window.innerHeight / 2) {
+      //on the bottom side
+      palCont.style.top = "initial";
+      palCont.style.bottom = (window.innerHeight - inputBounds.top) + "px";
+    } else {
+      //on the top side
+      palCont.style.bottom = "initial";
+      palCont.style.top = (inputBounds.top + inputBounds.height) + "px";
+    }
+    
+    //colpGlobalUpdate = onupdate;
+    colpGlobalDisplay = e.target;
+    let oldTime;
+    colpGlobalOninput = (newCol) => {
+      inputCol[0] = newCol[0];
+      inputCol[1] = newCol[1];
+      inputCol[2] = newCol[2];
+      inputCol[3] = newCol[3];
+      oninput(newCol);
+      //intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
+      let curTime = Math.round(Date.now() / 100);
+      
+      if(oldTime != curTime) {
+        oldTime = curTime;
+        onupdate();
+      }
+    }
+    //don't show the context menu
+    return false;
+  };
+  colpDisplay.title = "Right click to select from a pre-made palette.";
   
   return colpDisplay;
 }
@@ -190,8 +184,7 @@ class InputColorControl {
       this.HSV = RGB2HSV(newCol);
       this.alpha = Math.floor(newCol[3] * 255);
       
-      if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
-      this.localDisplay.style.backgroundColor = '#' + hex;
+      this.updateDisplay();
       this.setSlidersRGB();
       this.setSlidersHSV();
       this.setSlidersAlpha();
@@ -344,6 +337,23 @@ class InputColorControl {
     
     this.target = colpContainer;
   }
+  externalUpdate(inputCol) {
+    colp.RGB[0] = Math.floor(inputCol[0] * 255);
+    colp.RGB[1] = Math.floor(inputCol[1] * 255);
+    colp.RGB[2] = Math.floor(inputCol[2] * 255);
+    colp.alpha = Math.floor(inputCol[3] * 255);
+    colp.HSV = RGB2HSV(inputCol);
+    
+    colp.setSlidersRGB();
+    colp.setSlidersHSV();
+    colp.setSlidersAlpha();
+    colp.updateColors();
+    colp.hexBox.value = RGB2Hex(inputCol);
+    //TODO: move this sorta code to uihelper.js
+    let trans = `rgba(${colp.RGB[0]}, ${colp.RGB[1]}, ${colp.RGB[2]}, ${colp.alpha / 255})`;
+    let opaque = `rgb(${colp.RGB[0]}, ${colp.RGB[1]}, ${colp.RGB[2]})`;
+    colp.localDisplay.style.background = `linear-gradient(90deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
+  }
   updateColors() {
     this.redSlider.style.background = `linear-gradient(90deg, rgb(0, ${this.RGB[1]}, ${this.RGB[2]}) 0%, rgb(255, ${this.RGB[1]}, ${this.RGB[2]}) 100%)`;
     this.greenSlider.style.background = `linear-gradient(90deg, rgb(${this.RGB[0]}, 0, ${this.RGB[2]}) 0%, rgb(${this.RGB[0]}, 255, ${this.RGB[2]}) 100%)`;
@@ -354,6 +364,12 @@ class InputColorControl {
     this.sattySlider.style.background = `linear-gradient(90deg, rgb(${valByte}, ${valByte}, ${valByte}) 0%, rgb(${fullSatty[0]}, ${fullSatty[1]}, ${fullSatty[2]}) 100%)`;
     this.valueSlider.style.background = `linear-gradient(90deg, black 0%, rgb(${fullVally[0]}, ${fullVally[1]}, ${fullVally[2]}) 100%)`;
     this.alphaSlider.style.background = `linear-gradient(90deg, transparent 0%, rgb(${this.RGB[0]}, ${this.RGB[1]}, ${this.RGB[2]}) 100%), url("img/ui/checker.png")`
+  }
+  updateDisplay() {
+    let trans = `rgba(${this.RGB[0]}, ${this.RGB[1]}, ${this.RGB[2]}, ${this.alpha / 255})`;
+    let opaque = `rgb(${this.RGB[0]}, ${this.RGB[1]}, ${this.RGB[2]})`;
+    if(this.localDisplay != null) this.localDisplay.style.background = `linear-gradient(90deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
+    if(colpGlobalDisplay != null) colpGlobalDisplay.style.background = `linear-gradient(0deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
   }
   setSlidersRGB() {
     this.redSlider.value = this.RGB[0];
@@ -379,8 +395,7 @@ class InputColorControl {
     this.HSV = byteRGB2HSV(this.RGB);
     const hex = byteRGB2Hex(this.RGB);
     this.updateHexBox();
-    if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
-    this.localDisplay.style.backgroundColor = '#' + hex;
+    this.updateDisplay();
     this.updateColors();
     this.setSlidersHSV();
     
@@ -391,7 +406,7 @@ class InputColorControl {
     this.RGB = HSV2ByteRGB(this.HSV);
     const hex = byteRGB2Hex(this.RGB);
     this.updateHexBox();
-    if(colpGlobalDisplay != null) colpGlobalDisplay.style.backgroundColor = '#' + hex;
+    this.updateDisplay();
     this.localDisplay.style.backgroundColor = '#' + hex;
     this.updateColors();
     this.setSlidersRGB();
@@ -400,10 +415,10 @@ class InputColorControl {
     if(colpGlobalOninput != null) colpGlobalOninput(newCol);
   }
   updateSlidersAlpha() {
-    //TODO: display alpha more
     const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
     if(colpGlobalOninput != null) colpGlobalOninput(newCol);
     this.updateHexBox();
+    this.updateDisplay();
   }
   updateHexBox() {
     const hex = byteRGB2Hex(this.RGB);
@@ -414,7 +429,42 @@ class InputColorControl {
 }
 //TODO: put somewhere else
 const colp = new InputColorControl();
-//TODO: gut this and move most of it to main.js
+
+//class EditHistory {
+//  add layer
+//  remove layer
+//  duplicate layer
+//  move layer
+//  rename layer
+//  hide layer
+//  change layer parameter
+//  
+//  {}
+//}
+function InputPaletteColor(colorInt, title) {
+  const color = intRGB2RGB(colorInt);
+  
+  const colpDisplay = Button("", (e) => {
+    /*let trans = `rgba(${inputCol[0]}, ${inputCol[1]}, ${inputCol[2]}, ${inputCol[3] / 255})`;
+    let opaque = `rgb(${inputCol[0]}, ${inputCol[1]}, ${inputCol[2]})`;
+    e.target.style.background = `linear-gradient(90deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;*/
+    
+    //e.target.style.backgroundColor = 
+    if(colpGlobalOninput != null) colpGlobalOninput(color);
+    //if(colpGlobalUpdate != null) colpGlobalUpdate();
+    colp.externalUpdate(color);
+    if(colpGlobalDisplay != null) colpGlobalDisplay.style.background = '#' + RGBA2Hex(color);
+    document.getElementById("palette-container").style.display = "none";
+    
+  }, "aero-btn colp-palette-entry");
+  
+  colpDisplay.style.backgroundColor = '#' + RGBA2Hex(color);
+  
+  colpDisplay.title = title;
+  
+  return colpDisplay;
+}
+//TODO: fucking please for the love of god, SPLIT THIS UP! it's hell to navigate this file, because of how much shit is in it.
 class Tether {
   canvas = undefined;
   ctx = undefined;
@@ -422,9 +472,9 @@ class Tether {
   previousLayer = 0;
   currentClass = LayerXorFractal;
   canvasScale = 4;
-  version = "VOLATILE 0.8";
   renderOnUpdate = true;
-  compressSaves = true;
+  //TODO: something something debugging saves
+  compressSaves = false;
   saveURL = false;
   tileView = false;
   smoothView = false;
@@ -435,15 +485,105 @@ class Tether {
     
     const colpContainer = document.getElementById("colp-container")
     colpContainer.appendChild(colp.target);
+    
+    const palCont = document.getElementById("palette-container");
+    palCont.appendChild(InputPaletteColor(0xFFFF00FF, "North West"));
+    palCont.appendChild(InputPaletteColor(0x7FFF00FF, "North"));
+    palCont.appendChild(InputPaletteColor(0x00FF00FF, "North East"));
+    palCont.appendChild(InputPaletteColor(0x00000000, "Transparent"));
+    palCont.appendChild(InputPaletteColor(0xD15B40FF, "Eraser"));
+    palCont.appendChild(InputPaletteColor(0xD69166FF, "Stucco"));
+    palCont.appendChild(InputPaletteColor(0xE7DFC9FF, "Light Sandstone"));
+    palCont.appendChild(InputPaletteColor(0xC5D695FF, "Gross White"));
+    palCont.appendChild(InputPaletteColor(0xA0D385FF, "Mint"));
+    palCont.appendChild(InputPaletteColor(0x4DBCA4FF, "Cooling Tower Water"));
+    palCont.appendChild(InputPaletteColor(0x7178DDFF, "Lavander"));
+    palCont.appendChild(InputPaletteColor(0x9774D3FF, "Also Lavander"));
+    palCont.appendChild(document.createElement("br"));
+    palCont.appendChild(InputPaletteColor(0xFF7F00FF, "West"));
+    palCont.appendChild(InputPaletteColor(0x7F7F00FF, "No Direction"));
+    palCont.appendChild(InputPaletteColor(0x007F00FF, "East"));
+    palCont.appendChild(InputPaletteColor(0xFFFFFFFF, "White"));
+    palCont.appendChild(InputPaletteColor(0x9E2114FF, "Brick"));
+    palCont.appendChild(InputPaletteColor(0xEE771FFF, "Lava"));
+    palCont.appendChild(InputPaletteColor(0xCEAF00FF, "Gold"));
+    palCont.appendChild(InputPaletteColor(0x9EBB55FF, "Lichen"));
+    palCont.appendChild(InputPaletteColor(0x138200FF, "Grass"));
+    palCont.appendChild(InputPaletteColor(0x097FA3FF, "Pool Water"));
+    palCont.appendChild(InputPaletteColor(0x362C93FF, "Lapis Lazuli"));
+    palCont.appendChild(InputPaletteColor(0x6144AAFF, "Amethyst"));
+    palCont.appendChild(document.createElement("br"));
+    palCont.appendChild(InputPaletteColor(0xFF0000FF, "South West"));
+    palCont.appendChild(InputPaletteColor(0x7F0000FF, "South"));
+    palCont.appendChild(InputPaletteColor(0x000000FF, "South East"));
+    palCont.appendChild(InputPaletteColor(0x808080FF, "Gr(e/a)y"));
+    palCont.appendChild(InputPaletteColor(0x492826FF, "Clay"));
+    palCont.appendChild(InputPaletteColor(0x633513FF, "Dark Pumpkin"));
+    palCont.appendChild(InputPaletteColor(0x3A3202FF, "Dirt"));
+    palCont.appendChild(InputPaletteColor(0x40472FFF, "Sand Green"));
+    palCont.appendChild(InputPaletteColor(0x19420BFF, "Deep Moss"));
+    palCont.appendChild(InputPaletteColor(0x103D59FF, "Ocean Water"));
+    palCont.appendChild(InputPaletteColor(0x232149FF, "Lake Water"));
+    palCont.appendChild(InputPaletteColor(0x39216DFF, "Toxic Sludge"));
+    
+    palCont.style.display = "none";
+  }
+  //TODO: bad name
+  updateSize(img) {
+    this.updateCanvasScale(img);
+    const tileScale = (this.tileView) ? 3 : 1;
+    this.canvas.height = img.h * tileScale;
+    this.canvas.width = img.w * tileScale;
+    document.getElementById("img-width-input").value = img.w;
+    document.getElementById("img-height-input").value = img.h;
   }
   
-  generateLayerOptions(options, types, containerId) {
+  printImage(img, forceRender = false) {
+    //dont render
+    if(!this.renderOnUpdate && !forceRender) return;
+    
+    let startTime = Date.now();
+    //nice design, the cursors don't get fucking set when i do this!!!
+    //document.body.style.cursor = "wait";
+    
+    img.renderImage();
+    
+    let canvasImg = this.ctx.createImageData(img.w, img.h);
+    //write image data to canvas
+    for(let i = 0; i < img.w * img.h * 4; i++) {
+      //convert from 0 - 1 to 0 - 255
+      canvasImg.data[i] = img.data[i] * 255;
+    }
+    //insert new image data
+    this.ctx.putImageData(canvasImg, 0, 0);
+    if(this.tileView) {
+      this.ctx.putImageData(canvasImg, img.w, 0);
+      this.ctx.putImageData(canvasImg, img.w * 2, 0);
+      
+      this.ctx.putImageData(canvasImg, 0, img.h);
+      this.ctx.putImageData(canvasImg, img.w, img.h);
+      this.ctx.putImageData(canvasImg, img.w * 2, img.h);
+      
+      this.ctx.putImageData(canvasImg, 0, img.h * 2);
+      this.ctx.putImageData(canvasImg, img.w, img.h * 2);
+      this.ctx.putImageData(canvasImg, img.w * 2, img.h * 2);
+    }
+    let renderTime = Date.now() - startTime;
+    
+    document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
+    
+   //document.body.style.cursor = "pointer";
+  }
+  
+  generateLayerOptions(img, options, types, containerId) {
     //this grotesque hell creature needs comments
     const optionContainer = document.getElementById(containerId);
     const layer = img.layers[this.currentLayer];
     //change this later!!!! maybe?
     //const options = layer.defaults;
     const optionKeys = Object.keys(options);
+    //bypass dumbass javascript design
+    const tempTether = this;
     
     if(optionKeys.length == 0) {
       const message = document.createElement("i");
@@ -505,13 +645,13 @@ class Tether {
             //dont print too fast so your pc doesnt sound like a jet engine
             let curTime = Math.round(Date.now() / 30);
             if(oldTime != curTime) {
-              img.printImage();
+              this.printImage(img);
               oldTime = curTime;
             }
           };
           //print the image when the user lets go of the input
           //prevents visual desync between the input and canvas when the input changes rapidly
-          input.onmouseup = (e) => {img.printImage()};
+          input.onmouseup = (e) => {this.printImage(img)};
           //number box
           input2.type = "number";
           input2.value = options[optionKeys[i]];
@@ -533,10 +673,18 @@ class Tether {
               } else {
                 input2.classList.remove("input-invalid");
               }
-            }
-            input.value = Number(input2.value);
-            options[optionKeys[i]] = Number(input2.value);
-            img.printImage();
+            }/* else {
+              if(val == "Infinity") {
+                val = Infinity;
+              } else if(val == "-Infinity") {
+                val = -Infinity;
+              } else if(val == "NaN") {
+                val = NaN;
+              }
+            }*/
+            input.value = Number(val);
+            options[optionKeys[i]] = Number(val);
+            this.printImage(img);
           };
           container.appendChild(input);
           container.appendChild(input2);
@@ -545,7 +693,7 @@ class Tether {
           //moved code to china
           const box = InputCheckbox(options[optionKeys[i]], (checked, e) => {
             options[optionKeys[i]] = checked;
-            img.printImage();
+            this.printImage(img);
           });
           
           container.appendChild(box);
@@ -554,17 +702,17 @@ class Tether {
           const inputCol = options[optionKeys[i]];
           const colBox = InputColor(inputCol, (newCol) => {
             if(limits.external) {
-              const brother = document.getElementById(limits.brotherId + t.currentLayer);
+              const brother = document.getElementById(limits.brotherId + this.currentLayer);
               brother.style.backgroundColor = limitDarkness(newCol);
             }
           }, () => {
-            img.printImage();
+            this.printImage(img);
           });
           container.appendChild(colBox);
           break;
         case "keyvalues":
           input = document.createElement("select");
-          input.id = id;
+          input.id = id; //TODO: what?
           
           for(let i = 0; i < limits.keys.length; i++) {
             const option = document.createElement("option");
@@ -576,7 +724,7 @@ class Tether {
           
           input.addEventListener("change", function (e) {
             options[optionKeys[i]] = limits.values[input.selectedIndex];
-            img.printImage();
+            tempTether.printImage(img);
           });
           input.onwheel = (e) => {
             if(e.deltaY > 0) {
@@ -587,7 +735,7 @@ class Tether {
               if(input.selectedIndex < 0) input.selectedIndex = input.children.length - 1;
             }
             options[optionKeys[i]] = limits.values[input.selectedIndex];
-            img.printImage();
+            this.printImage(img);
             e.preventDefault();
           };
           container.appendChild(input);
@@ -630,14 +778,14 @@ class Tether {
             oldKey = key;
             
             if(limits.external) {
-              const brother = document.getElementById(limits.brotherId + t.currentLayer);
+              const brother = document.getElementById(limits.brotherId + tempTether.currentLayer);
               if(key == KEY_CANVAS) {
                 brother.style.backgroundImage = "url(img/icon/canvas.svg)";
               } else {
                 brother.style.backgroundImage = `url(img/icon/${img.layers[img.layerKeys[key]].displayName}.svg)`;
               }
             }
-            img.printImage();
+            tempTether.printImage(img);
           });
           container.appendChild(input);
           break;
@@ -722,7 +870,7 @@ class Tether {
             }
             unitButton.innerText = UnitLength.getUnitText(unitLength);
             setLengthRange();
-            img.printImage();
+            this.printImage(img);
           }
           //slider
           input.type = "range";
@@ -742,7 +890,7 @@ class Tether {
               val = clamp(val, input.min, input.max);
               //input.value = val;
               //just dont update the number - cause it makes inputting small numbers a bitch
-              if(val != valUnchanged) {
+              if(val != valUnchanged || Number(val) == NaN) {
                 return;
               }
             }
@@ -751,13 +899,13 @@ class Tether {
             //dont print too fast so your pc doesnt sound like a jet engine
             let curTime = Math.round(Date.now() / 30);
             if(oldTime != curTime) {
-              img.printImage();
+              this.printImage(img);
               oldTime = curTime;
             }
           };
           //print the image when the user lets go of the input
           //prevents visual desync between the input and canvas when the input changes rapidly
-          input.onmouseup = (e) => {img.printImage()};
+          input.onmouseup = (e) => {this.printImage(img)};
           //number box
           input2.type = "number";
           input2.value = unitLength.value;
@@ -772,7 +920,7 @@ class Tether {
             if(limits.unsafe) {
               val = clamp(val, input2.min, input2.max);
               //just dont update the number - cause it makes inputting small numbers a bitch
-              if(val != valUnchanged) {
+              if(val != valUnchanged || Number(val) == NaN) {
                 input2.classList.add("input-invalid");
                 return;
               } else {
@@ -780,7 +928,7 @@ class Tether {
               }
             }
             input.value = Number(input2.value);
-            img.printImage();
+            this.printImage(img);
           };
           //TODO:
           container.style.height = "64px";
@@ -844,7 +992,7 @@ class Tether {
             //dont print too fast so your pc doesnt sound like a jet engine
             let curTime = Math.round(Date.now() / 30);
             if(oldTime != curTime) {
-              img.printImage();
+              this.printImage(img);
               oldTime = curTime;
             }
           };
@@ -852,7 +1000,7 @@ class Tether {
           //prevents visual desync between the input and canvas when the input changes rapidly
           dial.onmouseup = (e) => {
             options[optionKeys[i]] = 360 - Math.floor(dir); //convert between web degrees to renderer degrees
-            img.printImage();
+            this.printImage(img);
           };
           //number box
           input.type = "number";
@@ -865,13 +1013,41 @@ class Tether {
             let val = input.value;
             options[optionKeys[i]] = Number(input.value);
             dialFace.style.transform = "rotate(" + (360 - options[optionKeys[i]]) + "deg)"; //convert between web 
-            img.printImage();
+            this.printImage(img);
           };
           dial.appendChild(dialFace);
           container.appendChild(dial);
           container.appendChild(input);
           break;
         }
+        case "string": {
+          //slider
+          const input2 = document.createElement("textarea");
+          input2.value = options[optionKeys[i]];
+          input2.className = "input-option-textarea";
+          
+          input2.oninput = (e) => {
+            let val = input2.value;
+            //do a safety check on unsafe options
+            //"unsafe options" are ones that control loops (e.g. maxLines for wandering, thickness for border)
+            //having unsafe options too high can crash or freeze the browser!!
+            /*if(limits.unsafe) {
+              //just dont update the number - cause it makes inputting a bitch
+              if(val.length > ) {
+                input2.classList.add("input-invalid");
+                return;
+              } else {
+                input2.classList.remove("input-invalid");
+              }
+            }*/
+            options[optionKeys[i]] = val;
+            this.printImage(img);
+          };
+          container.appendChild(input2);
+          break;
+        }
+        default:
+          throw new ProcedrawError(`Unknown option type ${limits.type}`);
       }
       //spacing
       //optionContainer.appendChild(document.createElement("br"));
@@ -879,38 +1055,52 @@ class Tether {
     }
   }
   
-  updateLayerOptions() {
+  updateLayerOptions(img) {
     killChildren(document.getElementById("layer-options"));
     killChildren(document.getElementById("layer-options-default"));
     if(img.layers.length == 0) {
-      
+      //TODO: just clean up a lot of this code
     } else {
       const layer = img.layers[this.currentLayer];
-      this.generateLayerOptions(layer.od, layer.typesDefault, "layer-options-default");
-      this.generateLayerOptions(layer.options, layer.types, "layer-options");
+      this.generateLayerOptions(img, layer.od, layer.typesDefault, "layer-options-default");
+      this.generateLayerOptions(img, layer.options, layer.types, "layer-options");
     }
   }
   
-  generateLayerList() {
+  generateLayerList(img) {
     const listContainer = document.getElementById("layer-list-container");
     killChildren(document.getElementById("layer-list-container"));
+    
     for(let i = img.layers.length - 1; i >= 0; i--) {
       const layer = img.layers[i];
-      const layerContainer = divWrap("layer-container");
-      layerContainer.id = "dyn-layer-" + i;
-      
       //javascript is shitty so i have to do this if i want to reference a class in an event (except for global self referencing-which is disgusting)
       const tempTether = this;
-      const buttonContainer = document.createElement("div");
-    
-      buttonContainer.className = "layer-button-container";
       
-      const up = document.createElement("button");
-      up.dataset.idx = i;
-      up.classList.add("layer-icon-button", "icon-layer-up");
+      /*<table style="width: 256px">
+        <tr>
+          <td><div style="width: 32px; height: 32px; background-color: blue"></div></td>
+          <!-- use draggable="false" for images -->
+          <td rowspan="2"><div style="width: 64px; height: 64px; background-color: red"></div></td>
+          <td rowspan="2">0.</td>
+          <!-- 100% width makes only this bit stretch when the table is wider than the content -->
+          <td rowspan="2" style="width: 100%"><input type="text"></td>
+          <td rowspan="2"><div style="width: 32px; height: 32px; background-color: green"></div></td>
+        </tr>
+        <tr>
+          <td><div style="width: 32px; height: 32px; background-color: yellow"></div></td>
+        </tr>
+      </table>*/
+      //TODO: remove unused classes
+      //TODO: remove unused coments shits
+      const layerTable = document.createElement("table");
+      layerTable.id = "dyn-layer-" + i;
+      layerTable.className = "layer-container";
+      const upContainer = document.createElement("td");
+      const downContainer = document.createElement("td");
+      const eyeContainer = document.createElement("td");
       
-      up.addEventListener("click", function (e) {
-        const idx = Number(this.dataset.idx);
+      const up = Button("", (e) => {
+        const idx = Number(e.target.dataset.idx);
         //make sure not to move layers out of bounds
         if(idx < img.layers.length - 1) {
           const tempLayer = img.layers[idx + 1];
@@ -922,25 +1112,19 @@ class Tether {
           img.layerKeys[thisKeyIdx]++;
           img.layerKeys[nextKeyIdx]--;
           
-          tempTether.generateLayerList();
+          tempTether.generateLayerList(img);
           tempTether.setCurrentLayer(idx + 1);
-          tempTether.updateLayerOptions();
+          tempTether.updateLayerOptions(img);
           tempTether.unhighlightLayer(tempTether.previousLayer);
           tempTether.highlightLayer(tempTether.currentLayer);
-          img.printImage();
+          tempTether.printImage(img);
         }
-      });
-      buttonContainer.appendChild(up);
+      }, "layer-icon-button icon-layer-up");
+      up.dataset.idx = i;
+      upContainer.appendChild(up);
       
-      const buttonBreak = document.createElement("br");
-      buttonContainer.appendChild(buttonBreak);
-      
-      const down = document.createElement("button");
-      down.dataset.idx = i;
-      down.classList.add("layer-icon-button", "icon-layer-down");
-      
-      down.addEventListener("click", function (e) {
-        const idx = Number(this.dataset.idx);
+      const down = Button("", (e) => {
+        const idx = Number(e.target.dataset.idx);
         //make sure not to move layers out of bounds
         if(idx > 0) {
           const tempLayer = img.layers[idx - 1];
@@ -952,23 +1136,19 @@ class Tether {
           img.layerKeys[prevKeyIdx]++;
           img.layerKeys[thisKeyIdx]--;
           
-          tempTether.generateLayerList();
+          tempTether.generateLayerList(img);
           tempTether.setCurrentLayer(idx - 1);
-          tempTether.updateLayerOptions();
+          tempTether.updateLayerOptions(img);
           tempTether.unhighlightLayer(tempTether.previousLayer);
           tempTether.highlightLayer(tempTether.currentLayer);
-          img.printImage();
+          tempTether.printImage(img);
         }
-      });
+      }, "layer-icon-button icon-layer-down");
+      down.dataset.idx = i;
+      downContainer.appendChild(down);
       
-      buttonContainer.appendChild(down);
-      layerContainer.appendChild(buttonContainer);
-      
-      const layerSelect = document.createElement("div");
-      layerSelect.classList.add("layer-select");
-      
-      const iconContainer = document.createElement("div");
-      iconContainer.className = "layer-icon-container";
+      const iconContainer = document.createElement("td");
+      iconContainer.rowSpan = 2;
       
       const iconTint = document.createElement("div");
       iconTint.className = "layer-icon-tint";
@@ -977,18 +1157,13 @@ class Tether {
       
       const icon = document.createElement("img");
       icon.id = "dyn-icon-" + i;
+      icon.draggable = false;
       
       if(layer.isFilter) {
         icon.src = "img/icon/" + layer.name + ".svg";
         
         if(layer.od.base == KEY_CANVAS) {
           icon.style.backgroundImage = "url(img/icon/canvas.svg)";
-        } else if(layer.name == "emboss, but it's broken so this will intentionally never be done") {
-          const baseName = img.layers[img.layerKeys[layer.od.base]].name;
-          icon.classList.add = "emboss-icon";
-          iconContainer.classList.add = "emboss-icon-container";
-          iconContainer.style.backgroundImage = `url(img/icon/${baseName}.svg)`;
-          icon.src = "img/icon/" + baseName + ".svg"
         } else {
           const baseName = img.layers[img.layerKeys[layer.od.base]].name;
           icon.style.backgroundImage = `url(img/icon/${baseName}.svg)`;
@@ -1000,45 +1175,29 @@ class Tether {
       
       iconTint.appendChild(icon);
       iconContainer.appendChild(iconTint);
-      layerSelect.appendChild(iconContainer);
       
-      const name = document.createElement("span");
-      name.className = "layer-text-container";
+      const indexContainer = document.createElement("td");
+      indexContainer.rowSpan = 2;
       const text = i + ". ";
-      name.appendChild(document.createTextNode(text));
+      indexContainer.appendChild(document.createTextNode(text));
       
-      const nameInput = document.createElement("input");
-      nameInput.type = "text";
-      nameInput.value = layer.displayName;
-      nameInput.classList.add("name-input");
-      nameInput.addEventListener("input", function (e) {
+      const nameInput = InputText(layer.displayName, (e) => {
         layer.displayName = nameInput.value;
-      });
+      }, "name-input");
+      const nameContainer = document.createElement("td");
+      nameContainer.appendChild(nameInput);
+      nameContainer.rowSpan = 2;
       //store the layer's index in the element itself (never knew you could do that, neato)
-      layerSelect.dataset.idx = i;
-      layerSelect.appendChild(name);
-      layerSelect.appendChild(nameInput)
-      
-      layerSelect.addEventListener("click", function (e) {
-        tempTether.setCurrentLayer(Number(this.dataset.idx));
-        tempTether.updateLayerOptions();
+      layerTable.dataset.idx = i;
+      layerTable.onclick = (e) => {
+        tempTether.setCurrentLayer(Number(layerTable.dataset.idx));
+        tempTether.updateLayerOptions(img);
         tempTether.unhighlightLayer(tempTether.previousLayer);
         tempTether.highlightLayer(tempTether.currentLayer);
-      });
-      const eyeContainer = document.createElement("div");
-      eyeContainer.className = "layer-eye-container";
+      };
       
-      const eye = document.createElement("button");
       let shown = layer.od.shown;
-      eye.classList.add("layer-icon-button");
-        
-      if(shown) {
-        eye.classList.add("icon-layer-shown");
-      } else {
-        eye.classList.add("icon-layer-hidden");
-      }
-      
-      eye.onclick = (e) => {
+      const eye = Button("", (e) => {
         shown = !shown;
         layer.od.shown = shown;
         
@@ -1049,18 +1208,34 @@ class Tether {
           eye.classList.remove("icon-layer-shown");
           eye.classList.add("icon-layer-hidden");
         }
-        img.printImage();
-      };
-      
-      layerContainer.appendChild(layerSelect);
-      layerSelect.appendChild(eyeContainer);
+        this.printImage(img);
+        //having this prevents clicking on the eye from also acting as a click to select the layer
+        e.stopPropagation();
+      }, (shown) ? "icon-layer-shown layer-icon-button" : "icon-layer-hidden layer-icon-button");
       eyeContainer.appendChild(eye);
-      listContainer.appendChild(layerContainer);
+      eyeContainer.rowSpan = 2;
+      
+      const topRow = document.createElement("tr");
+      const bottomRow = document.createElement("tr");
+      
+      topRow.appendChild(upContainer);
+      bottomRow.appendChild(downContainer);
+      topRow.appendChild(iconContainer);
+      topRow.appendChild(indexContainer);
+      topRow.appendChild(nameContainer);
+      topRow.appendChild(eyeContainer);
+      
+      layerTable.appendChild(topRow);
+      layerTable.appendChild(bottomRow);
+      //layerContainer.appendChild(layerSelect);
+      //layerSelect.appendChild(eyeContainer);
+      //eyeContainer.appendChild(eye);
+      listContainer.appendChild(layerTable);
     }
     this.unhighlightLayer(this.previousLayer);
     this.highlightLayer(this.currentLayer);
   }
-  
+  //javalicious
   setCurrentLayer(idx) {
     this.previousLayer = this.currentLayer;
     this.currentLayer = idx;
@@ -1085,8 +1260,8 @@ class Tether {
     title.textContent = "procedraw | " + text;
   }
   
-  updateCanvasScale() {
-    const tileScale = (t.tileView) ? 3 : 1;
+  updateCanvasScale(img) {
+    const tileScale = (this.tileView) ? 3 : 1;
     this.canvas.style.height = img.h * this.canvasScale * tileScale + "px";
     this.canvas.style.width = img.w * this.canvasScale * tileScale + "px";
   }

@@ -1,3 +1,22 @@
+//////////////////////////////////////////////
+//    All Procedraw Material is Licensed    //
+//     December, 2024-???? under MIT by.    //
+//         Backshot Betty #killtf2.         //
+//                 _______                  //
+//                |   |_|+|                 //
+//                |___|+|_|                 //
+//                |_|+|   |                 //
+//                |+|_|___|                 //
+//                                          //
+//   *Any names, or persons, illustrated    //
+// in any of the Procedraw Programs, except //
+//     that of Backshot Betty #killtf2,     //
+//          that may seem similar           //
+//               to anyone                  //
+//   in real life, are purely coincidental, //
+//         or otherwise parodic.*           //
+//////////////////////////////////////////////
+
 "use strict";
 //helpful functions that are used everywhere in the code
 
@@ -78,6 +97,7 @@ function HSV2ByteRGB(col) {
 function byteRGB2HSV(col) {
   return RGB2HSV([col[0] / 255, col[1] / 255, col[2] / 255]);
 }
+//TODO: make a fast version? there are a few things that could be trimmed out, since this was originally designed for UI stuff
 function RGB2HSV(col) { //[R, G, B] array
     //https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
     const r = col[0];
@@ -137,33 +157,11 @@ function colorMix(col0, col1, percent/*, mode = MIX_PLAIN*/) {
   if(col0[3] < col1[3]) {
     percent /= a;
   }
-  /*
-  if(percent < 0 || a < 0 || aBlend < 0) {
-    console.log(a);
-    console.log(aBlend);
-    console.log(percent);
-    console.log("---");
-  }*/
   const r = col0[0] + percent * (col1[0] - col0[0]);
   const g = col0[1] + percent * (col1[1] - col0[1]);
   const b = col0[2] + percent * (col1[2] - col0[2]);
   return [r, g, b, a];
 }
-
-/*add(col0, col1, percent) {
-  const r = (col0[0] + col1[0] * percent);
-  const g = (col0[1] + col1[1] * percent);
-  const b = (col0[2] + col1[2] * percent);
-  const r = col0[0] * (1 - percent) + col1[0] * percent;
-  const g = col0[1] * (1 - percent) + col1[1] * percent;
-  const b = col0[2] * (1 - percent) + col1[2] * percent;
-  const r = col1[0] * percent + col0[0];
-  const g = col1[1] * percent + col0[1];
-  const b = col1[1] * percent + col0[2];
-  
-  const a = col0[3];
-  return [r, g, b, a];
-}*/
 //trig stuff//
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
@@ -242,8 +240,18 @@ function deepObjectCopy(oldObj) {
   }
   return newObj;
 }
+function assert(condition, error = "Unknown.") {
+  if(!condition) {
+    console.error("Assertion failed: " + error)
+  }
+}
+function killChildren(container) {
+  while(container.firstChild) {
+    container.removeChild(container.lastChild);
+  }
+}
 function godText(max) {
-  const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham","angel","theology","cloud","edges","edge","blobs","border","noise","bort","gradient"];
+  const words = ["beautiful","dirty","dirt","stone","rough","water","smooth","harsh","jade","gold","golden","plating","plate","plated","notched","carved","carving","chiseled","tile","button","jagged","porus","spongy","sponge","carpet","wall","floor","dull","shiny","special","clay","mud","sand","magma","lava","leaves","wood","bark","cloth","concrete","curtain","striped","flag","sign","pillar","column","linoleum","quartz","planks","screen","metal","iron","fur","plastic","tinny","tin","steel","marble","marbled","meat","meaty","slippery","red","orange","yellow","lime","green","blue","indigo","purple","magenta","black","pink","white","light","dark","grey","black","brown","rouge","lemon","sour","foul","awful","amazing","book","paper","leather","glass","glassy","wet","hot","cold","warm","lukewarm","rock","boulder","moss","mossy","abstract","geometric","artistic","algebraic","archaic","simple","crude","basic","cell","battery","tissue","outlet","screw","nail","iridescent","refractive","pearlescent","pearl","cracked","shattered","torn","worn","broken","java","script","cascading","style","sheet","hypertext","markup","language","powder","powdered","calculus","wave","tangent","square","root","gradient","papyrus","cactus","thorny","terrain","rocky","mountain","enormous","miniscule","firey","string","array","set","map","hash","hashed","text","textual","texture","generic","bland","obtuse","simple","obsidian","geode","ruby","platform","sludge","random","procedural","predictable","c","ansi","plus","flower","bone","boned","ball","grass","weed","roof","shingles","cancer","glowing","glowy","glow","bitwise","fractal","recursive","insane","crazy","self","similar","structure","logical","assembly","low","level","with","flat","sprite","buffer","file","stream","memory","pixel","bottle","ur","heaven","bubble","bubbles","sequence","glitter","glittery","sparkles","sparkly","fancy","holy","temple","frutiger","aero","bar","bars","barred","wavy","null","void","pointer","flooring","machine","machinary","graph","mushroom","stalk","trunk","oak","pine","ghost","gum","table","brain","positive","negative","electron","electric","spark","glaze","wine","bread","skin","blood","lambda","foo","baz","jet","theta","pi","ceiling","tube","lamp","lantern","pattern","design","serpent","apple","software","abraham","angel","theology","cloud","edges","edge","blobs","border","noise","bort","gradient","capsacin","tv","screen","screened","xor","sunlight","normalize","normalized","vectorize","vectorized","offset","bitmap","text","worley","value","valuable","perlin","liney","wandering","wave","table","repeat","mask","sharpen","emboss","embossed","blur","blurred","blurry","blurrier","invert","contrast","contrasting","inverse","hsv","ascii","ieee","rgb","scale","shear","tweak","alpha","sine","sloth","slothful","lust","lustful","wrath","wrathful","envy","envious","gluttony","gluttonous","greed","greedy","pride","prideful","keyword","constant","variable","condition","true","false","maybe","somewhat","almost","nearly","completely","barely","close","closed","clothed","gore","gory","goresome","gruesome","ghoulish","grue","day","morning","noon","night","midnight","lemon","twilight"];
 
   let text = "";
   let wordCount = Math.ceil(Math.random() * max);
@@ -254,9 +262,19 @@ function godText(max) {
   }
   return text;
 }
+function monkeyText(count) {
+  let text = ""
+  for(let i = 0; i < count; i++) {
+    let code = Math.floor(Math.random() * (126 - 32) + 32);
+    //voodoolicious, especially compared to C
+    text += String.fromCodePoint(code);
+  }
+  return text
+}
 //do NOT change these values! they are used in saves
 const UNIT_PIXELS = 0;
 const UNIT_PERCENTAGE = 1;
+const UNIT_VAR = 2;
 const UNIT_RATIO = 3;
           
 class UnitLength {
@@ -307,5 +325,12 @@ class UnitLength {
         console.error("error in 'getUnitText()': unknown unit " + unitLength.unit);
         return "undefined";
     }
+  }
+}
+
+class ProcedrawError extends Error {
+  constructor(...args) {
+    super(...args);
+    this.name = "ProcedrawError"
   }
 }

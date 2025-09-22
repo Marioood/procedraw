@@ -1,10 +1,26 @@
+//////////////////////////////////////////////
+//    All Procedraw Material is Licensed    //
+//     December, 2024-???? under MIT by.    //
+//         Backshot Betty #killtf2.         //
+//                 _______                  //
+//                |   |_|+|                 //
+//                |___|+|_|                 //
+//                |_|+|   |                 //
+//                |+|_|___|                 //
+//                                          //
+//   *Any names, or persons, illustrated    //
+// in any of the Procedraw Programs, except //
+//     that of Backshot Betty #killtf2,     //
+//          that may seem similar           //
+//               to anyone                  //
+//   in real life, are purely coincidental, //
+//         or otherwise parodic.*           //
+//////////////////////////////////////////////
+
 "use strict";
 
 class Serialization {
-  //this gets changed when the SAVE FORMAT is changed, not when layer paramters are changed
-  format = 0;
-  
-  save() {
+  save(img) {
     let saved = {};
     saved.img = {
       bg: RGBA2Hex(img.bg),
@@ -12,8 +28,8 @@ class Serialization {
       h: img.h,
       name: img.name,
       author: img.author,
-      version: t.version,
-      format: this.format
+      version: PD_VERSION,
+      format: PD_SAVE_FORMAT
     };
     saved.layers = [];
     
@@ -70,8 +86,7 @@ class Serialization {
     return JSON.stringify(saved);
   }
   
-  load(savedText) {
-    //welcome to my hooker palace!
+  load(img, savedText) {
     let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
     
     img.bg = hex2RGB('#' + saved.img.bg);
@@ -80,10 +95,10 @@ class Serialization {
     img.name = saved.img.name;
     img.author = saved.img.author;
     if(saved.img.format == undefined) {
-      alert(`this image was saved in an ancient version of procedraw (before VOLATILE 0.5), it will not work with out repair\n\nthe image is from version ${saved.img.version}\n\n...sorry!`);
-    } else if(saved.img.format < this.format) {
+      alert(`this image was saved in an ancient version of procedraw (before VOLATILE 0.5), it will not work without repair\n\nthe image is from version ${saved.img.version}\n\n...sorry!`);
+    } else if(saved.img.format < PD_SAVE_FORMAT) {
       alert(`this image was saved in an earlier version of procedraw\n\nthe image uses format ${saved.img.format}, while the current save format is ${this.format}\n\nthe image is also from version ${saved.img.version}\n\ntherefore, it may not load in properly (!)`);
-    } else if(saved.img.format > this.format) {
+    } else if(saved.img.format > PD_SAVE_FORMAT) {
       alert(`either you are from the future or are using an old version of procedraw\n\nthe image uses format ${saved.img.format}, while this version's save format is ${this.format}\n\nthe image is also from version ${saved.img.version}\n\ntherefore, it may not load in properly (!)`);
     }
     //blank layers so we arent loading images on top of eachother
@@ -105,10 +120,10 @@ class Serialization {
       //just using the layer index should be fine, since layer indices and keys are the same at this point
       if(newLayer.od.base != KEY_CANVAS) img.layers[newLayer.od.base].linkCount++;
       
+            //TODO: these comments are fucking incomprehensible, even to the person who wrote them
       function loadOptions(fauxOptions, types) {
         //clean up colors!
         let newOptions = {};
-        //fauxLayer.options = ;
         const optionKeys = Object.keys(fauxOptions);
         
         for(let o = 0; o < optionKeys.length; o++) {
@@ -134,12 +149,16 @@ class Serialization {
             //because layer data only gets defined when the link count is > 0
             img.layers[img.layerKeys[val]].linkCount++;
           } else if(type == "length") {
-            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer (e.g. after the default values got stripped)
+            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
             if(Array.isArray(val)) {
               //[value, units]
               newOptions[key] = new UnitLength(val[0], val[1]);
-            } else {
+            } else if(typeof(val) == "object") {
               newOptions[key] = val;
+            } else {
+              //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
+              newOptions[key] = val;
+              throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
             }
           } else {
             newOptions[key] = val;
@@ -161,8 +180,8 @@ class Serialization {
     }
   }
 
-  async saveEnc() {
-    const data = this.save();
+  async saveEnc(img) {
+    const data = this.save(img);
 
     if (typeof CompressionStream !== 'undefined') {
       try {
@@ -180,8 +199,8 @@ class Serialization {
 
     return data;
   }
-  async loadEnc(savedText) {
-    if (typeof savedText == 'object') this.load(savedText);
+  async loadEnc(img, savedText) {
+    if (typeof savedText == 'object') this.load(img, savedText);
 
     if (typeof DecompressionStream !== 'undefined') {
       try {
@@ -189,7 +208,7 @@ class Serialization {
       } catch (_) {}
     }
 
-    this.load(savedText);
+    this.load(img, savedText);
   }
 
   async gzip(data) {

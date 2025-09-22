@@ -1,21 +1,45 @@
-STUPID
+URGENT
 
+verify if the normal map stuff is even correct (create a heightmap of a coin, then sunlight it blahhhh)
+crop filter
+ctrl + scroll to zoom in and out
+scroll to move up and down
+shift + scroll to move left and right
+gradient think with css variables
+undo
+ADD CHANGES TO CHANGE LOG!!!
+proper layer icons
 save as file
+make loading more safe (test ways to break / exploit saving)
+  save format is not finalized, do this way later
+  less cryptic error messages
+list of controls
+ui looks like shit!
+restructure code to allow for the image/layer renderer to be used on it's own (without the editor). people (kit) have told me that procedraw could be useful for html5 game textures.....
+  layer wrappers
+  actual documentation / tutorials
+layer presets
+the code is getting stale! rewrite it soon....
+better width and height customization (set limit, with warning)
+//variables and math expressions
+MAYBE?: tether should be written in a way that one could just rewrite functions for a different ui system and everything would still work (doesnt make sense, since it's javascript)
+download dialog. actually, just dialogs in general
+"no color selected" thing for color picker, it's confusing otherwise
+i had a dream about the normalize layer, therefore add it
+//could be a "map" filter?
+
+STUPID
+replace direction input (old school boolean version) with either a fancy dial or less fancy keyvalue list
+centered shear / pivot point (do this for most transform filters, actually)
+offset for wavetable (curvy)
 image layer that has is an embedded image
 test browser support (and provide appropriate taxes)
-//could be a "map" filter?
 //overlap option (see wandering lines)
 "no layers exist" text
 decompress thing for save repair
 //color ramp
-//variables and math expressions
 option limit skeletons (for documentation)
-make loading more safe (test ways to break / exploit saving)
-  save format is not finalized, do this way later
-  less cryptic error messages
-palette
 HILARIOUS parody logos!
-list of controls
 fix tiling for worley (none powers of 2)
 PBR material creation (???)
 remove some mix types? a couple of them feel like filler
@@ -30,44 +54,34 @@ merge layer should merge several layers (?)
 strict input for width (FORCE it to go below 0. maybe this could be an input box function option?)
 
 dent and crystal filters (see: paint.net)
-enums should probably maybe be moved to their own file. makes stuff less cluttered
 noisy blobs // fractal blobs? mess with distance function?? clustered blobs???
 description for pictures
-
-URGENT
-push updates sooon...... there are a lot
-
-proper layer icons
-
+blobs/worley sample SOMETHING from a layer
+rounded corners for border
 
 unsafe number and length inputs stay red when the slider is changed
 good emboss
+rotate filter
 rgb normal for contrast layer
 lacunarity for noise layers? 
 easeMode for wandering
 option for wandering lines to stay proportional (like errrrr when rotated they stay the same euclidean length)
-crop filter
-ctrl + scroll to zoom in and out
-scroll to move up and down
-shift + scroll to move left and right
 blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
 perlin noise layer
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
 edit tint switch layer dont switch color edit color SEE BUG
 more accurate layer icons
 proper direction input... again!
-the code is getting stale! rewrite it soon....
 merge the blend modes and mix modes? some of them are quite similar in purpose and functionality...
 make controls more visible on mobile (see: firefox device simulation mode)
-actual documentation / tutorials
-better width and height customization (set limit, with warning)
-rotate filter
 ehhhhh astroids preset is broken for worley noise
-layer presets
-restructure code to allow for the image/layer renderer to be used on it's own (without the editor). people (kit) have told me that procedraw could be useful for html5 game textures.....
-  layer wrappers
+consistent ease modes and ease modes for more layers
+look into what the unit length stuff is actually doing... some results seem funky when printed out
+merge layer bugs, specifically with the dissolve, halftone, and bayer modes
 
 REMINDERS
+
+go through TODO comments
 
 clean up unused garbage
 //DONT SLAP MORE SHIT ONTO SHIT
@@ -85,6 +99,13 @@ normal maps are a huge, gigantic can of worms. adding too many features related 
 
 consider how colorblind people might view the layer icons
 
+software is not improved by adding and adding to it. it is improved by addressing the problems with said software.
+remember what terry says.
+
+VOLATILE 0.9 changes:
+bitmapText
+string type
+rewrote shit lel
 
 
 VOLATILE 0.8 changes:
@@ -110,16 +131,53 @@ VOLATILE 0.8 changes:
   * the 'd' key prints the image data and anything wrong with it
   
   
-  
-  
-  
-  
-  
-   -tools -nop4
-  
-  
-  
-  
-  mat_texture_limit 25000
-  
-  look into what the unit length stuff is actually doing... some results seem funky when printed out
+~~~~~~~~~~~ https://www.youtube.com/watch?v=73gGwGI8Z7E ~~~~~~~~~~~~~
+
+animated image thing... potential names... written in c?
+
+procedural + draw
+procedraw
+
+NO "GENERATIVE"
+procedural
+animation
+animated
+draw
+sheet
+graph //brings math to mind
+write //brings text to mind
+glyph //brings letters to mind
+scribe //brings text to mind
+
+//FINAL NAME, thank you hot dad
+roman + ani(mation) + draw
+romanidraw
+
+c + ani(mation) + draw
+canidraw (canny-draw)???
+
+animatedraw
+procederanim
+procedranim
+procedraw
+animotion //TAKEN
+anidraw/animadraw //TAKEN
+aniglyph //could work, but brings 3d glasses to mind
+anigraph //could work, but brings rearranging chunks of letters to mind
+
+//blinking light
+
+changing a thingy will rerender the image
+
+layers -|- timeline --------------------------------------------
+        |0           1            2            3      
+solid   |tint=[0,0,0].            .            .tint=[1,0,0]
+        |            .            .            .               
+noise   |render      .render      .render      .render
+        |            .            .            .      
+gradient|            .            .            .      
+        |            .            .            .      
+border  |            .            .            .      
+----------------------------------------------------------------
+
+JAPPA WILL BOIL!

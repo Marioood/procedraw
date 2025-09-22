@@ -1,58 +1,26 @@
+//////////////////////////////////////////////
+//    All Procedraw Material is Licensed    //
+//     December, 2024-???? under MIT by.    //
+//         Backshot Betty #killtf2.         //
+//                 _______                  //
+//                |   |_|+|                 //
+//                |___|+|_|                 //
+//                |_|+|   |                 //
+//                |+|_|___|                 //
+//                                          //
+//   *Any names, or persons, illustrated    //
+// in any of the Procedraw Programs, except //
+//     that of Backshot Betty #killtf2,     //
+//          that may seem similar           //
+//               to anyone                  //
+//   in real life, are purely coincidental, //
+//         or otherwise parodic.*           //
+//////////////////////////////////////////////
+
 "use strict";
 //global layer management (data funnelling n processing)
 
-//NEVER change these values!
-//they are used in save files, so changing them WILL break save files!!!
-const BLEND_ADD = 0;
-const BLEND_MULTIPLY = 1;
-const BLEND_PLAIN = 2;
-const BLEND_SCREEN = 3;
-const BLEND_OVERLAY = 4;
-const BLEND_SUBTRACT = 5;
-const BLEND_CHANNEL_DISSOLVE = 6;
-const BLEND_DISSOLVE = 7;
-const BLEND_SHIFT_OVERLAY = 8;
-const BLEND_OVERBLOWN_TEST = 9;
-const BLEND_BAYER = 10;
-const BLEND_HALFTONE = 11;
-
-//https://en.wikipedia.org/wiki/Ordered_dithering
-//be happy that i manually aligned the tables... it looks pretty
-const BLEND_TABLE_BAYER = [
-  0,      0.5,    0.125,  0.625,
-  0.75,   0.25,   0.875,  0.375,
-  0.1875, 0.6875, 0.0625, 0.5625,
-  0.9375, 0.4375, 0.8125, 0.3125
-];
-
-const BLEND_TABLE_HALFTONE = [
-  0.9375, 0.875, 0.75,  0.625,  0.625,  0.75,  0.875, 0.9375,
-  0.875,  0.75,  0.625, 0.5,    0.5,    0.625, 0.75,  0.875,
-  0.75,   0.625, 0.5,   0.25,   0.25,   0.5,   0.625, 0.75,
-  0.625,  0.5,   0.25,  0,      0.0625, 0.25,  0.5,   0.625,
-  0.625,  0.5,   0.25,  0.0625, 0.0625, 0.25,  0.5,   0.625,
-  0.75,   0.625, 0.5,   0.25,   0.25,   0.5,   0.625, 0.75,
-  0.875,  0.75,  0.625, 0.5,    0.5,    0.625, 0.75,  0.875,
-  0.9375, 0.875, 0.75,  0.625,  0.625,  0.75,  0.875, 0.9375
-];
-        
-const MIX_PLAIN = 0;
-const MIX_HALF = 1;
-const MIX_RANDOM = 2;
-const MIX_BAYER = 3;
-const MIX_HALFTONE = 4;
-const MIX_DAFT_X = 5;
-const MIX_DAFT_Y = 6;
-const MIX_HALF_DITHER = 7;
-
-const INTERP_NEAREST = 0;
-const INTERP_BILINEAR = 1;
-const INTERP_BILINEAR_COS = 2;
-
-const KEY_FREED = -1;
-const KEY_CANVAS = -2;
-
-class ImageManager {
+class ProcedrawImage {
   //height and width
   w = 64;
   h = 64;
@@ -62,10 +30,12 @@ class ImageManager {
   //the canvas pixel data
   data = [];
   //the current layer being printed
+  //TODO: jank, rewrite
   layer = null;
   //the background color (grey)
   bg = [0.5, 0.5, 0.5, 1];
   layers = [];
+  //TODO: make the layer keys stuff an object? would cut down on repetitiveness
   //woot woot! memory management in javascript!!!
   //list of indices in the layers array. used for filter layers, so that their base layers don't change
   layerKeys = [];
@@ -79,7 +49,7 @@ class ImageManager {
   name = "our beauty";
   //image author
   author = "you!";
-  
+  //TODO: move this to constants?
   layerClasses = {
     //regular layers
     xorFractal: LayerXorFractal,
@@ -94,6 +64,7 @@ class ImageManager {
     gradient: LayerGradient,
     valueNoise: LayerValueNoise,
     waveTable: LayerWaveTable,
+    bitmapText: LayerBitmapText,
     //filters
     tweak: FilterTweak,
     tile: FilterTile,
@@ -111,14 +82,11 @@ class ImageManager {
     offset: FilterOffset,
     vectorize: FilterVectorize,
     sunlight: FilterSunlight,
-    shear: FilterShear
+    shear: FilterShear,
+    functionPass: FilterFunctionPass
   };
-  
-  printImage(forceRender = false) {
-    //dont render
-    if(!t.renderOnUpdate && !forceRender) return;
-    
-    let startTime = Date.now();
+  //TODO: make this return image data?
+  renderImage() {
     //write the background color
     for(let i = 0; i < this.w * this.h; i++) {
       this.data[i * 4] = this.bg[0];
@@ -131,39 +99,15 @@ class ImageManager {
       if(this.layers[i].od.shown || this.layers[i].linkCount > 0) {
         this.layer = this.layers[i];
         if(this.layer.linkCount > 0) {
-          this.layer.data = new Array(img.w * img.h);
-          for(let i = 0; i < img.w * img.h * 4; i++) {
+          this.layer.data = new Array(this.w * this.h);
+          for(let i = 0; i < this.w * this.h * 4; i++) {
             this.layer.data[i] = 0;
           }
         }
-        
-        this.layer.generate(this.layer.options);
+        //TODO: jank
+        this.layer.generate(this, this.layer.options);
       }
     }
-    //canvas stuff
-    let canvasImg = t.ctx.createImageData(this.w, this.h);
-    //write to canvas data
-    for(let i = 0; i < this.w * this.h * 4; i++) {
-      //convert from 0 - 1 to 0 - 255
-      canvasImg.data[i] = this.data[i] * 255;
-    }
-    //insert new image data
-    t.ctx.putImageData(canvasImg, 0, 0);
-    if(t.tileView) {
-      t.ctx.putImageData(canvasImg, this.w, 0);
-      t.ctx.putImageData(canvasImg, this.w * 2, 0);
-      
-      t.ctx.putImageData(canvasImg, 0, this.h);
-      t.ctx.putImageData(canvasImg, this.w, this.h);
-      t.ctx.putImageData(canvasImg, this.w * 2, this.h);
-      
-      t.ctx.putImageData(canvasImg, 0, this.h * 2);
-      t.ctx.putImageData(canvasImg, this.w, this.h * 2);
-      t.ctx.putImageData(canvasImg, this.w * 2, this.h * 2);
-    }
-    let renderTime = Date.now() - startTime;
-    
-    document.getElementById("render-time").textContent = "render time: " + renderTime + "ms";
   }
   
   updateSize() {
@@ -204,32 +148,33 @@ class ImageManager {
     //base color
     const rb = this.data[rOffs];
     const gb = this.data[gOffs];
+    //literally 1984
     const bb = this.data[bOffs];
     //moved from combinePixel(), gained ~10 ms on a 512x512 image by doing this -- nice!!
     switch(blend) {
-      case BLEND_ADD:
+      case O_BLEND_ADD:
         this.data[rOffs] = rl * alpha + rb;
         this.data[gOffs] = gl * alpha + gb;
         this.data[bOffs] = bl * alpha + bb;
         break;
-      case BLEND_MULTIPLY:
+      case O_BLEND_MULTIPLY:
         this.data[rOffs] = (rl * alpha + 1 - alpha) * rb;
         this.data[gOffs] = (gl * alpha + 1 - alpha) * gb;
         this.data[bOffs] = (bl * alpha + 1 - alpha) * bb;
         break;
-      case BLEND_PLAIN:
+      case O_BLEND_PLAIN:
         //lerp
         //TODO: something something similar to img.blend()
         this.data[rOffs] = rb + alpha * (rl - rb);
         this.data[gOffs] = gb + alpha * (gl - gb);
         this.data[bOffs] = bb + alpha * (bl - bb);
         break;
-      case BLEND_SCREEN:
+      case O_BLEND_SCREEN:
         this.data[rOffs] = 1 - (1 - rl * alpha) * (1 - rb);
         this.data[gOffs] = 1 - (1 - gl * alpha) * (1 - gb);
         this.data[bOffs] = 1 - (1 - bl * alpha) * (1 - bb);
         break;
-      case BLEND_OVERLAY:
+      case O_BLEND_OVERLAY:
         if(rl < 0.5) {
           this.data[rOffs] = (2 * (rl * alpha) + 1 - alpha) * rb;
         } else {
@@ -246,24 +191,24 @@ class ImageManager {
           this.data[bOffs] = 1 - (1 - (bl - 0.5) * 2 * alpha) * (1 - bb);
         }
         break;
-      case BLEND_SUBTRACT:
+      case O_BLEND_SUBTRACT:
           this.data[rOffs] = rb - (rl * alpha);
           this.data[gOffs] = gb - (gl * alpha);
           this.data[bOffs] = bb - (bl * alpha);
         break;
-      case BLEND_CHANNEL_DISSOLVE:
+      case O_BLEND_CHANNEL_DISSOLVE:
           if(alpha > Math.random()) this.data[rOffs] = rl;
           if(alpha > Math.random()) this.data[gOffs] = gl;
           if(alpha > Math.random()) this.data[bOffs] = bl;
         break;
-      case BLEND_DISSOLVE:
+      case O_BLEND_DISSOLVE:
         if(alpha > Math.random()) {
           this.data[rOffs] = rl;
           this.data[gOffs] = gl;
           this.data[bOffs] = bl;
         }
         break;
-      case BLEND_SHIFT_OVERLAY:
+      case O_BLEND_SHIFT_OVERLAY:
         if(rl < 0.5) {
           this.data[rOffs] = rb - (0.5 - rl) * 2 * alpha;
         } else {
@@ -280,7 +225,7 @@ class ImageManager {
           this.data[bOffs] = (bl - 0.5) * 2 * alpha + bb;
         }
         break;
-      case BLEND_OVERBLOWN_TEST:
+      case O_BLEND_OVERBLOWN_TEST:
         //the layer color is displayed as magenta if it's is overblown
         const isOverblown = rl > 1 || gl > 1 || bl > 1;
         //the color is displayed as green if it's underblown
@@ -316,22 +261,48 @@ class ImageManager {
           this.data[bOffs] = bb + alpha * (bl - bb);
         }
         break;
-      case BLEND_BAYER:
+      case O_BLEND_BAYER:
         if(alpha > BLEND_TABLE_BAYER[x % 4 + y % 4 * 4]) {
           this.data[rOffs] = rl;
           this.data[gOffs] = gl;
           this.data[bOffs] = bl;
         }
         break;
-      case BLEND_HALFTONE:
+      case O_BLEND_HALFTONE:
         if(alpha > BLEND_TABLE_HALFTONE[x % 8 + y % 8 * 8]) {
           this.data[rOffs] = rl;
           this.data[gOffs] = gl;
           this.data[bOffs] = bl;
         }
         break;
+      case O_BLEND_XOR:
+        this.data[rOffs] = ((rl * 255 * alpha) ^ (rb * 255)) / 255;
+        this.data[gOffs] = ((gl * 255 * alpha) ^ (gb * 255)) / 255;
+        this.data[bOffs] = ((bl * 255 * alpha) ^ (bb * 255)) / 255;
+        break;
+      case O_BLEND_HSV_HUE: {
+        let hsvLayer = RGB2HSV([rl, gl, bl]);
+        let hsvBase = RGB2HSV([rb, gb, bb]);
+        let rgbMerged = HSV2RGB([hsvLayer[0] * alpha + hsvBase[0], hsvBase[1], hsvBase[2]]);
+        
+        this.data[rOffs] = rgbMerged[0];
+        this.data[gOffs] = rgbMerged[1];
+        this.data[bOffs] = rgbMerged[2];
+        break;
+      }
+      case O_BLEND_HSV_SATTY: {
+        let hsvLayer = RGB2HSV([rl, gl, bl]);
+        let hsvBase = RGB2HSV([rb, gb, bb]);
+        let sattyLater = (hsvLayer[1] / 100) * alpha + 1 - alpha;
+        let rgbMerged = HSV2RGB([hsvBase[0], sattyLater * (hsvBase[1] / 100) * 100, hsvBase[2]]);
+        
+        this.data[rOffs] = rgbMerged[0];
+        this.data[gOffs] = rgbMerged[1];
+        this.data[bOffs] = rgbMerged[2];
+        break;
+      }
       default:
-        console.error(`unknown blend mode ${blend}`);
+        throw new ProcedrawError(`unknown blend mode ${blend}`);
     }
     //add the alphas together
     //alpha >1 doesnt matter on a canvas, but DOES matter for filters modifying the whole image
@@ -351,7 +322,7 @@ class ImageManager {
   
   getPixelFromData(x, y, baseData, interpMode) {
     switch(interpMode) {
-      case INTERP_NEAREST:
+      case O_INTERP_NEAREST:
         const idx = Math.floor(x) + Math.floor(y) * this.w;
         const r = baseData[idx * 4];
         const g = baseData[idx * 4 + 1];
@@ -359,7 +330,7 @@ class ImageManager {
         const a = baseData[idx * 4 + 3];
         
         return [r, g, b, a];
-      case INTERP_BILINEAR: {
+      case O_INTERP_BILINEAR: {
         const xFloor = Math.floor(x);
         const yFloor = Math.floor(y);
         const xCeil = mod(Math.ceil(x), this.w);
@@ -400,7 +371,7 @@ class ImageManager {
         
         return colorMix(col0, col2, yBias);
       }
-      case INTERP_BILINEAR_COS: {
+      case O_INTERP_BILINEAR_COS: {
         const xFloor = Math.floor(x);
         const yFloor = Math.floor(y);
         const xCeil = mod(Math.ceil(x), this.w);
@@ -441,7 +412,7 @@ class ImageManager {
   godLayer() {
     const choice = x => x[Math.floor(Math.random() * x.length)];
     /** @type {Layer} */
-    let layer = new (choice(Object.values(img.layerClasses)));
+    let layer = new (choice(Object.values(this.layerClasses)));
     //hack to prevent filter layers from generating if there are no other layers (the program crashes out if that happens)
     if(layer.isFilter && this.layers.length == 0) layer = new LayerXorFractal();
     const jsIsDumb = this; //can't use 'this' in the 'layer' case because it's undefined.................
@@ -498,7 +469,7 @@ class ImageManager {
             let min, max;
             
             if(unit == UNIT_PIXELS) {
-              const shortest = Math.max(img.w, img.h);
+              const shortest = Math.max(jsIsDumb.w, jsIsDumb.h);
               min = d.scaledMin * shortest;
               max = d.scaledMax * shortest;
             } else {
@@ -514,6 +485,9 @@ class ImageManager {
             opts[key] = new UnitLength(len, unit);
             break;
           }
+          case "string":
+            opts[key] = godText(8);
+            break;
           default:
             console.error(`Unsupported option type ${d.type}`);
         }

@@ -1,3 +1,22 @@
+//////////////////////////////////////////////
+//    All Procedraw Material is Licensed    //
+//     December, 2024-???? under MIT by.    //
+//         Backshot Betty #killtf2.         //
+//                 _______                  //
+//                |   |_|+|                 //
+//                |___|+|_|                 //
+//                |_|+|   |                 //
+//                |+|_|___|                 //
+//                                          //
+//   *Any names, or persons, illustrated    //
+// in any of the Procedraw Programs, except //
+//     that of Backshot Betty #killtf2,     //
+//          that may seem similar           //
+//               to anyone                  //
+//   in real life, are purely coincidental, //
+//         or otherwise parodic.*           //
+//////////////////////////////////////////////
+
 class Filter extends Layer {
   isFilter = true;
   
@@ -46,7 +65,7 @@ class FilterTweak extends Filter {
   
   static description = "A filter that duplicates a base layer.";
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
@@ -70,10 +89,10 @@ class FilterTile extends Filter {
   options = {
     width: new UnitLength(16, UNIT_PIXELS),
     height: new UnitLength(16, UNIT_PIXELS),
-    xOffs: new UnitLength(0, UNIT_PIXELS),
-    yOffs: new UnitLength(0, UNIT_PIXELS),
     xShift: new UnitLength(0, UNIT_PIXELS),
-    yShift: new UnitLength(0, UNIT_PIXELS)
+    yShift: new UnitLength(0, UNIT_PIXELS),
+    xPivot: new UnitLength(0, UNIT_PIXELS),
+    yPivot: new UnitLength(0, UNIT_PIXELS)
   };
   
   types = {
@@ -91,14 +110,14 @@ class FilterTile extends Filter {
       scaledMax: 1,
       step: 1
     },
-    xOffs: {
+    xPivot: {
       type: "length",
       subtype: "width",
       absoluteMin: -1,
       scaledMax: 1,
       step: 1
     },
-    yOffs: {
+    yPivot: {
       type: "length",
       subtype: "height",
       scaledMin: -1,
@@ -121,13 +140,13 @@ class FilterTile extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     const width = UnitLength.getLength(o.width, img.w, true);
     const height = UnitLength.getLength(o.height, img.h, true);
-    const xOffs = UnitLength.getLength(o.xOffs, img.w, true);
-    const yOffs = UnitLength.getLength(o.yOffs, img.h, true);
+    const xOffs = UnitLength.getLength(o.xPivot, img.w, true);
+    const yOffs = UnitLength.getLength(o.yPivot, img.h, true);
     const xShift = UnitLength.getLength(o.xShift, img.w, true);
     const yShift = UnitLength.getLength(o.yShift, img.h, true);
     
@@ -186,7 +205,7 @@ class FilterInvert extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);;
     
     for(let y = 0; y < img.h; y++) {
@@ -212,7 +231,7 @@ class FilterScale extends Filter {
     xScale: 2,
     yScale: 2,
     edgeMode: O_WRAP, //wet option
-    interpMode: INTERP_NEAREST
+    interpMode: O_INTERP_NEAREST
   };
   
   types = {
@@ -244,7 +263,7 @@ class FilterScale extends Filter {
     interpMode: LIMITS_INTERP
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     const xScale = o.xScale;
@@ -332,7 +351,7 @@ class FilterSine extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
@@ -347,6 +366,9 @@ class FilterSine extends Filter {
     }
   }
 }
+
+assert(COUNT_BLEND_MODES == 15, "FilterMerge expects 15 blend modes");
+
 class FilterMerge extends Filter {
   name = "merge";
   
@@ -356,7 +378,7 @@ class FilterMerge extends Filter {
     topBase: KEY_CANVAS,
     topAlpha: 1,
     //bottomAlpha: 1, can't figure out bottom alpha, ill deal with it later!!
-    mergeBlend: BLEND_PLAIN
+    mergeBlend: O_BLEND_PLAIN
   };
   
   types = {
@@ -372,7 +394,7 @@ class FilterMerge extends Filter {
     mergeBlend: LIMITS_BLEND
   };
   
-  generate(o) {
+  generate(img, o) {
     const bottomData = img.layerDataFromKey(this.od.base);
     const topData = img.layerDataFromKey(o.topBase);
     
@@ -399,29 +421,29 @@ class FilterMerge extends Filter {
         let r, g, b;
         
         switch(o.mergeBlend) {
-          case BLEND_ADD:
+          case O_BLEND_ADD:
             r = (rl * alpha) + rb;
             g = (gl * alpha) + gb;
             b = (bl * alpha) + bb;
             break;
-          case BLEND_MULTIPLY:
+          case O_BLEND_MULTIPLY:
             r = (rl * alpha + 1 - alpha) * rb;
             g = (gl * alpha + 1 - alpha) * gb;
             b = (bl * alpha + 1 - alpha) * bb;
             break;
-          case BLEND_PLAIN:
+          case O_BLEND_PLAIN:
             //lerp
             //TODO: something something similar to img.blend()
             r = rb + alpha * (rl - rb);
             g = gb + alpha * (gl - gb);
             b = bb + alpha * (bl - bb);
             break;
-          case BLEND_SCREEN:
+          case O_BLEND_SCREEN:
             r = 1 - (1 - rl * alpha) * (1 - rb);
             g = 1 - (1 - gl * alpha) * (1 - gb);
             b = 1 - (1 - bl * alpha) * (1 - bb);
             break;
-          case BLEND_OVERLAY:
+          case O_BLEND_OVERLAY:
             if(rl < 0.5) {
               r = (2 * (rl * alpha) + 1 - alpha) * rb;
             } else {
@@ -438,24 +460,24 @@ class FilterMerge extends Filter {
               b = 1 - (1 - (bl - 0.5) * 2 * alpha) * (1 - bb);
             }
             break;
-          case BLEND_SUBTRACT:
+          case O_BLEND_SUBTRACT:
               r = rb - (rl * alpha);
               g = gb - (gl * alpha);
               b = bb - (bl * alpha);
             break;
-          case BLEND_CHANNEL_DISSOLVE:
+          case O_BLEND_CHANNEL_DISSOLVE:
               if(alpha > Math.random()) r = rl;
               if(alpha > Math.random()) g = gl;
               if(alpha > Math.random()) b = bl;
             break;
-          case BLEND_DISSOLVE:
+          case O_BLEND_DISSOLVE:
             if(alpha > Math.random()) {
               r = rl;
               g = gl;
               b = bl;
             }
             break;
-          case BLEND_SHIFT_OVERLAY:
+          case O_BLEND_SHIFT_OVERLAY:
             if(rl < 0.5) {
               r = rb - (0.5 - rl) * 2 * alpha;
             } else {
@@ -472,7 +494,7 @@ class FilterMerge extends Filter {
               b = (bl - 0.5) * 2 * alpha + bb;
             }
             break;
-          case BLEND_OVERBLOWN_TEST:
+          case O_BLEND_OVERBLOWN_TEST:
             //the layer color is displayed as magenta if it's is overblown
             const isOverblown = rl > 1 || gl > 1 || bl > 1;
             //the color is displayed as green if it's underblown
@@ -508,22 +530,48 @@ class FilterMerge extends Filter {
               b = bb + alpha * (bl - bb);
             }
             break;
-          case BLEND_BAYER:
+          case O_BLEND_BAYER:
             if(alpha > BLEND_TABLE_BAYER[x % 4 + y % 4 * 4]) {
               r = rl;
               g = gl;
               b = bl;
             }
             break;
-          case BLEND_HALFTONE:
+          case O_BLEND_HALFTONE:
             if(alpha > BLEND_TABLE_HALFTONE[x % 8 + y % 8 * 8]) {
               r = rl;
               g = gl;
               b = bl;
             }
             break;
+          case O_BLEND_XOR:
+            r = ((rl * 255 * alpha) ^ (rb * 255)) / 255;
+            g = ((gl * 255 * alpha) ^ (gb * 255)) / 255;
+            b = ((bl * 255 * alpha) ^ (bb * 255)) / 255;
+            break;
+          case O_BLEND_HSV_HUE: {
+            let hsvLayer = RGB2HSV([rl, gl, bl]);
+            let hsvBase = RGB2HSV([rb, gb, bb]);
+            let rgbMerged = HSV2RGB([hsvLayer[0] * alpha + hsvBase[0], hsvBase[1], hsvBase[2]]);
+            
+            r = rgbMerged[0];
+            g = rgbMerged[1];
+            b = rgbMerged[2];
+            break;
+          }
+          case O_BLEND_HSV_SATTY: {
+            let hsvLayer = RGB2HSV([rl, gl, bl]);
+            let hsvBase = RGB2HSV([rb, gb, bb]);
+            let sattyLater = (hsvLayer[1] / 100) * alpha + 1 - alpha;
+            let rgbMerged = HSV2RGB([hsvBase[0], sattyLater * (hsvBase[1] / 100) * 100, hsvBase[2]]);
+            
+            r = rgbMerged[0];
+            g = rgbMerged[1];
+            b = rgbMerged[2];
+            break;
+          }
           default:
-            console.error(`unknown blend mode ${o.mergeBlend}`);
+            throw new ProcedrawError(`unknown blend mode ${o.mergeBlend}`);
         }
         
         const a = Math.min(topData[aOffs] + bottomData[aOffs], 1);
@@ -579,7 +627,7 @@ class FilterRepeat extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     let xOffs = 0;
     let yOffs = 0;
@@ -623,7 +671,7 @@ class FilterMask extends Filter {
     useGreen: true,
     useBlue: true,
     useAlpha: false,
-    mode: O_GREATER_THAN,
+    mode: O_MASK_GREATER_THAN,
     precision: 0,
     mergeAlpha: false
   };
@@ -661,12 +709,12 @@ class FilterMask extends Filter {
         "layer color <= value"
       ],
       values: [
-        O_GREATER_THAN,
-        O_LESS_THAN,
-        O_EQUAL_TO,
-        O_NOT_EQUAL_TO,
-        O_GREATER_THAN_OR_EQUAL_TO,
-        O_LESS_THAN_OR_EQUAL_TO
+        O_MASK_GREATER_THAN,
+        O_MASK_LESS_THAN,
+        O_MASK_EQUAL_TO,
+        O_MASK_NOT_EQUAL_TO,
+        O_MASK_GREATER_THAN_OR_EQUAL_TO,
+        O_MASK_LESS_THAN_OR_EQUAL_TO
       ]
     },
     precision: {
@@ -680,7 +728,7 @@ class FilterMask extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const baseData = img.layerDataFromKey(this.od.base);
     const compareData = img.layerDataFromKey(o.maskBase);
     let compareValue = 0;
@@ -710,32 +758,32 @@ class FilterMask extends Filter {
         if(o.precision != 0) compareColor = Math.round(compareColor / (o.precision * channelCount)) * o.precision * channelCount;
           
         switch(o.mode) {
-          case O_GREATER_THAN:                
+          case O_MASK_GREATER_THAN:                
             if(compareColor > compareValue) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
             break;
-          case O_LESS_THAN:                
+          case O_MASK_LESS_THAN:                
             if(compareColor < compareValue) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
             break;
-          case O_EQUAL_TO:                
+          case O_MASK_EQUAL_TO:                
             if(compareColor == compareValue) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
             break;
-          case O_NOT_EQUAL_TO:                
+          case O_MASK_NOT_EQUAL_TO:                
             if(compareColor != compareValue) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
             break;
-          case O_GREATER_THAN_OR_EQUAL_TO:                
+          case O_MASK_GREATER_THAN_OR_EQUAL_TO:                
             if(compareColor >= compareValue) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
             break;
-          case O_LESS_THAN_OR_EQUAL_TO:                
+          case O_MASK_LESS_THAN_OR_EQUAL_TO:                
             if(compareColor <= compareValue) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
@@ -779,7 +827,7 @@ class FilterEmboss extends Filter {
     }
   };
   //like repeated emboss
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
@@ -844,7 +892,7 @@ class FilterContrast extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     if(o.normalize) {
@@ -881,6 +929,7 @@ class FilterContrast extends Filter {
       for(let y = 0; y < img.h; y++) {
         for(let x = 0; x < img.w; x++) {
           const idx = x + y * img.w;
+          //TODO: why is the brightness calmped?
           const r = clamp((clamp(data[idx * 4] + o.brightness, 0, 1) - 0.5) * o.strength + 0.5, 0, 1);
           const g = clamp((clamp(data[idx * 4 + 1] + o.brightness, 0, 1) - 0.5) * o.strength + 0.5, 0, 1);
           const b = clamp((clamp(data[idx * 4 + 2] + o.brightness, 0, 1) - 0.5) * o.strength + 0.5, 0, 1);
@@ -925,7 +974,7 @@ class FilterBlur extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     const blurRadius = UnitLength.getLength(o.blurRadius, Math.min(img.w, img.h), true);
     const blurDiameter = blurRadius * 2 + 1;
@@ -1016,7 +1065,7 @@ class FilterHSV extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
@@ -1042,9 +1091,9 @@ class FilterHSV extends Filter {
 class FilterSharpen extends Filter {
   name = "sharpen";
   
-  static description = "A filter that enhances the edges of a base layer.";
+  static description = "A filter that highlights the edges of a base layer. Works well when the blend mode is set to overlay.";
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     for(let y = 0; y < img.h; y++) {
@@ -1081,11 +1130,12 @@ class FilterSharpen extends Filter {
 class FilterOffset extends Filter {
   name = "offset";
   
-  static description = "A filter that offsets a base layer based on another layer's pixels. It can be useful to use the vectorize filter with this.\n\nThe red channels controls x movement (0 is fully left, 127 is the center, 255 is fully right). The green channels controls y movement (0 is fully down, 127 is the center, 255 is fully up).";
+  static description = "A filter that offsets a base layer based on another layer's pixels. It can be useful to use the vectorize filter with this.\n\nThe red channels controls x movement (255 is fully left, 127 is the center, 0 is fully right). The green channels controls y movement (0 is fully down, 127 is the center, 255 is fully up).";
   
   options = {
     offsetLayer: KEY_CANVAS,
-    magnitude: new UnitLength(4, UNIT_PIXELS)
+    magnitude: new UnitLength(4, UNIT_PIXELS),
+    interpMode: O_INTERP_NEAREST
   };
   
   types = {
@@ -1098,45 +1148,35 @@ class FilterOffset extends Filter {
       scaledMin: -1,
       scaledMax: 1,
       step: 1
-    }
+    },
+    interpMode: LIMITS_INTERP
   };
   
-  generate(o) {
+  generate(img, o) {
     const baseData = img.layerDataFromKey(this.od.base);
     const offsetData = img.layerDataFromKey(o.offsetLayer);
     
     const magnitude = UnitLength.getLength(o.magnitude, Math.min(img.w, img.h));
-    /*for(let y = 0; y < img.h; y++) {
-      let xOffs = Math.sin(y / img.h * Math.PI) * 4;
-      for(let x = 0; x < img.w; x++) {
-        let yOffs = Math.sin(x / img.w * Math.PI * 4) * 2;
-        const idx = mod(x + Math.floor(xOffs), img.w) + mod(y + Math.floor(yOffs), img.h) * img.w;
-        const r = data[idx * 4];
-        const g = data[idx * 4 + 1];
-        const b = data[idx * 4 + 2];
-        const a = data[idx * 4 + 3];
-        img.plotPixel([r, g, b, a], x, y);
-      }
-    }*/
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         const staticIdx = x + y * img.w;
         
         const ro = offsetData[staticIdx * 4];
         const go = offsetData[staticIdx * 4 + 1];
-        const bo = offsetData[staticIdx * 4 + 2];
+        //const bo = offsetData[staticIdx * 4 + 2];
         const ao = offsetData[staticIdx * 4 + 3];
         //between -1...1
-        const xOffs = (ro * 2 - 1) * ao;
-        const yOffs = (go * 2 - 1) * ao;
+        const xOffs = (ro * 2 - 1) * ao * magnitude;
+        const yOffs = (go * 2 - 1) * ao * magnitude;
         
-        const offsetIdx = mod(x + Math.floor(xOffs * magnitude), img.w) + mod(y + Math.floor(yOffs * magnitude), img.h) * img.w;
+        //const offsetIdx = mod(y + Math.floor(yOffs * magnitude), img.h) * img.w;
+        const col = img.getPixelFromData(mod(x + xOffs, img.w), mod(y + yOffs, img.h), baseData, o.interpMode);
         
-        const rb = baseData[offsetIdx * 4];
-        const gb = baseData[offsetIdx * 4 + 1];
-        const bb = baseData[offsetIdx * 4 + 2];
-        const ab = baseData[offsetIdx * 4 + 3];
-        img.plotPixel([rb, gb, bb, ab], x, y);
+        //const rb = baseData[offsetIdx * 4];
+        //const gb = baseData[offsetIdx * 4 + 1];
+        //const bb = baseData[offsetIdx * 4 + 2];
+        //const ab = baseData[offsetIdx * 4 + 3];
+        img.plotPixel(col, x, y);
       }
     }
   }
@@ -1147,7 +1187,7 @@ class FilterVectorize extends Filter {
   
   static description = "A filter that generates a normal map of a base layer.";
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     //   +y
@@ -1229,7 +1269,7 @@ class FilterSunlight extends Filter {
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     //this is which way the light is pointing
     //compared to the emboss layer, whose dir controls which way the light is coming from
@@ -1262,7 +1302,7 @@ class FilterShear extends Filter {
   options = {
     xMagnitude: new UnitLength(0.5, UNIT_PIXELS),
     yMagnitude: new UnitLength(0, UNIT_PIXELS),
-    interpMode: INTERP_NEAREST
+    interpMode: O_INTERP_NEAREST
   };
   
   types = {
@@ -1283,7 +1323,7 @@ class FilterShear extends Filter {
     interpMode: LIMITS_INTERP
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
     const xMagnitude = UnitLength.getLength(o.xMagnitude, img.w);
@@ -1300,68 +1340,81 @@ class FilterShear extends Filter {
   }
 }
 
-
-/*class FilterLightbulb extends Filter {
-  name = "lightbulb";
+class FilterFunctionPass extends Filter {
+  name = "functionPass";
   
-  static description = "A filter that simulates light from a single source over a base layer. Works well with the vectorize filter.";
+  static description = "A filter that passes a base layer's colors through a function.";
   
   options = {
-    xLight: new UnitLength(50, UNIT_PERCENTAGE),
-    yLight: new UnitLength(50, UNIT_PERCENTAGE),
-    radius: new UnitLength(16, UNIT_PIXELS)
-    //TODO: combine?
-    //TODO: light color
-    //TODO: ambient color
-    //TODO: sunlight or point light
-    //TODO: strength
-    //TODO: zLight (height from surface)
-    //TODO: direction seems more sunlight-ish, while the radius stuff seems more point light-ish
+    n0: 2,
+    mode: O_FUNCTION_CLAMP
   };
   
   types = {
-    xLight: {
-      type: "length",
-      subtype: "position"
+    n0: {
+      type: "number",
+      step: 0.05,
+      min: -32,
+      max: 32
     },
-    yLight: {
-      type: "length",
-      subtype: "position"
-    },
-    radius: {
-      type: "length",
-      subtype: "dimension"
+    mode: {
+      type: "keyvalues",
+      keys: [
+        "clamp(pixel)",
+        "wrap(pixel)",
+        "sqrt(pixel)",
+        "pixel ^ n0"
+      ],
+      values: [
+        O_FUNCTION_CLAMP,
+        O_FUNCTION_WRAP,
+        O_FUNCTION_SQRT,
+        O_FUNCTION_POWER
+      ]
     }
   };
   
-  generate(o) {
+  generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
-    const xLight = UnitLength.getLength(o.xLight, img.w);
-    const yLight = UnitLength.getLength(o.yLight, img.h);
-    const radius = UnitLength.getLength(o.radius, Math.min(img.w, img.h));
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         const idx = x + y * img.w;
-        const r = data[idx * 4];
-        const g = data[idx * 4 + 1];
-        const xVecBase = r * 2 - 1;
-        const yVecBase = g * 2 - 1;
+        const rb = data[idx * 4];
+        const gb = data[idx * 4 + 1];
+        const bb = data[idx * 4 + 2];
+        const ab = data[idx * 4 + 3];
         
-        const xVecLight = xLight - x; //adjacent
-        const yVecLight = yLight - y; //opposite
-        //const hypotenuse = Math.sqrt(adjacent * adjacent + opposite * opposite);
-        //const dotProduct = xVecLight * xVecBase + yVecLight * xVecBase;
-        //const lightDist = 1 - hypotenuse / radius;
+        let r, g, b, a;
+        a = ab;
+        switch(o.mode) {
+          case O_FUNCTION_CLAMP:
+            r = (rb > 1) ? 1 : ((rb < 0) ? 0 : rb);
+            g = (rb > 1) ? 1 : ((rb < 0) ? 0 : rb);
+            b = (rb > 1) ? 1 : ((rb < 0) ? 0 : rb);
+            break;
+            
+          case O_FUNCTION_WRAP:
+            r = mod(rb, 1);
+            g = mod(gb, 1);
+            b = mod(bb, 1);
+            break;
+            
+          case O_FUNCTION_SQRT:
+            r = Math.sqrt(rb);
+            g = Math.sqrt(gb);
+            b = Math.sqrt(bb);
+            break;
+            
+          case O_FUNCTION_POWER:
+            r = rb ** o.n0;
+            g = gb ** o.n0;
+            b = bb ** o.n0;
+            break;
+        }
         
-        //direction from the current pixel to the light
-        //also this could be optimized with trig stuff (calculate sine with previous stuffs)
-        const dirBase = Math.atan(yVecBase / xVecBase);
-        const dirLight = Math.atan(yVecLight / xVecLight);
-        
-        const brightness = Math.cos(dirBase + dirLight) + Math.sin(dirBase + dirLight) / 2 + 0.5;
-        img.plotPixel([brightness, brightness, brightness, 1], x, y);
+        img.plotPixel([r, g, b, a], x, y);
       }
     }
   }
-}*/
+}

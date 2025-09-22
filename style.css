@@ -108,10 +108,14 @@ hr {
 .layer-container {
   border-bottom: var(--otln) 1px solid;
   height: 66px;
-  width: auto;
+  /*width: auto;
   box-sizing: border-box;
-  margin: 1px;
+  margin: 1px;*/
   background: var(--bg-cont);
+  min-width: 100%;
+}
+.layer-container td {
+  text-align: center;
 }
 .layer-highlight {
   background: linear-gradient(180deg, #404040 0, #606060 100%);
@@ -132,6 +136,10 @@ hr {
   width: auto;
   height: 100%;
   background-color: transparent;
+  cursor: pointer;
+}
+.layer-select:active {
+  background-color: #00000080;
 }
 .layer-button-container {
   float: left;
@@ -187,9 +195,9 @@ hr {
 .layer-icon-container {
   height: 100%;
   width: auto;
-  display: flex;
+  /*display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: center;*/
   float: left;
   background: 0;
 }
@@ -252,7 +260,7 @@ input[type=range]::-webkit-slider-thumb {
   border-left: 1px solid #606060;
   border-right: 1px solid #202020;
   outline: 1px solid var(--otln);
-  border-radius: 2px;
+  border-radius: 0;
   margin: 1px;
   height: 24px;
   width: 4px;
@@ -264,12 +272,13 @@ input[type=range]::-moz-range-thumb {
   border-left: 1px solid #606060;
   border-right: 1px solid #202020;
   outline: 1px solid var(--otln);
-  border-radius: 2px;
+  border-radius: 0;
   margin: 1px;
   height: 24px;
   width: 4px;
 }
 input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
+  /*TODO: just make this borders n shit*/
   color: white;
   background: linear-gradient(180deg, black 0, #404040 100%);
   border-bottom: 1px solid black;
@@ -277,7 +286,6 @@ input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
   border-left: 1px solid #606060;
   border-right: 1px solid #202020;
   outline: 1px solid var(--otln);
-  border-radius: 2px;
   margin: 1px;
   height: 24px;
 }
@@ -312,6 +320,7 @@ textarea {
 }
 select {
   background-color: var(--bg);
+  width: 222px;
 }
 button {
   cursor: pointer;
@@ -337,29 +346,44 @@ button {
 }
 .input-dial {
   color: white;
-  background: /*url("img/ui/dial-bg.png"), */linear-gradient(180deg, black 0, #404040 100%);
+  background: url("img/ui/dial-bg.png"), linear-gradient(180deg, black 0, #404040 100%);
   border-bottom: 1px solid black;
   border-top: 1px solid #808080;
   outline: 1px solid var(--otln);
   margin: 1px;
   /*SOMETHING makes the dial 2 pixels smaller, idk what it is*/
-  width: 64px;
-  height: 64px;
+  width: 128px;
+  height: 128px;
   border-radius: 50%;
   padding: 0;
 }
+.woke-conic-bg {
+  background: conic-gradient(#ff0000, #ff00ff, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000);
+}
 .input-dial-face {
   background-image: url("img/ui/dial.png");
-  width: 62px;
-  height: 62px;
+  width: 126px;
+  height: 126px;
   pointer-events: none;
   margin-left: 1px;
+}
+.input-option-textarea {
+  min-width: 220px;
+  max-width: 220px;
+  font-size: 16px;
 }
 /******** COLOR PICKER ********/
 .woke-bg {
   background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
 }
 .colp-input {
+  width: 222px;
+  height: 32px;
+  outline: 1px solid var(--otln);
+  display: inline-block;
+  background: 0; /*hide button gradient*/
+}
+.colp-palette-entry {
   width: 32px;
   height: 32px;
   outline: 1px solid var(--otln);
@@ -411,27 +435,26 @@ button {
   width: 128px;
 }
 /******** LAYER SELECT DROPDOWN ********/
-table {
+.layer-select-table {
   /*REMOVE REDUNDANT STUFF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
   outline: 1px solid #404040;
-  border-radius: 2px;
   border-spacing: 0;
   font-size: 0.75em;
   font-family: sans-serif;
   width: fit-content;
   position: absolute;
 }
-tbody {
+.layer-select-table tbody {
   background: linear-gradient(180deg, black 0, #202020 100%);
 }
-th {
+.layer-select-table th {
   background-color: #ffffff20;
   border-bottom: 1px solid black;
   border-top: 1px solid #808080;
   border-left: 1px solid #606060;
   border-right: 1px solid #202020;
 }
-td {
+.layer-select-table td {
   border-left: 1px solid #606060;
   border-right: 1px solid #202020;
   width: 33.33%;
@@ -502,6 +525,16 @@ td {
 .outline-invalid:active {
   outline: red 1px solid;
 }
+.palette-container {
+  position: absolute;
+  width: fit-content;
+  height: fit-content;
+  border: 1px solid var(--otln);
+  padding: 4px;
+  box-sizing: border-box;
+  background: var(--bg-cont);
+  white-space: nowrap;
+}
 .credits-container {
   position: absolute;
   width: 512px;
@@ -537,7 +570,7 @@ td {
   filter: invert(1);
 }
 .unit-button {
-  width: 52px;
+  width: 58px; /*the number input is wider than this for some reason?*/
   height: 24px;
   border-bottom-right-radius: 24px;
   border-bottom-left-radius: 24px;
