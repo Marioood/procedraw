@@ -1,24 +1,10 @@
-//////////////////////////////////////////////
-//    All Procedraw Material is Licensed    //
-//     December, 2024-???? under MIT by.    //
-//         Backshot Betty #killtf2.         //
-//                 _______                  //
-//                |   |_|+|                 //
-//                |___|+|_|                 //
-//                |_|+|   |                 //
-//                |+|_|___|                 //
-//                                          //
-//   *Any names, or persons, illustrated    //
-// in any of the Procedraw Programs, except //
-//     that of Backshot Betty #killtf2,     //
-//          that may seem similar           //
-//               to anyone                  //
-//   in real life, are purely coincidental, //
-//         or otherwise parodic.*           //
-//////////////////////////////////////////////
+//
+// All Procedraw material is licensed under MIT
+// Author: Marioood
+// Purpose: helpful functions that are used everywhere in the code
+//
 
 "use strict";
-//helpful functions that are used everywhere in the code
 
 //color / ui//
 function RGB2Hex(arr) {
@@ -132,9 +118,9 @@ function hex2RGB(hex) {
   //convert #RRGGBB to 0xRRGGBB and then [R, G, B] from 0...1
   //rgba or rgb depending on length
   if(hex.length <= 7) {
-    return intRGB2RGB(Number("0x" + hex.slice(1) + "ff"));
+    return intRGB2RGB(parseInt(hex.slice(1) + "ff", 16));
   } else {
-    return intRGB2RGB(Number("0x" + hex.slice(1)));
+    return intRGB2RGB(parseInt(hex.slice(1), 16));
   }
 }
 function limitDarkness(color) {
@@ -154,7 +140,8 @@ function colorMix(col0, col1, percent/*, mode = MIX_PLAIN*/) {
   const a = col0[3] + percent * (col1[3] - col0[3]);
   //do this so the transition between opaque and transparent colors doesnt look weird and muddy
   //if the second color's alpha is larger than the first colors then the colors will look all messed up. its better to leave it muddy for now until i figure out how to fix it
-  if(col0[3] < col1[3]) {
+  //check if a isn't 0 to prevent division by 0 errors
+  if(col0[3] < col1[3] && a > 0) {
     percent /= a;
   }
   const r = col0[0] + percent * (col1[0] - col0[0]);
@@ -240,14 +227,53 @@ function deepObjectCopy(oldObj) {
   }
   return newObj;
 }
-function assert(condition, error = "Unknown.") {
-  if(!condition) {
-    console.error("Assertion failed: " + error)
+//parameters are assumed to be arrays
+//this only works if the arrays do not contain arrays or objects
+function arrayIsEqualShallow(arr1, arr2) {
+  if(arr1.length != arr2.length) return false;
+  //the length of each array has already been checked, so they are the same length
+  for(let i = 0; i < arr1.length; i++) {
+    if(arr1[i] != arr2[i]) return false;
+  }
+  
+  return true;
+}
+//Purpose: copies the contents of dest into source whilst preserving the reference of arr1
+function memcpy(dest, source) {
+  //doing (dest[(index greater than length)] = something) works! it's like an insert operation
+  for(let i = 0; i < source.length; i++) {
+    dest[i] = source[i];
+  }
+  if(dest.length > source.length) {
+    //trim off items that would be preserved from the copy
+    let lenDif = dest.length - source.length;
+    for(let i = 0; i < lenDif; i++) {
+      dest.pop();
+    }
   }
 }
-function killChildren(container) {
-  while(container.firstChild) {
-    container.removeChild(container.lastChild);
+//splits a string into a series of segments
+//segmentString("abc1235678", 2) -> ["ab", "c1", "23", "56", "78"]
+//segmentString("abc1235678", 3) -> ["abc", "123", "567", "8"]
+//str is assumed to be a string, and seglen is assumed to be a positive integer
+function segmentString(str, seglen) {
+  //account for a string that cannot be split evenly (e.g. a string of length 4 that is split into segments 3 chars long)
+  let remainder = str.length % seglen;
+  let wholeSegCount = Math.floor(str.length / seglen);
+  let output = [];
+  
+  for(let seg = 0; seg < wholeSegCount; seg++) {
+    output.push(str.slice(seg * seglen, (seg + 1) * seglen));
+  }
+  //added if the string cannot be split evenly
+  if(remainder > 0) {
+    output.push(str.slice(str.length - remainder, str.length));
+  }
+  return output;
+}
+function assert(condition, error = "Unknown.") {
+  if(!condition) {
+    console.error("Assertion failed: " + error);
   }
 }
 function godText(max) {
@@ -270,62 +296,6 @@ function monkeyText(count) {
     text += String.fromCodePoint(code);
   }
   return text
-}
-//do NOT change these values! they are used in saves
-const UNIT_PIXELS = 0;
-const UNIT_PERCENTAGE = 1;
-const UNIT_VAR = 2;
-const UNIT_RATIO = 3;
-          
-class UnitLength {
-  //ALL FUNCTIONS IN THIS CLASS __HAVE__ TO BE STATIC; OTHERWISE, LAYER DUPLICATION WILL NOT WORK
-  value;
-  unit;
-  //lengthType;
-  
-  constructor(value, unit) {
-    this.value = value;
-    this.unit = unit;
-    //this.lengthType = lengthType;
-  }
-  //returns the current length (in pixels)
-  static getLength(unitLength, maxLength, isRounded) {
-    let length;
-    
-    switch(unitLength.unit) {
-      case UNIT_PIXELS:
-        length = unitLength.value;
-        break;
-      case UNIT_PERCENTAGE:
-        length = unitLength.value / 100 * maxLength;
-        break;
-      default:
-        console.error("error in 'getLength()': unknown unit " + unitLength.unit);
-        length = 0;
-        break;
-    }
-    if(length == NaN) {
-      alert("unit length returned as not a number (!!!)\n\n" + unitLength);
-      return 1;
-    }
-    if(isRounded) {
-      return Math.floor(length);
-    } else {
-      return length;
-    }
-  }
-  //returns the name of the current unit
-  static getUnitText(unitLength) {
-    switch(unitLength.unit) {
-      case UNIT_PIXELS:
-        return "pixels";
-      case UNIT_PERCENTAGE:
-        return "%";
-      default:
-        console.error("error in 'getUnitText()': unknown unit " + unitLength.unit);
-        return "undefined";
-    }
-  }
 }
 
 class ProcedrawError extends Error {

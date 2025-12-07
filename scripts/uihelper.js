@@ -102,3 +102,52 @@ function Textarea(hint, oninput, className) {
   textarea.oninput = oninput;
   return textarea;
 }
+function Td(child, className) {
+  const td = Tag("td", className);
+  if(child != undefined) {
+    td.appendChild(child);
+  }
+  return td;
+}
+function Tr(...tags) {
+  let tr = Tag("tr");
+  //hack to have the args be (...tags) OR (...tags, className)
+  //operator overloading wouldn't work because you can't require specific types in javascript
+  if(typeof(tags[tags.length - 1]) == "string") {
+      tr.className = tags.pop();
+  }
+  for(let i = 0; i < tags.length; i++) {
+      tr.appendChild(tags[i]);
+  }
+  return tr;
+}
+function Table(...tags) {
+  let table = Tag("table");
+  //hack to have the args be (...tags) OR (...tags, className)
+  //operator overloading wouldn't work because you can't require specific types in javascript
+  if(typeof(tags[tags.length - 1]) == "string") {
+      table.className = tags.pop();
+  }
+  for(let i = 0; i < tags.length; i++) {
+      table.appendChild(tags[i]);
+  }
+  return table;
+}
+
+function setTitle(text) {
+  const title = document.getElementsByTagName("title")[0];
+  title.textContent = "procedraw | " + text;
+}
+//sets an element's attribute and returns the element
+//Purpose: makes code a little more concise, because i dont have to declare as many variables when i want a somewhat complicated element wrapped in a div or table
+function setAttr(elem, attr, value) {
+  elem.setAttribute(attr, value);
+  
+  return elem;
+}
+//Purpose: kill children. used for recreating the layer options (i think) and recreating the layer list
+function killChildren(container) {
+  while(container.firstChild) {
+    container.removeChild(container.lastChild);
+  }
+}

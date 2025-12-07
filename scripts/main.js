@@ -38,20 +38,14 @@ function main() {
   const tether = new Tether();
   //rename to img again
   //this is the actual image itself
-  const renameme = new ProcedrawImage();
-  //main has had it's heart level shattered to 10%
-  setupLayerManagementButtons(renameme, tether);
-  setupImageOptions(renameme, tether, serial);
-  setupHeaderMenu(renameme, tether, serial);
-  setupKeybinds(renameme, tether);
+  const img = new ProcedrawImage();
+  //main has had its heart level shattered to 10%
+  setupLayerManagementButtons(img, tether);
+  setupImageOptions(img, tether, serial);
+  setupHeaderMenu(img, tether, serial);
+  setupKeybinds(img, tether);
   
   //////// URL SAVE LOADING ////////
-  function generateSaveUrl(data) {
-    const url = new URL(location.href);
-    url.searchParams.set("save", data);
-    return url.toString();
-  }
-
   const params = new URLSearchParams(window.location.search);
 
   (async() => {
@@ -60,14 +54,14 @@ function main() {
     const o = save;
 
     try {
-      await serial.loadEnc(renameme, save);
-      tether.generateLayerList(renameme);
-      renameme.updateSize();
-      tether.updateSize(renameme);
-      tether.printImage(renameme);
-      tether.setTitle(renameme.name);
+      await serial.loadEnc(img, save);
+      tether.generateLayerList(img);
+      img.updateSize();
+      tether.updateSize(img);
+      tether.printImage(img);
+      setTitle(img.name);
       
-      document.getElementById("img-bg-input").value = '#' + RGB2Hex(renameme.bg);
+      document.getElementById("img-bg-input").value = '#' + RGB2Hex(img.bg);
       document.getElementById("img-load-data").value = o;
     } catch (why) {
       console.error("Failed to load save");
@@ -84,7 +78,7 @@ function main() {
     //t.canvasScale -= Math.sqrt(Math.abs(e.deltaY / 128)) * zoomMult;
     tether.canvasScale -= (e.deltaY / 128)/* ** 2 * zoomMult*/;
     tether.canvasScale = Math.max(tether.canvasScale, 0);
-    tether.updateCanvasScale(renameme);
+    tether.updateCanvasScale(img);
   };
   
   //refresh warning
@@ -95,16 +89,16 @@ function main() {
     });
   }
   if(DEBUG) console.log("debug mode is enabled; some features may be disabled or enabled");
-  tether.updateSize(renameme);
-  tether.printImage(renameme, true);
+  tether.updateSize(img);
+  tether.printImage(img, true);
 }
 
-function setupLayerManagementButtons(renameme, tether) {
+function setupLayerManagementButtons(img, tether) {
   const removeLayer = document.getElementById("remove-layer");
   removeLayer.addEventListener("click", function (e) {
     //dont do anything if there arent any layers
-    if(renameme.layers.length == 0) return;
-    const curLayer = renameme.layers[tether.currentLayer]
+    if(img.layers.length == 0) return;
+    const curLayer = img.layers[tether.currentLayer]
     if(curLayer.linkCount > 0) {
       alert(`unable to delete layer; it is currently linked with ${curLayer.linkCount} filters(s)`);
       return;
@@ -113,7 +107,7 @@ function setupLayerManagementButtons(renameme, tether) {
       const baseKey = curLayer.od.base;
       //skip the link count stuff if the base isn't set
       if(baseKey != KEY_CANVAS) { 
-        renameme.layers[renameme.layerKeys[baseKey]].linkCount--;
+        img.layers[img.layerKeys[baseKey]].linkCount--;
       }
       //decrement link counts in layers linked via options (FilterMerge)
       const keys = Object.keys(curLayer.options);
@@ -122,41 +116,41 @@ function setupLayerManagementButtons(renameme, tether) {
         const key = keys[i];
         if(curLayer.types[key].type == "layer") {
           const layerKey = curLayer.options[key];
-          if(layerKey != KEY_CANVAS) renameme.layers[renameme.layerKeys[layerKey]].linkCount--;
+          if(layerKey != KEY_CANVAS) img.layers[img.layerKeys[layerKey]].linkCount--;
         }
       }
     }
     //copy keys so that index searching doesn't break
-    let keysCopy = new Array(renameme.layerKeys.length);
-    for(let i = 0; i < keysCopy.length; i++) keysCopy[i] = renameme.layerKeys[i];
+    let keysCopy = new Array(img.layerKeys.length);
+    for(let i = 0; i < keysCopy.length; i++) keysCopy[i] = img.layerKeys[i];
     //mark the deleted layer as free
-    renameme.layerKeysFreed.push(keysCopy.indexOf(tether.currentLayer));
-    keysCopy[renameme.layerKeys.indexOf(tether.currentLayer)] = KEY_FREED;
+    img.layerKeysFreed.push(keysCopy.indexOf(tether.currentLayer));
+    keysCopy[img.layerKeys.indexOf(tether.currentLayer)] = KEY_FREED;
     //rearrange layer keys
-    for(let i = tether.currentLayer + 1; i < renameme.layers.length; i++) {
-      const idx = renameme.layerKeys.indexOf(i);
+    for(let i = tether.currentLayer + 1; i < img.layers.length; i++) {
+      const idx = img.layerKeys.indexOf(i);
       keysCopy[idx]--;
     }
     //copy the modified keys back
-    for(let i = 0; i < keysCopy.length; i++) renameme.layerKeys[i] = keysCopy[i];
+    for(let i = 0; i < keysCopy.length; i++) img.layerKeys[i] = keysCopy[i];
     
-    renameme.layers.splice(tether.currentLayer, 1);
+    img.layers.splice(tether.currentLayer, 1);
     //go down a layer if we're in the middle, stay in place if we're at the bottom
     if(tether.currentLayer > 0) {
        tether.setCurrentLayer(tether.currentLayer - 1);
     }
     //clear layer keys and freed indexes if there are no layers (prevent memory leaks)
-    if(renameme.layers.length == 0) {
-      renameme.layerKeys = [];
-      renameme.layerKeysFreed = [];
+    if(img.layers.length == 0) {
+      img.layerKeys = [];
+      img.layerKeysFreed = [];
     }
-    tether.updateLayerOptions(renameme);
-    tether.generateLayerList(renameme);
-    tether.printImage(renameme);
+    tether.updateLayerOptions(img);
+    tether.generateLayerList(img);
+    tether.printImage(img);
   });
   //warning that you cant remove right now!
   removeLayer.onmousedown = (e) => {
-    if(renameme.layers.length == 0) {
+    if(img.layers.length == 0) {
       removeLayer.classList.add("outline-invalid");
     } else {
       removeLayer.classList.remove("outline-invalid");
@@ -165,61 +159,61 @@ function setupLayerManagementButtons(renameme, tether) {
 
   const clearLayer = document.getElementById("clear-layer");
   clearLayer.addEventListener("click", function (e) {
-    if(renameme.layers.length == 0) return;
+    if(img.layers.length == 0) return;
     if(confirm("Clear all layers? This cannot be undone.")) {
       //go down a layer if we're in the middle, stay in place if we're at the bottom
       tether.setCurrentLayer(0);
-      renameme.layers = [];
+      img.layers = [];
       //clear layer keys and freed indexes if there are no layers (prevent memory leaks)
-      renameme.layerKeys = [];
-      renameme.layerKeysFreed = [];
-      tether.updateLayerOptions(renameme);
-      tether.generateLayerList(renameme);
-      tether.printImage(renameme);
+      img.layerKeys = [];
+      img.layerKeysFreed = [];
+      tether.updateLayerOptions(img);
+      tether.generateLayerList(img);
+      tether.printImage(img);
     }
   });
   //warning that you cant remove right now!
   clearLayer.onmousedown = (e) => {
-    if(renameme.layers.length == 0) {
+    if(img.layers.length == 0) {
       clearLayer.classList.add("outline-invalid");
     } else {
       clearLayer.classList.remove("outline-invalid");
     }
   };
   const addLayer = document.getElementById("add-layer");
-  addLayer.addEventListener("click", function (e) {
-    if(renameme.layers.length > 0) {
+  addLayer.onclick = (e) => {
+    if(img.layers.length > 0) {
       tether.setCurrentLayer(tether.currentLayer + 1);
     }
     const layer = new tether.currentClass;
     layer.displayName = layer.name;
-    renameme.insertLayer(tether.currentLayer, layer);
+    img.insertLayer(tether.currentLayer, layer);
     
-    tether.updateLayerOptions(renameme);
-    tether.generateLayerList(renameme);
-    tether.printImage(renameme);
-  });
+    tether.updateLayerOptions(img);
+    tether.generateLayerList(img);
+    tether.printImage(img);
+  };
   const dupeLayer = document.getElementById("dupe-layer");
   dupeLayer.addEventListener("click", function (e) {
-    const layer2Dupe = renameme.layers[tether.currentLayer];
+    const layer2Dupe = img.layers[tether.currentLayer];
     if(layer2Dupe == null) return;
 
-    const clone = new renameme.layerClasses[layer2Dupe.name];
+    const clone = new img.layerClasses[layer2Dupe.name];
     //create copies - not references
     clone.options = deepObjectCopy(layer2Dupe.options);
     clone.od = deepObjectCopy(layer2Dupe.od);
     
     tether.setCurrentLayer(tether.currentLayer + 1);
-    clone.displayName = "copy of " + renameme.layers[tether.currentLayer - 1].displayName;
-    renameme.insertLayer(tether.currentLayer, clone);
+    clone.displayName = "copy of " + img.layers[tether.currentLayer - 1].displayName;
+    img.insertLayer(tether.currentLayer, clone);
     //fix that smearing!!
-    tether.updateLayerOptions(renameme);
-    tether.generateLayerList(renameme);
-    tether.printImage(renameme);
+    tether.updateLayerOptions(img);
+    tether.generateLayerList(img);
+    tether.printImage(img);
   });
   //warning that you cant dupe right now!
   dupeLayer.onmousedown = (e) => {
-    if(renameme.layers.length == 0) {
+    if(img.layers.length == 0) {
       dupeLayer.classList.add("outline-invalid");
     } else {
       dupeLayer.classList.remove("outline-invalid");
@@ -228,16 +222,16 @@ function setupLayerManagementButtons(renameme, tether) {
   
   const randomLayer = document.getElementById("random-layer");
   randomLayer.addEventListener("click", function (e) {
-    if(renameme.layers.length > 0) {
+    if(img.layers.length > 0) {
       tether.setCurrentLayer(tether.currentLayer + 1);
     }
-    const layer = renameme.godLayer();
+    const layer = img.godLayer();
     layer.displayName = layer.name;
-    renameme.insertLayer(tether.currentLayer, layer);
+    img.insertLayer(tether.currentLayer, layer);
     
-    tether.updateLayerOptions(renameme);
-    tether.generateLayerList(renameme);
-    tether.printImage(renameme);
+    tether.updateLayerOptions(img);
+    tether.generateLayerList(img);
+    tether.printImage(img);
   });
   //LAYER SELECT STUFFFFFFFS
   let layerSelectShown = false;
@@ -252,7 +246,7 @@ function setupLayerManagementButtons(renameme, tether) {
     }
     layerSelectShown = !layerSelectShown;
   };
-  assert(Object.keys(renameme.layerClasses).length == 31, "layer-select-table expects 31 layers.");
+  assert(Object.keys(img.layerClasses).length == 34, "layer-select-table expects 31 layers.");
   document.getElementById("layer-select-table").style.display = "none";
   //TODO: maybe have this be decided based on some value in the layer?
   const regularNames = [
@@ -262,7 +256,9 @@ function setupLayerManagementButtons(renameme, tether) {
       "border",
       "checkers",
       "gradient",
-      "waveTable"
+      "waveTable",
+      "mandelbrot",
+      "seedFractal"
     ],
     [
       "noise",
@@ -273,7 +269,8 @@ function setupLayerManagementButtons(renameme, tether) {
     [
       "wandering",
       "blobs",
-      "bitmapText"
+      "bitmapText",
+      "tileMap"
     ]
   ]
   const filterNames = [
@@ -325,15 +322,26 @@ function setupLayerManagementButtons(renameme, tether) {
       const button = document.createElement("button");
       button.className = "layer-select-table-button";
       button.innerText = item;
-      button.title = renameme.layerClasses[item].description;
+      button.title = img.layerClasses[item].description;
       button.value = item;
 
       button.onclick = (e) => {
         let className = e.target.value;
-        tether.currentClass = renameme.layerClasses[className];
+        tether.currentClass = img.layerClasses[className];
         document.getElementById("layer-select-table").style.display = "none";
         layerSelectShown = false;
         layerSelectDropdown.innerText = className;
+        //add layer
+        if(img.layers.length > 0) {
+          tether.setCurrentLayer(tether.currentLayer + 1);
+        }
+        const layer = new tether.currentClass;
+        layer.displayName = layer.name;
+        img.insertLayer(tether.currentLayer, layer);
+        
+        tether.updateLayerOptions(img);
+        tether.generateLayerList(img);
+        tether.printImage(img);
       };
       td.appendChild(button);
       rowElem.appendChild(td);
@@ -360,15 +368,26 @@ function setupLayerManagementButtons(renameme, tether) {
       const button = document.createElement("button");
       button.className = "layer-select-table-button";
       button.innerText = item;
-      button.title = renameme.layerClasses[item].description;
+      button.title = img.layerClasses[item].description;
       button.value = item;
 
       button.onclick = (e) => {
         let className = e.target.value;
-        tether.currentClass = renameme.layerClasses[className];
+        tether.currentClass = img.layerClasses[className];
         document.getElementById("layer-select-table").style.display = "none";
         layerSelectShown = false;
         layerSelectDropdown.innerText = className;
+        //add layer
+        if(img.layers.length > 0) {
+          tether.setCurrentLayer(tether.currentLayer + 1);
+        }
+        const layer = new tether.currentClass;
+        layer.displayName = layer.name;
+        img.insertLayer(tether.currentLayer, layer);
+        
+        tether.updateLayerOptions(img);
+        tether.generateLayerList(img);
+        tether.printImage(img);
       };
       td.appendChild(button);
       rowElem.appendChild(td);
@@ -377,61 +396,67 @@ function setupLayerManagementButtons(renameme, tether) {
   }
 }
 
-function setupImageOptions(renameme, tether, serial) {
+function setupImageOptions(img, tether, serial) {
   const imageOptions = document.getElementById("image-options");
   
-  const nameInput = InputText(renameme.name,(e) => {
-    renameme.name = e.target.value;
-    tether.setTitle(renameme.name);
+  const nameInput = InputText(img.name,(e) => {
+    img.name = e.target.value;
+    setTitle(img.name);
   }, "large-input");
   nameInput.id = "img-name-input";
   
-  const authorInput = InputText(renameme.author,(e) => {
-    renameme.author = e.target.value;
+  const authorInput = InputText(img.author,(e) => {
+    img.author = e.target.value;
   });
   authorInput.id = "img-author-input";
   
-  const widthInput = InputNumber(1, 512, renameme.h, (e) => {
-    renameme.w = Number(e.target.value);
-    renameme.updateSize();
-    tether.updateSize(renameme);
-    tether.printImage(renameme, true);
+  const widthInput = InputNumber(1, 512, img.h, (e) => {
+    img.w = Number(e.target.value);
+    img.updateSize();
+    tether.updateSize(img);
+    tether.printImage(img, true);
   });
   widthInput.id = "img-width-input";
   
-  const heightInput = InputNumber(1, 512, renameme.w, (e) => {
-    renameme.h = Number(e.target.value);
-    renameme.updateSize();
-    tether.updateSize(renameme);
-    tether.printImage(renameme, true);
+  const heightInput = InputNumber(1, 512, img.w, (e) => {
+    img.h = Number(e.target.value);
+    img.updateSize();
+    tether.updateSize(img);
+    tether.printImage(img, true);
   });
   heightInput.id = "img-height-input";
   
   const bgInput = InputColor([0.5, 0.5, 0.5, 1], (newCol) => {
-    renameme.bg = newCol;
+    img.bg = newCol;
   }, () => {
-    tether.printImage(renameme);
+    tether.printImage(img);
   });
   bgInput.id = "img-bg-input";
   
   const scaleInput = InputNumber(0, 64, tether.canvasScale, (e) => {
     tether.canvasScale = e.target.value;
-    tether.updateCanvasScale(renameme);
+    tether.updateCanvasScale(img);
   });
   scaleInput.step = 0.25;
   scaleInput.id = "img-scale-input";
 
+  function generateSaveUrl(data) {
+    const url = new URL(location.href);
+    url.searchParams.set("save", data);
+    return url.toString();
+  }
+  
   const saveImageText = Textarea("data is saved here", null, "save-box");
   saveImageText.readOnly = true;
   
   const saveImageButton = Button("save!", async (e) => {
     if(tether.compressSaves) {
-      const url = generateSaveUrl(saveImageText.value = await serial.saveEnc(renameme));
+      const url = generateSaveUrl(saveImageText.value = await serial.saveEnc(img));
       if (window.history.replaceState && tether.saveURL) {
         window.history.replaceState({}, "", url);
       }
     } else {
-      saveImageText.value = serial.save(renameme);
+      saveImageText.value = serial.save(img);
     }
   }, "aero-btn");
   const loadImageText = Textarea("you put data here", null, "save-box");
@@ -439,18 +464,18 @@ function setupImageOptions(renameme, tether, serial) {
   const loadImageButton = Button("load!", async (e) => {
     if(confirm("load image?")) {
       try {
-        await serial.loadEnc(renameme, loadImageText.value);
-        tether.generateLayerList(renameme);
-        renameme.updateSize();
-        tether.updateSize(renameme);
-        tether.printImage(renameme, true);
-        tether.setTitle(renameme.name);
+        await serial.loadEnc(img, loadImageText.value);
+        tether.generateLayerList(img);
+        img.updateSize();
+        tether.updateSize(img);
+        tether.printImage(img, true);
+        setTitle(img.name);
         //DOESNT WORK!!!! color input still uses old color when clicked
-        document.getElementById("img-bg-input").style.backgroundColor = '#' + RGB2Hex(renameme.bg);
-        authorInput.value = renameme.author;
+        document.getElementById("img-bg-input").style.backgroundColor = '#' + RGB2Hex(img.bg);
+        authorInput.value = img.author;
         //bgInput.remove();
         if(window.history.replaceState && tether.saveURL) {
-          window.history.replaceState({}, "", generateSaveUrl(await serial.saveEnc(renameme)));
+          window.history.replaceState({}, "", generateSaveUrl(await serial.saveEnc(img)));
         }
       } catch(error) {
         window.alert("couldn't parse data! \n\n" + error);
@@ -492,12 +517,12 @@ function setupImageOptions(renameme, tether, serial) {
     scaleInput,
     document.createElement("br"),
     Button("render", (e) => {
-      tether.printImage(renameme, true);
+      tether.printImage(img, true);
     }, "aero-btn")
   ));
 }
 
-function setupHeaderMenu(renameme, tether, serial) {
+function setupHeaderMenu(img, tether, serial) {
   const topContainer = document.getElementById("top-container");
   let curIdx = -1;
   const makeItems = (e, idx, thetan) => {
@@ -532,33 +557,34 @@ function setupHeaderMenu(renameme, tether, serial) {
   });
   const godButton = Button("create god image", (e) => {
     
-    renameme.name = godText(16);
-    renameme.author = "God";
-    document.getElementById("img-name-input").value = renameme.name;
-    document.getElementById("img-author-input").value = renameme.author;
+    img.name = godText(16);
+    img.author = "God";
+    document.getElementById("img-name-input").value = img.name;
+    document.getElementById("img-author-input").value = img.author;
     //go down a layer if we're in the middle, stay in place if we're at the bottom
     tether.setCurrentLayer(0);
-    renameme.layers = [];
+    img.layers = [];
     //these were causing an error because i accidentally added an s after the 'layer' part...
     //thanks javascript for not catching that one
-    renameme.layerKeys = [];
-    renameme.layerKeysFreed = [];
+    img.layerKeys = [];
+    img.layerKeysFreed = [];
+    setTitle(img.name);
     
     let layerCount = Math.ceil(Math.random() * 24);
     
     for(let i = 0; i < layerCount; i++) {
-      const curLayer = renameme.godLayer();
+      const curLayer = img.godLayer();
       curLayer.displayName = godText(2);
       //proper link count for filters
-      renameme.insertLayer(renameme.layers.length, curLayer);
+      img.insertLayer(img.layers.length, curLayer);
       tether.currentLayer++;
     }
     tether.currentLayer--;
     tether.setCurrentLayer(tether.currentLayer);
-    renameme.bg = [Math.random(), Math.random(), Math.random(), Math.random()];
-    tether.updateLayerOptions(renameme);
-    tether.generateLayerList(renameme);
-    tether.printImage(renameme);
+    img.bg = [Math.random(), Math.random(), Math.random(), Math.random()];
+    tether.updateLayerOptions(img);
+    tether.generateLayerList(img);
+    tether.printImage(img);
   });
   
   topContainer.appendChild(
@@ -620,8 +646,8 @@ function setupHeaderMenu(renameme, tether, serial) {
           Label("tileView", "header-label"),
           InputCheckbox(tether.tileView, (checked, e) => {
             tether.tileView = checked;
-            tether.updateSize(renameme);
-            tether.printImage(renameme, true);
+            tether.updateSize(img);
+            tether.printImage(img, true);
           })
         ));
       }, "header-dropdown"),
@@ -636,7 +662,7 @@ function setupHeaderMenu(renameme, tether, serial) {
   );
 }
 
-function setupKeybinds(renameme, tether) {
+function setupKeybinds(img, tether) {
   let oldTimeR = 0;
   document.onkeydown = (e) => {
     //intentionally lag the input so it doesnt print too fast
@@ -644,20 +670,20 @@ function setupKeybinds(renameme, tether) {
     if(oldTimeR != curTime) {
       if(e.key == "r" || e.key == "R") {
         oldTimeR = curTime;
-        tether.printImage(renameme, true);
+        tether.printImage(img, true);
       } else if(DEBUG) {
         if(e.key == "h" || e.key == "H") {
           //print layer keys
           console.log("current layer keys:");
-          console.log(renameme.layerKeys);
+          console.log(img.layerKeys);
           console.log("current freed layer key indices:");
-          console.log(renameme.layerKeysFreed);
+          console.log(img.layerKeysFreed);
           console.log("---");
         } else if(e.key == "c" || e.key == "C") {
           //print out the layer links
           console.log("layer link counts:");
-          for(let i = 0; i < renameme.layers.length; i++) {
-            const layer = renameme.layers[i];
+          for(let i = 0; i < img.layers.length; i++) {
+            const layer = img.layers[i];
             console.log(`${i}. ${layer.displayName} is linked ${layer.linkCount} time(s)`);
           }
           console.log("---");
@@ -667,24 +693,24 @@ function setupKeybinds(renameme, tether) {
         } else if(e.key == "l" || e.key == "L") {
           //print layers
           console.log("--- LAYER INFO ---");
-          console.log(renameme.w + " x " + renameme.h);
-          console.log(renameme.bg);
-          console.log(renameme.layers);
+          console.log(img.w + " x " + img.h);
+          console.log(img.bg);
+          console.log(img.layers);
           console.log("---");
         } else if(e.key == "d" || e.key == "D") {
           //image data error report
-          console.log(renameme.data);
+          console.log(img.data);
           console.log("errors:");
           let log = [];
           
-          for(let y = 0; y < renameme.h; y++) {
-            for(let x = 0; x < renameme.w; x++) {
-              const idx = x + y * renameme.w;
+          for(let y = 0; y < img.h; y++) {
+            for(let x = 0; x < img.w; x++) {
+              const idx = x + y * img.w;
               
-              const r = renameme.data[idx * 4];
-              const g = renameme.data[idx * 4 + 1];
-              const b = renameme.data[idx * 4 + 2];
-              const a = renameme.data[idx * 4 + 3];
+              const r = img.data[idx * 4];
+              const g = img.data[idx * 4 + 1];
+              const b = img.data[idx * 4 + 2];
+              const a = img.data[idx * 4 + 3];
               let errors = "";
               
               if(r === null) {
@@ -762,46 +788,46 @@ function setupKeybinds(renameme, tether) {
             iterations++;
             let errors = [];
             try {
-              renameme.name = "Test #" + iterations + " " + monkeyText(32);
-              renameme.author = "Monkey";
-              document.getElementById("img-name-input").value = renameme.name;
-              document.getElementById("img-author-input").value = renameme.author;
+              img.name = "Test #" + iterations + " " + monkeyText(32);
+              img.author = "Monkey";
+              document.getElementById("img-name-input").value = img.name;
+              document.getElementById("img-author-input").value = img.author;
               //go down a layer if we're in the middle, stay in place if we're at the bottom
               tether.setCurrentLayer(0);
-              renameme.layers = [];
+              img.layers = [];
               //these were causing an error because i accidentally added an s after the 'layer' part...
               //thanks javascript for not catching that one
-              renameme.layerKeys = [];
-              renameme.layerKeysFreed = [];
+              img.layerKeys = [];
+              img.layerKeysFreed = [];
               
               let layerCount = Math.ceil(Math.random() * 8);
               
               for(let i = 0; i < layerCount; i++) {
-                const curLayer = renameme.godLayer();
+                const curLayer = img.godLayer();
                 curLayer.displayName = monkeyText(8)
                 //proper link count for filters
-                renameme.insertLayer(renameme.layers.length, curLayer);
+                img.insertLayer(img.layers.length, curLayer);
                 tether.currentLayer++;
               }
               tether.currentLayer--;
               //TODO: what?
               tether.setCurrentLayer(tether.currentLayer);
-              renameme.bg = [Math.random(), Math.random(), Math.random(), Math.random()];
-              tether.updateLayerOptions(renameme);
-              tether.generateLayerList(renameme);
-              tether.printImage(renameme);
+              img.bg = [Math.random(), Math.random(), Math.random(), Math.random()];
+              tether.updateLayerOptions(img);
+              tether.generateLayerList(img);
+              tether.printImage(img);
             } catch(e) {
               errors.push(e);
               console.error(e);
             }
             
-            for(let i = 0; i < renameme.data.length; i++) {
-              if(renameme.data[i] != renameme.data[i]) {
+            for(let i = 0; i < img.data.length; i++) {
+              if(img.data[i] != img.data[i]) {
                 errors.push("Image contains NaN pixels!");
                 console.error("Image contains NaN pixels!");
                 break;
               }
-              if(renameme.data[i] == undefined) {
+              if(img.data[i] == undefined) {
                 errors.push("Image contains undefined pixels!");
                 console.error("Image contains undefined pixels!");
                 break;

@@ -1,28 +1,10 @@
-//////////////////////////////////////////////
-//    All Procedraw Material is Licensed    //
-//     December, 2024-???? under MIT by.    //
-//         Backshot Betty #killtf2.         //
-//                 _______                  //
-//                |   |_|+|                 //
-//                |___|+|_|                 //
-//                |_|+|   |                 //
-//                |+|_|___|                 //
-//                                          //
-//   *Any names, or persons, illustrated    //
-// in any of the Procedraw Programs, except //
-//     that of Backshot Betty #killtf2,     //
-//          that may seem similar           //
-//               to anyone                  //
-//   in real life, are purely coincidental, //
-//         or otherwise parodic.*           //
-//////////////////////////////////////////////
+//
+// All Procedraw material is licensed under MIT
+// Author: Marioood
+// Purpose: 
+//
 
 "use strict";
-//intermingling of html and js - scary!! (data output n input)
-
-
-//TODO: also just rewrite A LOT of the ui code, it is garbo
-
 //REMINDER: DON'T MOVE THIS STUFF TO HELPER.JS! that is for minor functions that are used everywhere, including image processing. Maybe make a "mathhelper.js" and "uihelper.js?"
 
 //something i hate about javascript and just the web in general is that they started out with these super high level abstractions
@@ -40,15 +22,12 @@ let colpGlobalOninput = null;
 //???
 let colpGlobalUpdate = null;
 
-function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
+function InputColor(inputCol, oninput, onupdate, isSquare = false) { //[R, G, B, A] from 0...1
   const colpDisplay = Button("", (e) => {
     colpGlobalDisplay = e.target;
     let oldTime;
     colpGlobalOninput = (newCol) => {
-      inputCol[0] = newCol[0];
-      inputCol[1] = newCol[1];
-      inputCol[2] = newCol[2];
-      inputCol[3] = newCol[3];
+      memcpy(inputCol, newCol);
       oninput(newCol);
       //intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
       let curTime = Math.round(Date.now() / 100);
@@ -61,12 +40,12 @@ function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
     colpGlobalUpdate = onupdate;
     colp.externalUpdate(inputCol);
     
-  },"aero-btn colp-input");
+  }, "aero-btn colp-input");
   
-  let byteInputCol = [Math.floor(inputCol[0] * 255), Math.floor(inputCol[1] * 255), Math.floor(inputCol[2] * 255)];
-  let trans = `rgba(${byteInputCol[0]}, ${byteInputCol[1]}, ${byteInputCol[2]}, ${inputCol[3]})`;
-  let opaque = `rgb(${byteInputCol[0]}, ${byteInputCol[1]}, ${byteInputCol[2]})`;
-  colpDisplay.style.background = `linear-gradient(0deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
+  if(isSquare) {
+    colpDisplay.style.width = "32px";
+  }
+  setBgInputColor(colpDisplay, inputCol);
   
   //left click (show palette)
   let isShown = false;
@@ -107,14 +86,10 @@ function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
       palCont.style.top = (inputBounds.top + inputBounds.height) + "px";
     }
     
-    //colpGlobalUpdate = onupdate;
     colpGlobalDisplay = e.target;
     let oldTime;
     colpGlobalOninput = (newCol) => {
-      inputCol[0] = newCol[0];
-      inputCol[1] = newCol[1];
-      inputCol[2] = newCol[2];
-      inputCol[3] = newCol[3];
+      memcpy(inputCol, newCol);
       oninput(newCol);
       //intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
       let curTime = Math.round(Date.now() / 100);
@@ -131,6 +106,14 @@ function InputColor(inputCol, oninput, onupdate) { //[R, G, B, A] from 0...1
   
   return colpDisplay;
 }
+
+function setBgInputColor(colpDisplay, inputCol) {
+  let byteInputCol = [Math.floor(inputCol[0] * 255), Math.floor(inputCol[1] * 255), Math.floor(inputCol[2] * 255)];
+  let trans = `rgba(${byteInputCol[0]}, ${byteInputCol[1]}, ${byteInputCol[2]}, ${inputCol[3]})`;
+  let opaque = `rgb(${byteInputCol[0]}, ${byteInputCol[1]}, ${byteInputCol[2]})`;
+  colpDisplay.style.background = `linear-gradient(0deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
+}
+
 class InputColorControl {
   target = null;
   localDisplay = null;
@@ -430,28 +413,11 @@ class InputColorControl {
 //TODO: put somewhere else
 const colp = new InputColorControl();
 
-//class EditHistory {
-//  add layer
-//  remove layer
-//  duplicate layer
-//  move layer
-//  rename layer
-//  hide layer
-//  change layer parameter
-//  
-//  {}
-//}
 function InputPaletteColor(colorInt, title) {
   const color = intRGB2RGB(colorInt);
   
   const colpDisplay = Button("", (e) => {
-    /*let trans = `rgba(${inputCol[0]}, ${inputCol[1]}, ${inputCol[2]}, ${inputCol[3] / 255})`;
-    let opaque = `rgb(${inputCol[0]}, ${inputCol[1]}, ${inputCol[2]})`;
-    e.target.style.background = `linear-gradient(90deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;*/
-    
-    //e.target.style.backgroundColor = 
     if(colpGlobalOninput != null) colpGlobalOninput(color);
-    //if(colpGlobalUpdate != null) colpGlobalUpdate();
     colp.externalUpdate(color);
     if(colpGlobalDisplay != null) colpGlobalDisplay.style.background = '#' + RGBA2Hex(color);
     document.getElementById("palette-container").style.display = "none";
@@ -464,6 +430,389 @@ function InputPaletteColor(colorInt, title) {
   
   return colpDisplay;
 }
+
+function InputGlyph(img, t, glyph) {
+  let canvas = document.createElement("canvas");
+  canvas.className = "input-glyph-canvas";
+  const ctx = canvas.getContext("2d");
+  let canvasScale;
+  
+  const printGlyph = () => {
+    let canvasImg = ctx.createImageData(glyph.width, glyph.height);
+    //write image data to canvas
+    for(let i = 0; i < glyph.width * glyph.height * 4; i++) {
+      //convert from 0 - 1 to 0 - 255
+      canvasImg.data[i] = glyph.data[i] * 255;
+    }
+    //insert new image data
+    ctx.putImageData(canvasImg, 0, 0);
+  }
+  
+  const setCanvasSize = () => {
+    canvas.width = glyph.width;
+    canvas.height = glyph.height;
+    canvasScale = 222 / glyph.width;
+    canvas.style.width = (glyph.width * canvasScale) + "px";
+  };
+  setCanvasSize();
+  printGlyph();
+  
+  let mouseDown = false;
+  let curClickType = -1;
+  const MOUSE_LEFT = 0;
+  const MOUSE_RIGHT = 2;
+  let colLeft = [0.5, 0, 1, 1];
+  let colRight = [1, 1, 1, 1];
+  
+  const colLeftInput = InputColor(colLeft, (newCol) => {
+    colLeft = newCol;
+  }, () => {
+    //blank
+  }, true);
+  
+  const colRightInput = InputColor(colRight, (newCol) => {
+    colRight = newCol;
+  }, () => {
+    //blank
+  }, true);
+  
+  const colSwapInput = Button("<\n|\n<", (e) => {
+  }, "aero-btn input-glyph-swap");
+  
+  const widthInput = InputNumber(1, 64, glyph.width, (e) => {
+    glyph.setSize(parseInt(e.target.value), glyph.height, colRight);
+    t.printImage(img);
+    setCanvasSize();
+    printGlyph();
+  });
+  
+  const heightInput = InputNumber(1, 64, glyph.height, (e) => {
+    glyph.setSize(glyph.width, parseInt(e.target.value), colRight);
+    t.printImage(img);
+    setCanvasSize();
+    printGlyph();
+  });
+  
+  const shiftUpInput = Button("^", (e) => {
+    glyph.shift(0, -1);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-up-shift-button");
+  
+  const shiftRightInput = Button(">", (e) => {
+    glyph.shift(1, 0);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-horz-shift-button");
+  
+  const shiftDownInput = Button("v", (e) => {
+    glyph.shift(0, 1);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-down-shift-button");
+  
+  const shiftLeftInput = Button("<", (e) => {
+    glyph.shift(-1, 0);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-horz-shift-button");
+  
+  const TOOL_PENCIL = 0;
+  const TOOL_PICKER = 1;
+  const TOOL_BUCKET = 2;
+  const TOOL_REPLACE = 3;
+  let curTool = TOOL_PENCIL;
+  
+  const setGlyphCursor = (name) => {
+     canvas.style.cursor = 'url("img/ui/tool-' + name + '.png") 0 32, crosshair';
+  };
+  setGlyphCursor("pencil");
+  
+  const toolPencilInput = Button("", (e) => {
+    curTool = TOOL_PENCIL;
+    setGlyphCursor("pencil");
+  }, "aero-btn tool-pencil");
+  toolPencilInput.title = "Draw a pixel on the tile.";
+  
+  const toolPickerInput = Button("", (e) => {
+    curTool = TOOL_PICKER;
+    setGlyphCursor("picker");
+  }, "aero-btn tool-picker");
+  toolPickerInput.title = "Select a color from the tile.";
+  
+  const toolBucketInput = Button("", (e) => {
+    curTool = TOOL_BUCKET;
+    setGlyphCursor("bucket");
+  }, "aero-btn tool-bucket");
+  toolBucketInput.title = "Replace a connected region of color in the tile.";
+  
+  const toolReplaceInput = Button("", (e) => {
+    curTool = TOOL_REPLACE;
+    canvas.style.cursor = 'url("img/ui/tool-replace.png"), crosshair';
+  }, "aero-btn tool-replace");
+  
+  const filterNoiseInput = Button("N", (e) => {
+    for(let i = 0; i < glyph.width * glyph.height; i++) {
+      let idx = i * 4;
+      glyph.data[idx] = Math.random();
+      glyph.data[idx + 1] = Math.random();
+      glyph.data[idx + 2] = Math.random();
+      glyph.data[idx + 3] = 1;
+    }
+    t.printImage(img);
+    printGlyph();
+      
+  }, "aero-btn");
+  
+  filterNoiseInput.title = "Fill the entire glyph with noise.";
+  
+  let idxOld;
+  //TODO: move to Glyph object
+  const plotGlyphPixel = (curColor, x, y) => {
+    const idx = x + y * glyph.width;
+    
+    let ogColor = [glyph.data[idx * 4], glyph.data[idx * 4 + 1], glyph.data[idx * 4 + 2], glyph.data[idx * 4 + 3]];
+    //prevent unecessary rendering
+    if(idxOld != idx || !arrayIsEqualShallow(ogColor, curColor)) {
+      glyph.data[idx * 4] = curColor[0];
+      glyph.data[idx * 4 + 1] = curColor[1];
+      glyph.data[idx * 4 + 2] = curColor[2];
+      glyph.data[idx * 4 + 3] = curColor[3];
+      t.printImage(img);
+      printGlyph();
+    }
+    
+    idxOld = idx;
+  };
+  
+  const useTool = (e) => {
+    const cursorX = Math.floor(e.offsetX / canvasScale);
+    const cursorY = Math.floor(e.offsetY / canvasScale);
+    let curColor;
+    
+    if(curClickType == MOUSE_LEFT) {
+      curColor = colLeft;
+    } else if(curClickType == MOUSE_RIGHT) {
+      curColor = colRight;
+    }
+    
+    switch(curTool) {
+      case TOOL_PENCIL:
+        plotGlyphPixel(curColor, cursorX, cursorY);
+        break;
+        
+      case TOOL_PICKER:
+        curColor = glyph.getPixel(cursorX, cursorY);
+        //the color pickers use the references of colLeft and colRight, which allows for this cloning stuff to work
+        if(curClickType == MOUSE_LEFT) {
+          memcpy(colLeft, curColor);
+          setBgInputColor(colLeftInput, colLeft);
+          //the color picker now affects this input
+          //colpGlobalDisplay = colLeftInput;
+          if(colpGlobalDisplay == colLeftInput) {
+            colp.externalUpdate(colLeft);
+          }
+        } else if(curClickType == MOUSE_RIGHT) {
+          memcpy(colRight, curColor);
+          setBgInputColor(colRightInput, colRight);
+          //the color picker now affects this input
+          //colpGlobalDisplay = colRightInput;
+          if(colpGlobalDisplay == colRightInput) {
+            colp.externalUpdate(colRight);
+          }
+        }
+        //colp.externalUpdate(curColor);
+        break;
+        
+      case TOOL_BUCKET:
+        glyph.floodFill(glyph.getPixel(cursorX, cursorY), curColor, cursorX, cursorY);
+        t.printImage(img);
+        printGlyph();
+        break;
+        
+      case TOOL_REPLACE:
+        glyph.replaceColor(glyph.getPixel(cursorX, cursorY), curColor);
+        t.printImage(img);
+        printGlyph();
+        break;
+    }
+  }
+  
+  canvas.onmousedown = (e) => {
+    curClickType = e.button;
+    mouseDown = true;
+    useTool(e);
+  };
+  canvas.onmousemove = (e) => {
+    if(!mouseDown) return;
+    useTool(e);
+  };
+  canvas.onmouseup = (e) => {
+    mouseDown = false;
+  };
+  canvas.onmouseleave = (e) => {
+    mouseDown = false; //something something onmouseup is only done if the mouse is up'd on the target element
+  };
+  canvas.oncontextmenu = (e) => {
+    e.preventDefault(); //prevent the context menu from showing up
+  };
+  
+  const canvasTable = Table(
+    Tr(Td(), Td(shiftUpInput), Td()),
+    Tr(Td(shiftLeftInput), Td(canvas), Td(shiftRightInput)),
+    Tr(Td(), Td(shiftDownInput), Td())
+  );
+  
+  const toolTable = Table(
+    Tr(Td(colLeftInput), setAttr(Td(colSwapInput), "rowspan", 2), Td(toolPencilInput), Td(toolBucketInput), Td(filterNoiseInput)),
+    Tr(Td(colRightInput), Td(toolPickerInput), Td(toolReplaceInput))
+  );
+  
+  const glyphContainer = divWrap(
+    toolTable,
+    widthInput,
+    heightInput,
+    document.createElement("br"),
+    canvasTable
+  );
+  return glyphContainer;
+}
+
+function InputBinaryGlyph(img, t, glyph) {
+  let canvas = document.createElement("canvas");
+  canvas.className = "input-glyph-canvas";
+  const ctx = canvas.getContext("2d");
+  let canvasScale;
+  
+  const printGlyph = () => {
+    let canvasImg = ctx.createImageData(glyph.width, glyph.height);
+    //write image data to canvas
+    for(let i = 0; i < glyph.width * glyph.height; i++) {
+      //convert from 0 - 1 to 0 - 255
+      canvasImg.data[i * 4] = glyph.data[i] * 255;
+      canvasImg.data[i * 4 + 1] = glyph.data[i] * 255;
+      canvasImg.data[i * 4 + 2] = glyph.data[i] * 255;
+      canvasImg.data[i * 4 + 3] = 255;
+    }
+    //insert new image data
+    ctx.putImageData(canvasImg, 0, 0);
+  }
+  
+  const setCanvasSize = () => {
+    canvas.width = glyph.width;
+    canvas.height = glyph.height;
+    canvasScale = 222 / glyph.width;
+    canvas.style.width = (glyph.width * canvasScale) + "px";
+  };
+  setCanvasSize();
+  printGlyph();
+  
+  let mouseDown = false;
+  let curClickType = -1;
+  const MOUSE_LEFT = 0;
+  const MOUSE_RIGHT = 2;
+  
+  const widthInput = InputNumber(1, 64, glyph.width, (e) => {
+    glyph.setSize(parseInt(e.target.value), glyph.height);
+    t.printImage(img);
+    setCanvasSize();
+    printGlyph();
+  });
+  
+  const heightInput = InputNumber(1, 64, glyph.height, (e) => {
+    glyph.setSize(glyph.width, parseInt(e.target.value));
+    t.printImage(img);
+    setCanvasSize();
+    printGlyph();
+  });
+  
+  const shiftUpInput = Button("^", (e) => {
+    glyph.shift(0, -1);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-up-shift-button");
+  
+  const shiftRightInput = Button(">", (e) => {
+    glyph.shift(1, 0);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-horz-shift-button");
+  
+  const shiftDownInput = Button("v", (e) => {
+    glyph.shift(0, 1);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-down-shift-button");
+  
+  const shiftLeftInput = Button("<", (e) => {
+    glyph.shift(-1, 0);
+    t.printImage(img);
+    printGlyph();
+  }, "aero-btn input-glyph-horz-shift-button");
+  
+  canvas.style.cursor = 'url("img/ui/tool-pencil.png") 0 32, crosshair';
+  
+  let idxOld;
+  //TODO: move to Glyph object
+  const plotGlyphPixel = (curColor, x, y) => {
+    const idx = x + y * glyph.width;
+    
+    let ogColor = glyph.data[idx];
+    //prevent unecessary rendering
+    if(idxOld != idx || ogColor != curColor) {
+      glyph.data[idx] = curColor;
+      t.printImage(img);
+      printGlyph();
+    }
+    
+    idxOld = idx;
+  };
+  
+  const useTool = (e) => {
+    const cursorX = Math.floor(e.offsetX / canvasScale);
+    const cursorY = Math.floor(e.offsetY / canvasScale);
+    
+    if(curClickType == MOUSE_LEFT) {
+      plotGlyphPixel(1, cursorX, cursorY);
+    } else if(curClickType == MOUSE_RIGHT) {
+      plotGlyphPixel(0, cursorX, cursorY);
+    }
+  }
+  
+  canvas.onmousedown = (e) => {
+    curClickType = e.button;
+    mouseDown = true;
+    useTool(e);
+  };
+  canvas.onmousemove = (e) => {
+    if(!mouseDown) return;
+    useTool(e);
+  };
+  canvas.onmouseup = (e) => {
+    mouseDown = false;
+  };
+  canvas.onmouseleave = (e) => {
+    mouseDown = false; //something something onmouseup is only done if the mouse is up'd on the target element
+  };
+  canvas.oncontextmenu = (e) => {
+    e.preventDefault(); //prevent the context menu from showing up
+  };
+  
+  const canvasTable = Table(
+    Tr(Td(), Td(shiftUpInput), Td()),
+    Tr(Td(shiftLeftInput), Td(canvas), Td(shiftRightInput)),
+    Tr(Td(), Td(shiftDownInput), Td())
+  );
+  
+  const glyphContainer = divWrap(
+    widthInput,
+    heightInput,
+    document.createElement("br"),
+    canvasTable
+  );
+  return glyphContainer;
+}
+
 //TODO: fucking please for the love of god, SPLIT THIS UP! it's hell to navigate this file, because of how much shit is in it.
 class Tether {
   canvas = undefined;
@@ -673,15 +1022,7 @@ class Tether {
               } else {
                 input2.classList.remove("input-invalid");
               }
-            }/* else {
-              if(val == "Infinity") {
-                val = Infinity;
-              } else if(val == "-Infinity") {
-                val = -Infinity;
-              } else if(val == "NaN") {
-                val = NaN;
-              }
-            }*/
+            }
             input.value = Number(val);
             options[optionKeys[i]] = Number(val);
             this.printImage(img);
@@ -804,31 +1145,6 @@ class Tether {
             alert(JSON.stringify(limits) + " has invalid subtype!");
           }
           function setLengthRange() {
-            /*if(limits.subtype == "dimension") {
-              if(unitLength.unit == UNIT_PIXELS) {
-                input.min = 1;
-                input.max = img.w;
-                input2.min = 1;
-                input2.max = img.w;
-              } else {
-                input.min = 0;
-                input.max = 100;
-                input2.min = 0;
-                input2.max = 100;
-              }
-            } else if(limits.subtype == "position") {
-              if(unitLength.unit == UNIT_PIXELS) {
-                input.min = -img.w;
-                input.max = img.w;
-                input2.min = -img.w;
-                input2.max = img.w;
-              } else {
-                input.min = -100;
-                input.max = 100;
-                input2.min = -100;
-                input2.max = 100;
-              }
-            } else */
             if(unitLength.unit == UNIT_PIXELS) {
               input.min = maxLen;
               input.max = maxLen;
@@ -1046,6 +1362,16 @@ class Tether {
           container.appendChild(input2);
           break;
         }
+        case "glyph": {
+          input = InputGlyph(img, this, options[optionKeys[i]]);
+          container.appendChild(input);
+          break;
+        }
+        case "binaryglyph": {
+          input = InputBinaryGlyph(img, this, options[optionKeys[i]]);
+          container.appendChild(input);
+          break;
+        }
         default:
           throw new ProcedrawError(`Unknown option type ${limits.type}`);
       }
@@ -1091,7 +1417,6 @@ class Tether {
         </tr>
       </table>*/
       //TODO: remove unused classes
-      //TODO: remove unused coments shits
       const layerTable = document.createElement("table");
       layerTable.id = "dyn-layer-" + i;
       layerTable.className = "layer-container";
@@ -1253,11 +1578,6 @@ class Tether {
     const oldLayer = document.getElementById("dyn-layer-" + idx);
     if(oldLayer == null) return;
     oldLayer.classList.remove("layer-highlight");
-  }
-  
-  setTitle(text) {
-    const title = document.getElementsByTagName("title")[0];
-    title.textContent = "procedraw | " + text;
   }
   
   updateCanvasScale(img) {

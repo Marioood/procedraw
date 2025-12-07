@@ -6,7 +6,7 @@
   --main-tit-h: 24px;
   --main-cont-h: calc(100% - var(--main-tit-h));
   --bg-cont: linear-gradient(180deg, var(--bg) 0, #202020 100%);
-  --bg-trans: linear-gradient(180deg, var(--bg) 0, #202020b0 100%);
+  --bg-trans: linear-gradient(180deg, var(--bg) 0, #202020b0 100%); /*use for dropdowns*/
   --bg-btn: linear-gradient(180deg, black 0, #404040 100%);
   --bg-dark: linear-gradient(180deg, black 0, var(--bg) 100%);
   --label-w: 96px;
@@ -372,6 +372,52 @@ button {
   max-width: 220px;
   font-size: 16px;
 }
+.input-glyph-canvas {
+  display: block;
+  cursor: crosshair;
+}
+.input-glyph-horz-shift-button {
+  width: 10px;
+  height: 222px; /*ehhhh good enough*/
+  display: block;
+}
+.input-glyph-up-shift-button {
+  border-radius: 25px 25px 0 0;
+  width: 100%;
+  height: 10px;
+  display: block;
+}
+.input-glyph-down-shift-button {
+  border-radius: 0 0 25px 25px;
+  width: 100%;
+  height: 10px;
+  display: block;
+}
+.tool-pencil {
+  background: url("img/ui/tool-pencil.png"), linear-gradient(180deg, black 0, #404040 100%);
+  width: 32px;
+  height: 32px;
+}
+.tool-picker {
+  background: url("img/ui/tool-picker.png"), linear-gradient(180deg, black 0, #404040 100%);
+  width: 32px;
+  height: 32px;
+}
+.tool-bucket {
+  background: url("img/ui/tool-bucket.png"), linear-gradient(180deg, black 0, #404040 100%);
+  width: 32px;
+  height: 32px;
+}
+.tool-replace {
+  background: url("img/ui/tool-replace.png"), linear-gradient(180deg, black 0, #404040 100%);
+  width: 32px;
+  height: 32px;
+}
+.input-glyph-swap {
+  width: 37px;
+  height: 74px;
+  border-radius: 0 999px 999px 0;
+}
 /******** COLOR PICKER ********/
 .woke-bg {
   background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
@@ -443,9 +489,9 @@ button {
   font-family: sans-serif;
   width: fit-content;
   position: absolute;
-}
-.layer-select-table tbody {
-  background: linear-gradient(180deg, black 0, #202020 100%);
+  background: var(--bg-trans);
+  top: 25px;
+  right: 366px;
 }
 .layer-select-table th {
   background-color: #ffffff20;
@@ -461,22 +507,16 @@ button {
 }
 .layer-select-dropdown-button {
   width: 218px;
-}
-/*TODO: replace with svg background*/
-.layer-select-dropdown-button::after {
-  content: "v";
-  position: absolute;
-  right: 160px;
+  background-image: url("img/ui/arrow-left.png");
 }
 .layer-select-table-button {
   background: none;
 }
-.layer-select-container {
-  width: 220px;
-}
 /******** MISC ********/
 .version-text {
   float: right;
+  margin-top: 2px;
+  margin-right: 2px;
 }
 #credits {
   position: absolute;
@@ -532,7 +572,7 @@ button {
   border: 1px solid var(--otln);
   padding: 4px;
   box-sizing: border-box;
-  background: var(--bg-cont);
+  background: var(--bg-trans);
   white-space: nowrap;
 }
 .credits-container {

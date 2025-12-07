@@ -1,24 +1,10 @@
-//////////////////////////////////////////////
-//    All Procedraw Material is Licensed    //
-//     December, 2024-???? under MIT by.    //
-//         Backshot Betty #killtf2.         //
-//                 _______                  //
-//                |   |_|+|                 //
-//                |___|+|_|                 //
-//                |_|+|   |                 //
-//                |+|_|___|                 //
-//                                          //
-//   *Any names, or persons, illustrated    //
-// in any of the Procedraw Programs, except //
-//     that of Backshot Betty #killtf2,     //
-//          that may seem similar           //
-//               to anyone                  //
-//   in real life, are purely coincidental, //
-//         or otherwise parodic.*           //
-//////////////////////////////////////////////
+//
+// All Procedraw material is licensed under MIT
+// Author: Marioood
+// Purpose: layer classes (data processing)
+//
 
 "use strict";
-//layer classes (data processing)
 /*
 default layer options are stored in a layer class as "options" object
 new options are passed into generate() as "o" (short for options)
@@ -112,11 +98,12 @@ class Layer {
 class LayerXorFractal extends Layer {
   name = "xorFractal";
   
-  static description = "A bitwise XOR fractal.";
+  static description = "A bitwise XOR fractal. Can also be changed to an AND or OR fractal.";
   
   options = {
     width: new UnitLength(100, UNIT_PERCENTAGE),
-    height: new UnitLength(100, UNIT_PERCENTAGE)
+    height: new UnitLength(100, UNIT_PERCENTAGE),
+    operation: O_BITWISE_XOR
   };
   
   types = {
@@ -133,18 +120,51 @@ class LayerXorFractal extends Layer {
       scaledMin: 0,
       scaledMax: 1,
       step: 1
+    },
+    operation: {
+      type: "keyvalues",
+      keys: [
+        "xor",
+        "and",
+        "or"
+      ],
+      values: [
+        O_BITWISE_XOR,
+        O_BITWISE_AND,
+        O_BITWISE_OR
+      ]
     }
   };
   
   generate(img, o) {
     const xScale = 256 / UnitLength.getLength(o.width, img.w);
     const yScale = 256 / UnitLength.getLength(o.height, img.h);
-    
-    for(let y = 0; y < img.h; y++) {
-      for(let x = 0; x < img.w; x++) {
-        let col = ((x * xScale) ^ (y * yScale)) / 255;
-        img.plotPixel([col, col, col, 1], x, y);
-      }
+    //TODO: fractals are too dark around their edges (not normalized)
+    switch(o.operation) {
+      case O_BITWISE_XOR:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            let col = ((x * xScale) ^ (y * yScale)) / 255;
+            img.plotPixel([col, col, col, 1], x, y);
+          }
+        }
+        break;
+      case O_BITWISE_AND:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            let col = ((x * xScale) & (y * yScale)) / 255;
+            img.plotPixel([col, col, col, 1], x, y);
+          }
+        }
+        break;
+      case O_BITWISE_OR:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            let col = ((x * xScale) | (y * yScale)) / 255;
+            img.plotPixel([col, col, col, 1], x, y);
+          }
+        }
+        break;
     }
   }
 }
@@ -377,8 +397,8 @@ class LayerLiney extends Layer {
     bias: 1,
     dir: true,
     coverage: 1,
-    lowColor: [0, 0, 0, 1],
-    highColor: [1, 1, 1, 1]
+    highColor: [1, 1, 1, 1],
+    lowColor: [0, 0, 0, 1]
   }
   
   types = {
@@ -409,10 +429,10 @@ class LayerLiney extends Layer {
       max: 1,
       min: 0
     },
-    lowColor: {
+    highColor: {
       type: "color"
     },
-    highColor: {
+    lowColor: {
       type: "color"
     }
   }
@@ -1985,7 +2005,12 @@ class LayerBitmapText extends Layer {
         let glyphData = GLYPHS_CLASCII[char]; //is this safe? who knows!
         
         if(glyphData == undefined) {
+          //character is not in the font
           glyphData = GLYPHS_CLASCII.unknown;
+        } else if(typeof(glyphData) == "string") {
+          //support for character aliasing
+          //this is used when two characters look identical (e.g. uppercase beta and uppercase b)
+          glyphData = GLYPHS_CLASCII[glyphData];
         }
         for(let yi = 0; yi < glyphHeight; yi++) {
           for(let xi = 0; xi < glyphWidth; xi++) {
@@ -2009,3 +2034,420 @@ class LayerBitmapText extends Layer {
     }
   }
 }
+
+class LayerTileMap extends Layer {
+  name = "tileMap";
+  
+  static description = "A custom image tiled over a layer.";
+  
+  options = {
+    //bayer-style example. the lcd one just looks better
+    /*glyph: new Glyph(2, 2,
+      [
+        0, 0, 1, 1, 0, 1, 0, 1,
+        0, 1, 0, 1, 1, 0, 0, 1
+      ]
+    )*/
+    tile: new Glyph(3, 3,
+      [
+        1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1,
+        1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1,
+        0.5,0,0, 1, 0,0.5,0, 1, 0,0,0.5, 1
+      ]
+    )
+    //TODO: options for value, alpha, rgb, and rgba
+    //TODO: should colorMode be part of the glyph data?
+  };
+  
+  types = {
+    tile: {
+      type: "glyph"
+    }
+  };
+    
+  generate(img, o) {
+    const glyphWidth = o.tile.width;
+    const glyphHeight = o.tile.height;
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        let glyphIdx = x % glyphWidth + (y % glyphHeight) * glyphWidth;
+        let r = o.tile.data[glyphIdx * 4];
+        let g = o.tile.data[glyphIdx * 4 + 1];
+        let b = o.tile.data[glyphIdx * 4 + 2];
+        let a = o.tile.data[glyphIdx * 4 + 3];
+        img.plotPixel([r, g, b, a], x, y);
+      }
+    }
+  }
+}
+
+class LayerMandelbrot extends Layer {
+  name = "mandelbrot";
+  
+  static description = "The Mandelbrot set.";
+  
+  options = {
+    maxIterations: 16,
+    zoom: 0.5,
+    xRelOffs: 0,
+    yRelOffs: 0,
+    xAbsOffs: new UnitLength(0, UNIT_PIXELS),
+    yAbsOffs: new UnitLength(0, UNIT_PIXELS),
+    viewWidth: new UnitLength(100, UNIT_PERCENTAGE),
+    viewHeight: new UnitLength(100, UNIT_PERCENTAGE),
+    zRealStart: 0,
+    zImagStart: 0,
+    discardInside: true,
+    outputMode: O_OUTPUT_COLOR
+    //TODO: color output and alpha output flags
+  };
+  
+  types = {
+    maxIterations: {
+      type: "number",
+      unsafe: true,
+      min: 1,
+      max: 32,
+      step: 1
+    },
+    xRelOffs: {
+      type: "number",
+      min: -2,
+      max: 2,
+      step: 0.001
+    },
+    yRelOffs: {
+      type: "number",
+      min: -2,
+      max: 2,
+      step: 0.001
+    },
+    xAbsOffs: {
+      type: "length",
+      subtype: "width",
+      scaledMin: -1,
+      scaledMax: 1,
+      step: 1
+    },
+    yAbsOffs: {
+      type: "length",
+      subtype: "height",
+      scaledMin: -1,
+      scaledMax: 1,
+      step: 1
+    },
+    viewWidth: {
+      type: "length",
+      subtype: "width",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1
+    },
+    viewHeight: {
+      type: "length",
+      subtype: "height",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1
+    },
+    zoom: {
+      type: "number",
+      min: 0,
+      max: 100,
+      step: 0.05/*,
+      unsafe: true //zoom INDIRECTLY affects how many iterations have to be calculated*/
+    },
+    discardInside: {
+      type: "boolean"
+    },
+    zRealStart: {
+      type: "number",
+      min: -2,
+      max: 2,
+      step: 0.01
+    },
+    zImagStart: {
+      type: "number",
+      min: -2,
+      max: 2,
+      step: 0.01
+    },
+    outputMode: {
+      type: "keyvalues",
+      keys: [
+        "color only",
+        "alpha only",
+        "alpha and color"
+      ],
+      values: [
+        O_OUTPUT_COLOR,
+        O_OUTPUT_ALPHA,
+        O_OUTPUT_BOTH
+      ]
+    }
+  };
+  
+  generate(img, o) {
+    //TODO: fine and coarse offset?
+    //TODO: coloring options (zebra stripes)
+    const xAbsOffs = UnitLength.getLength(o.xAbsOffs, img.w);
+    const yAbsOffs = UnitLength.getLength(o.yAbsOffs, img.h);
+    const viewWidth = UnitLength.getLength(o.viewWidth, img.w);
+    const viewHeight = UnitLength.getLength(o.viewHeight, img.h);
+    const iZoom = 1 / o.zoom;
+    
+    for(let y = 0; y < img.h; y++) {
+      const yN = (y + yAbsOffs - img.h * 0.5) / viewHeight * 2;
+      
+      for(let x = 0; x < img.w; x++) {
+        const xN = (x + xAbsOffs - img.w * 0.5) / viewWidth * 2;
+        let c = new Complex(xN * iZoom + o.xRelOffs, yN * iZoom + o.yRelOffs);
+        let z = new Complex(o.zRealStart, o.zImagStart);//Complex.ZERO;
+        let i = 0;
+        while(Complex.abs(z) < 2 && i < o.maxIterations) {
+          z = Complex.add(Complex.square(z), c);
+          i++;
+        }
+        if(o.discardInside && i == o.maxIterations)
+          i = 0;
+        //ts is for good normalizing
+        const col = i / (o.maxIterations - (o.discardInside ? 1 : 0));
+        
+        if(o.outputMode == O_OUTPUT_COLOR)
+          img.plotPixel([col, col, col, 1], x, y);
+        else if(o.outputMode == O_OUTPUT_ALPHA)
+          img.plotPixel([1, 1, 1, col], x, y);
+        else
+          img.plotPixel([col, col, col, col], x, y);
+      }
+    }
+  }
+}
+
+class LayerSeedFractal extends Layer {
+  name = "seedFractal";
+  
+  static description = "A customizable fractal based on a starting seed.";
+  //TODO: fix weird edge issues
+  options = {
+    xScale: 1,
+    yScale: 1,
+    xOffs: 0,
+    yOffs: 0,
+    seed: new BinaryGlyph(3, 3,
+      [
+        1, 1, 1,
+        1, 0, 1,
+        1, 1, 1
+      ]
+    )
+  };
+  
+  types = {
+    xScale: {
+      type: "number",
+      min: 0,
+      max: 16,
+      step: 0.05
+    },
+    yScale: {
+      type: "number",
+      min: 0,
+      max: 16,
+      step: 0.05
+    },
+    xOffs: {
+      type: "number"
+    },
+    yOffs: {
+      type: "number"
+    },
+    seed: {
+      type: "binaryglyph"
+    }
+  };
+  
+  generate(img, o) {
+    const xScale = 1 / o.xScale;
+    const yScale = 1 / o.yScale;
+    //if a seed has gaps near the top left sides, then this algorith doesn't work correctly.
+    //shifting the test position away from the x y axes is the easiest solution i've found for this (works because fractals are, by definition, self-similar)
+    const w = o.seed.width;
+    const h = o.seed.height;
+      
+    /*let needsShifting = false;
+    //needs to be checked for both axes? maybe?
+    
+    for(let i = 0; i < w; i++) {
+      if(!(o.seed.getPixel(i, 0) && o.seed.getPixel(0, i))) {
+        needsShifting = true;
+        break;
+      }
+    }*/
+    //thank you Jnaruk from Wikipedia for this algorithm
+    //https://en.wikipedia.org/wiki/Talk:Sierpi%C5%84ski_carpet#Stupid_Java_Code
+    function isFilled(x, y) {
+      /*while(x > 0 && y > 0) {
+        if(x % 3 == 1 && y % 3 == 1)
+          return false;
+        
+        x = Math.floor(x / 3);
+        y = Math.floor(y / 3);
+      }*/
+      
+      while(x > 0 && y > 0) {
+        //TODO: optimize into one loop
+        for(let yi = 0; yi < h; yi++) {
+          for(let xi = 0; xi < w; xi++) {
+            if(!o.seed.data[xi + yi * w])
+              if(x % w == xi && y % h == yi)
+                return false;
+          }
+        }
+        
+        x = Math.floor(x / w);
+        y = Math.floor(y / h);
+      }
+      return true;
+    }
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        if(isFilled(Math.abs(Math.floor(x * xScale) + o.xOffs * Math.floor(img.w)),
+        Math.abs(Math.floor(y * yScale) + o.yOffs * Math.floor(img.h))))
+          img.plotPixel([1, 1, 1, 1], x, y);
+      }
+    }
+  }
+}
+
+/*class LayerGlyphMap extends Layer {
+  name = "glyphMap";
+  
+  static description = "A glyph tiled over a layer. ADD MORE ABOUT CREATION!!!";
+  
+  options = {
+    glyph: "0 9\n9 5",
+    glyphWidth: new UnitLength(2, UNIT_PIXELS),
+    glyphHeight: new UnitLength(2, UNIT_PIXELS),
+    precisionMode: O_CHAR_PREC_10,
+    colorMode: 0
+  };
+  
+  types = {
+    glyph: {
+      type: "string"
+    },
+    glyphWidth: {
+      type: "length",
+      subtype: "width",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1
+    },
+    glyphHeight: {
+      type: "length",
+      subtype: "height",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1
+    },
+    precisionMode: {
+      type: "keyvalues",
+      keys: [
+        "10 value brightness (0, 1, 2...9)",
+        "16 hex value brightness (0, 1, 2...f)",
+        //"26 alphabetical value brightness (a, b, c...z)",
+        "256 hex value brightness (00, 01, 02...ff)"
+      ],
+      values: [
+        O_CHAR_PREC_10,
+        O_CHAR_PREC_16,
+        //O_CHAR_PREC_26,
+        O_CHAR_PREC_256
+      ]
+    },
+    colorMode: {
+      type: "keyvalues",
+      keys: [
+        "brightness (1 value)",
+        "alpha (1 value)",
+        "red, green & blue (3 values)",
+        "red, green, blue & alpha (4 values)"
+      ],
+      values: [
+        O_COLOR_BRIGHTNESS,
+        O_COLOR_ALPHA,
+        O_COLOR_RGB,
+        O_COLOR_RGBA
+      ]
+    }
+  };
+    
+  generate(img, o) {
+    const glyphWidth = UnitLength.getLength(o.glyphWidth, img.w);
+    const glyphHeight = UnitLength.getLength(o.glyphHeight, img.h);
+    let glyphSplit = o.glyph.split('\n');
+    let rawGlyphData = [];
+    let glyphData = [];
+    //different for...p adding reasons
+    let glyphSampleWidth = glyphWidth;
+    //TODO: autodetect width?
+    for(let y = 0; y < glyphHeight; y++) {
+      for(let x = 0; x < glyphSampleWidth; x++) {
+        if(glyphSplit[y] == undefined) {
+          rawGlyphData.push(0);
+        } else if(glyphSplit[y][x] == undefined) {
+          rawGlyphData.push(0);
+        } else {
+          //curChar will ALWAYS be a character
+          let curChar = glyphSplit[y][x];
+          let val;
+          
+          switch(o.precisionMode) {
+            case O_CHAR_PREC_10:
+              val = parseInt(curChar, 10) / 9;
+              break;
+              
+            case O_CHAR_PREC_16:
+              val = parseInt(curChar, 16) / 15;
+              break;
+          }
+          //don't add the value if it's invalid (allow for padding between each value)
+          //is val nan?
+          if(val == val) {
+            rawGlyphData.push(val);
+          } else {
+            //increment so we keep reading the rest of the glyph table
+            glyphSampleWidth++;
+          }
+        }
+      }
+    }
+    //TODO: sucks
+    for(let i = 0; i < rawGlyphData.length; i++) {
+      let val = rawGlyphData[i];
+      let color;
+      
+      switch(o.colorMode) {
+        case O_COLOR_BRIGHTNESS:
+          color = [val, val, val, 1];
+          break;
+          
+        case O_COLOR_ALPHA:
+          color = [1, 1, 1, val];
+          break;
+      }
+      glyphData.push(color);
+    }
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        let glyphIdx = x % glyphWidth + (y % glyphHeight) * glyphWidth;
+        let col = glyphData[glyphIdx];
+        img.plotPixel(col, x, y);
+      }
+    }
+  }
+}*/

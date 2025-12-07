@@ -1,5 +1,13 @@
 URGENT
 
+make plotPixel() accept 4 values instead of 1 array? (could be faster???)
+math expression UnitLength type?
+multi-layer merge
+  layer groups that are just treated as one layer?
+  
+append an image onto another image
+transformation layers based off of other layers? like the offset layer, but for scaling, rotation, shearing, etc.
+fix gradient layer -- it sucks ass
 verify if the normal map stuff is even correct (create a heightmap of a coin, then sunlight it blahhhh)
 crop filter
 ctrl + scroll to zoom in and out
@@ -28,6 +36,18 @@ download dialog. actually, just dialogs in general
 i had a dream about the normalize layer, therefore add it
 //could be a "map" filter?
 
+//class EditHistory {
+//  add layer
+//  remove layer
+//  duplicate layer
+//  move layer
+//  rename layer
+//  hide layer
+//  change layer parameter
+//  
+//  {}
+//}
+
 STUPID
 replace direction input (old school boolean version) with either a fancy dial or less fancy keyvalue list
 centered shear / pivot point (do this for most transform filters, actually)
@@ -48,7 +68,6 @@ quantize filter
 disable corners or edges
 merge liney and noise layers? a lot of their options are awfully similar...
 mix options for the blobs layer (col0 -> col1)
-embed pdimg data into a png, have that png be from procedraw (static, obviously) but have that png be able to be loaded into procedraw
 random tile export option (several different renders of the image put together)
 merge layer should merge several layers (?)
 strict input for width (FORCE it to go below 0. maybe this could be an input box function option?)
@@ -78,6 +97,7 @@ ehhhhh astroids preset is broken for worley noise
 consistent ease modes and ease modes for more layers
 look into what the unit length stuff is actually doing... some results seem funky when printed out
 merge layer bugs, specifically with the dissolve, halftone, and bayer modes
+see how long each layer render (special display thingy!)
 
 REMINDERS
 
@@ -101,6 +121,10 @@ consider how colorblind people might view the layer icons
 
 software is not improved by adding and adding to it. it is improved by addressing the problems with said software.
 remember what terry says.
+
+VOLATILE 0.9.1 (Still not 1.0 LEL) changes:
+added glyphMap
+fixed a typo that caused bilinear interpolation to look mess up the blue channel
 
 VOLATILE 0.9 changes:
 bitmapText
@@ -180,4 +204,96 @@ gradient|            .            .            .
 border  |            .            .            .      
 ----------------------------------------------------------------
 
-JAPPA WILL BOIL!
+
+
+
+
+ext. inputs:
+w = 256
+h = 256
+x = 0..w - 1
+y = 0..h - 1
+
+my inputs:
+xN = x / w
+yN = y / h
+
+intensity output:
+(x & y) / min(w, h)
+OR
+xN * yN
+OR
+//booleans would return 1.0 or 0.0
+x % 4 == 0 && y % 2 == 0
+OR
+//from 0..1
+rand(x)
+
+-- blob function layer --
+
+ext. inputs:
+r = 8
+w = r * 2 + 1
+h = r * 2 + 1
+x = -r..r
+y = -r..r
+
+my inputs:
+xN = x / r
+yN = y / r
+
+alpha output:
+desc: circle
+sqrt(xN * xN + yN * yN)
+OR
+hypot(xN, yN)
+OR
+//abs(sin(sqrt((x - 0.5)^2 + (y - 0.5)^2) * pi * 2))
+abs(sin(hypot(xN, yN) * pi * 2)) * (hypot(xN, yN) < 0.5)
+-----------------------
+//instructions can store an instruction AND a value... use that!
+push x from heap
+push w from heap
+div
+store on heap as xN
+...
+push xN from heap
+push yN from heap
+call hypot
+push 3.1415
+mul
+push 2 mul
+call sin
+call abs
+
+push xN from heap
+push yN from heap
+call hypot
+push 0.5
+less than
+mul
+-----------------------
+ext. inputs:
+w = 256
+h = 256
+x = 0..w - 1
+y = 0..h - 1
+base = Color[h][w]
+
+my inputs:
+min(a, b) = a < b ? a : b
+max(a, b) = (a > b) * a + (a <= b) * b;
+max2(a, b) = if(a < b, a, b)
+avg(xs...) | avg(1, 2, 3, 4) | (1 + 2 + 3 + 4) / 4
+exp(b, e) = e == 0 ? exp(b, e - 1) * b : 1
+neg(n) = 0 - n
+ternaries should /become/ functions when interpreted!
+the if function should just be a temporary thing, cause it's less efficient
+
+output:
+base[y][x].r * 2
+-----------------------
+put an observer unders omeone's furnace :)
+
+
+

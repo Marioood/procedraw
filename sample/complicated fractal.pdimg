@@ -1,0 +1,1 @@
+{"img":{"bg":"7f7f7fff","w":256,"h":16,"name":"complicated fractal","author":"marioood","version":"VOLATILE 0.9.1","format":0},"layers":[{"name":"seedFractal","od":{"tint":"ffffffff"},"options":{"xOffs":1,"yOffs":1,"seed":[16,4,"7575351317750000"]}}]}

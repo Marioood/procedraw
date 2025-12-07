@@ -1,21 +1,8 @@
-//////////////////////////////////////////////
-//    All Procedraw Material is Licensed    //
-//     December, 2024-???? under MIT by.    //
-//         Backshot Betty #killtf2.         //
-//                 _______                  //
-//                |   |_|+|                 //
-//                |___|+|_|                 //
-//                |_|+|   |                 //
-//                |+|_|___|                 //
-//                                          //
-//   *Any names, or persons, illustrated    //
-// in any of the Procedraw Programs, except //
-//     that of Backshot Betty #killtf2,     //
-//          that may seem similar           //
-//               to anyone                  //
-//   in real life, are purely coincidental, //
-//         or otherwise parodic.*           //
-//////////////////////////////////////////////
+//
+// All Procedraw material is licensed under MIT
+// Authors: Marioood, Buj
+// Purpose: serialization... duh.
+//
 
 "use strict";
 
@@ -53,16 +40,25 @@ class Serialization {
           if(type == "color") {
             //colors are arrays during runtime - but theyre smaller as hex strings
             val = RGBA2Hex(val);
-            refVal = RGBA2Hex(refVal);
+            
           } else if(type == "layer") {
             //save layer index, because the keys get lost after saving
             val = img.layerKeys[val];
-            refVal = img.layerKeys[refVal];
+            
+          } else if(type == "boolean") {
+            //1 and 0 are slightly smaller than true and false...
+            val = (val) ? 1 : 0;
+            
           } else if(type == "length") {
             refIsEqual = val.value == refVal.value && val.unit == refVal.unit;
             //arrays are smaller than objects
             val = [val.value, val.unit];
-            refVal = [refVal.value, refVal.unit];
+            
+          } else if(type == "glyph" || type == "binaryglyph") {
+            //even if the height and width are different, there is a (basically zero, but not impossible) chance that both glyph datas will be equal
+            refIsEqual = arrayIsEqualShallow(val.data, refVal.data) && val.width == refVal.width && val.height == refVal.height;
+            
+            val = val.serialize();
           }
           if(refIsEqual) continue;
           newOptions[key] = val;
@@ -120,7 +116,7 @@ class Serialization {
       //just using the layer index should be fine, since layer indices and keys are the same at this point
       if(newLayer.od.base != KEY_CANVAS) img.layers[newLayer.od.base].linkCount++;
       
-            //TODO: these comments are fucking incomprehensible, even to the person who wrote them
+      //TODO: these comments are fucking incomprehensible, even to the person who wrote them
       function loadOptions(fauxOptions, types) {
         //clean up colors!
         let newOptions = {};
@@ -131,16 +127,13 @@ class Serialization {
           const val = fauxOptions[key];
           const type = types[key].type;
           if(type == "color") {
-            //too lazy to parse colors that are from the default layer... just check if theyre an array and plop em in
-            //TODO: figure out why the hell i do this? apparently it's important and stuff breaks without it, but the comment is absolute ass
-            //THANKS PAST ME
-            //i have yet to gleam any meaning from this comment
             if(typeof val == "object") {
+              //if the value is from the default layer
               newOptions[key] = val;
-              console.log("i am john object: " + key);
             } else {
               newOptions[key] = hex2RGB('#' + val);
             }
+            
           } else if(type == "layer") {
             newOptions[key] = val;
             //skip link count increment if the layer has no base
@@ -148,12 +141,49 @@ class Serialization {
             //prevent filters from shitting themselves
             //because layer data only gets defined when the link count is > 0
             img.layers[img.layerKeys[val]].linkCount++;
+            
+          } else if(type == "boolean") {
+            //it does not matter if the value is from the default layer (it would be a boolean instead of a number), because true == 1! hooray for javascript!!!
+            newOptions[key] = val == 1;
+            
           } else if(type == "length") {
             //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
             if(Array.isArray(val)) {
               //[value, units]
               newOptions[key] = new UnitLength(val[0], val[1]);
+              
             } else if(typeof(val) == "object") {
+              //if the value is from the default layer
+              newOptions[key] = val;
+            } else {
+              //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
+              newOptions[key] = val;
+              throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
+            }
+          } else if(type == "glyph") {
+            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
+            if(Array.isArray(val)) {
+              //[width, height, colorFormat, data]
+              
+              newOptions[key] = Glyph.deserialize(val);
+              
+            } else if(typeof(val) == "object") {
+              //if the value is from the default layer
+              newOptions[key] = val;
+            } else {
+              //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
+              newOptions[key] = val;
+              throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
+            }
+          } else if(type == "binaryglyph") {
+            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
+            if(Array.isArray(val)) {
+              //[width, height, colorFormat, data]
+              
+              newOptions[key] = BinaryGlyph.deserialize(val);
+              
+            } else if(typeof(val) == "object") {
+              //if the value is from the default layer
               newOptions[key] = val;
             } else {
               //TODO: fixing this error is trivial, but wait to do that once the save format is finalized

@@ -1,30 +1,15 @@
-//////////////////////////////////////////////
-//    All Procedraw Material is Licensed    //
-//     December, 2024-???? under MIT by.    //
-//         Backshot Betty #killtf2.         //
-//                 _______                  //
-//                |   |_|+|                 //
-//                |___|+|_|                 //
-//                |_|+|   |                 //
-//                |+|_|___|                 //
-//                                          //
-//   *Any names, or persons, illustrated    //
-// in any of the Procedraw Programs, except //
-//     that of Backshot Betty #killtf2,     //
-//          that may seem similar           //
-//               to anyone                  //
-//   in real life, are purely coincidental, //
-//         or otherwise parodic.*           //
-//////////////////////////////////////////////
-
-//All constants (enums, patterns for whatever, etc.) are stored here to make the code a bit less cluttered
+//
+// All Procedraw material is licensed under MIT
+// Author: Marioood
+// Purpose: All constants (enums, patterns for whatever, etc.) are stored here to make the code a bit less cluttered
+//
 
 //TODO: move some stuff from the Tether class to here
 //TODO: move some stuff from the Serialization class to here
 
 
 //////// PROGRAM INFO ////////
-PD_VERSION = "VOLATILE 0.9"; //scarily close to 1.0
+PD_VERSION = "VOLATILE 0.9.1"; //scarily close to 1.0
 //this gets changed when the SAVE FORMAT is changed, not when layer paramters are changed
 //do not change until Procedraw exits the VOLATILE stage of development  
 PD_SAVE_FORMAT = 0;
@@ -125,6 +110,23 @@ const O_INTERP_NEAREST = 0;
 const O_INTERP_BILINEAR = 1;
 const O_INTERP_BILINEAR_COS = 2;
 
+const O_BITWISE_XOR = 0;
+const O_BITWISE_AND = 1;
+const O_BITWISE_OR = 2;
+
+const O_OUTPUT_COLOR = 0;
+const O_OUTPUT_ALPHA = 1;
+const O_OUTPUT_BOTH = 2;
+
+//////// OTHER ////////
+//do NOT change these values! they are used in saves
+const GLYPH_FMT_RGB = 0;
+const GLYPH_FMT_RGBA = 1;
+
+const UNIT_PIXELS = 0;
+const UNIT_PERCENTAGE = 1;
+const UNIT_VAR = 2;
+const UNIT_RATIO = 3;
 //the layer keys technically aren't options, but are also technically options
 const KEY_FREED = -1;
 const KEY_CANVAS = -2;
@@ -234,6 +236,10 @@ const LIMITS_INTERP = {
 
 //8x8 monospace atari and commodore 64 inspired font
 //space is not drawn, any other character is drawn. 'M' is used because it is the closest ascii char to a square
+//each member holds the data for a character
+//if a member stores a list, then that is the raw data for the glyph
+//if a member stores a string, it acts as an alias to another glyph, which just points to another glyph's data
+//this is to prevent tons of copy-and-pasting for when two glyphs look identical (e.g. uppercase alpha and uppercase a)
 const GLYPHS_CLASCII = {
   unknown: [
     "MMMMMMMM",
@@ -1224,5 +1230,474 @@ const GLYPHS_CLASCII = {
     "  M   M ",
     "M   M   ",
     "  M   M "
-  ]
+  ],
+  "\u03B1": [
+    "        ",
+    "        ",
+    " MMM MM ",
+    "MM  MM  ",
+    "MM  MM  ",
+    "MM  MM  ",
+    " MMM MM ",
+    "        "
+  ],
+  "\u0391": 'A',
+  "\u03B2": [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM   MM ",
+    "MMM  MM ",
+    "MM MMM  ",
+    "MM      "
+  ],
+  "\u0392": 'B',
+  "\u03B3": [
+    "        ",
+    "        ",
+    "MM  MM  ",
+    "MM  MM  ",
+    " MMMM   ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    " 
+  ],
+  "\u0393": [
+    "MMMMMMM ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "        "
+  ],
+  "\u03B4": [
+    "  MMM   ",
+    "  MMM   ",
+    " MM MM  ",
+    " MM MM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "        " 
+  ],
+  "\u0394": [
+    "MMMMMMM ",
+    "MM      ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u03B5": [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    " MM     ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u0395": 'E',
+  "\u03B6": [
+    "MMMMMMM ",
+    "   MM   ",
+    "  MM    ",
+    " MM     ",
+    "MM      ",
+    "MM      ",
+    " MMMMMM ",
+    "     MM "
+  ],
+  "\u0396": 'Z',
+  "\u03B7": [
+    "        ",
+    "        ",
+    "MM MMM  ",
+    "MMM  MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "     MM "
+  ],
+  "\u0397": 'H',
+  "\u03B8": [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u0398": [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM M MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u03B9": [
+    "        ",
+    "        ",
+    "        ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "   MM   ",
+    "        "
+  ],
+  "\u0399": 'I',
+  "\u03BA": [
+    "        ",
+    "        ",
+    "MM  MM  ",
+    "MM MM   ",
+    "MMMM    ",
+    "MM MM   ",
+    "MM  MM  ",
+    "        "
+  ],
+  "\u039A": 'K',
+  "\u03BB": [
+    "  MM    ",
+    "  MM    ",
+    "   MM   ",
+    "   MM   ",
+    "  MMMM  ",
+    " MM MM  ",
+    "MM   MM ",
+    "        " 
+  ],
+  "\u039B": [
+    "  MMM   ",
+    "  MMM   ",
+    " MM MM  ",
+    " MM MM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        " 
+  ],
+  "\u03BC": [
+    "        ",
+    "        ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMM  MM ",
+    "MM MM MM",
+    "MM      "
+  ],
+  "\u039C": 'M',
+  "\u03BD": 'v',
+  "\u039D": 'N',
+  "\u03BE": [
+    "MMMMMMM ",
+    "MM      ",
+    "MM      ",
+    " MMM    ",
+    "MM      ",
+    "MM      ",
+    " MMMMMM ",
+    "     MM "
+  ],
+  "\u039E": [
+    "MMMMMMM ",
+    "MM   MM ",
+    "        ",
+    "  MMM   ",
+    "        ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "        "
+  ],
+  "\u039F": 'O',
+  "\u03BF": 'o',
+  "\u03C0": [
+    "        ",
+    "        ",
+    "MMMMMMM ",
+    " MM MM  ",
+    " MM MM  ",
+    " MM MM  ",
+    " MM  MM ",
+    "        "
+  ],
+  "\u03A0": [
+    "MMMMMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  "\u03C1": [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM      ",
+    "MM      "
+  ],
+  "\u03A1": 'P',
+  "\u03A3": [
+    "MMMMMMM ",
+    "MM   MM ",
+    " MM     ",
+    "  MM    ",
+    " MM     ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "        "
+  ],
+  "\u03C4": [
+    "        ",
+    "        ",
+    "MMMMMM  ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "   MM   ",
+    "        "
+  ],
+  "\u03A4": 'T',
+  "\u03C5": [
+    "        ",
+    "        ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u03A5": 'Y',
+  "\u03C6": [
+    "        ",
+    "        ",
+    " M  MM  ",
+    "MM M MM ",
+    "MM M MM ",
+    " MMMMM  ",
+    "   M    ",
+    "   M    "
+  ],
+  "\u03A6": [
+    "   M    ",
+    " MMMMM  ",
+    "MM M MM ",
+    "MM M MM ",
+    "MM M MM ",
+    " MMMMM  ",
+    "   M    ",
+    "        "
+  ],
+  "\u03A7": 'X'
 };
+
+const GLYPHS_ERROR = {
+  ' ': [
+    "MMMM",
+    "MMMM",
+    "MMMM",
+    "MMMM",
+    "MMMM",
+    "MMMM",
+    "MMMM",
+    "MMMM"
+  ],
+  '\\': [
+    " MMM",
+    " MMM",
+    " MMM",
+    "M MM",
+    "MM M",
+    "MM M",
+    "MM M",
+    "MMMM"
+  ],
+  'u': [
+    "MMMM",
+    "MMMM",
+    "MMMM",
+    " M M",
+    " M M",
+    " M M",
+    "M  M",
+    "MMMM"
+  ],
+  '0': [
+    "   M",
+    " M M",
+    " M M",
+    " M M",
+    " M M",
+    " M M",
+    "   M",
+    "MMMM"
+  ],
+  '1': [
+    "M M",
+    "  MM",
+    "M MM",
+    "M MM",
+    "M MM",
+    "M MM",
+    "   M",
+    "MMMM"
+  ],
+  '2': [
+    "   M",
+    "MM M",
+    "MM M",
+    "M MM",
+    " MMM",
+    " MMM",
+    "   M",
+    "MMMM"
+  ],
+  '3': [
+    "   M",
+    "MM M",
+    "MM M",
+    "M  M",
+    "MM M",
+    "MM M",
+    "   M",
+    "MMMM"
+  ],
+  '4': [
+    " M M",
+    " M M",
+    " M M",
+    "MM M",
+    "MM M",
+    "MM M",
+    "MM M",
+    "MMMM"
+  ],
+  '5': [
+    "   M",
+    " MMM",
+    " MMM",
+    "M MM",
+    "MM M",
+    "MM M",
+    "   M",
+    "MMMM"
+  ],
+  '6': [
+    "   M",
+    " MMM",
+    " MMM",
+    "   M",
+    " M M",
+    " M M",
+    "   M",
+    "MMMM"
+  ],
+  '7': [
+    "   M",
+    "MM M",
+    "MM M",
+    "M MM",
+    " MMM",
+    " MMM",
+    " MMM",
+    "MMMM"
+  ],
+  '8': [
+    "   M",
+    " M M",
+    " M M",
+    "   M",
+    " M M",
+    " M M",
+    "   M",
+    "MMMM"
+  ],
+  '9': [
+    "   M",
+    " M M",
+    " M M",
+    "   M",
+    "MM M",
+    "MM M",
+    "MM M",
+    "MMMM"
+  ],
+  'A': [
+    "   M",
+    " M M",
+    " M M",
+    "   M",
+    " M M",
+    " M M",
+    " M M",
+    "MMMM"
+  ],
+  'B': [
+    "  MM",
+    " M M",
+    " M M",
+    "  MM",
+    " M M",
+    " M M",
+    "  MM",
+    "MMMM"
+  ],
+  'C': [
+    "M  M",
+    " MMM",
+    " MMM",
+    " MMM",
+    " MMM",
+    " MMM",
+    "M  M",
+    "MMMM"
+  ],
+  'D': [
+    "  MM",
+    " M M",
+    " M M",
+    " M M",
+    " M M",
+    " M M",
+    "  MM",
+    "MMMM"
+  ],
+  'E': [
+    "   M",
+    " MMM",
+    " MMM",
+    "  MM",
+    " MMM",
+    " MMM",
+    "   M",
+    "MMMM"
+  ],
+  'F': [
+    "   M",
+    " MMM",
+    " MMM",
+    "  MM",
+    " MMM",
+    " MMM",
+    " MMM",
+    "MMMM"
+  ]
+}

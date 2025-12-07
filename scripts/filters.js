@@ -672,7 +672,7 @@ class FilterMask extends Filter {
     useBlue: true,
     useAlpha: false,
     mode: O_MASK_GREATER_THAN,
-    precision: 0,
+    error: 0.05,
     mergeAlpha: false
   };
   
@@ -703,8 +703,8 @@ class FilterMask extends Filter {
       keys: [
         "layer color > value",
         "layer color < value",
-        "layer color = value",
-        "layer color NOT = value",
+        "layer color = value +/-error",
+        "layer color NOT = value +/-error",
         "layer color >= value",
         "layer color <= value"
       ],
@@ -717,11 +717,11 @@ class FilterMask extends Filter {
         O_MASK_LESS_THAN_OR_EQUAL_TO
       ]
     },
-    precision: {
+    error: {
       type: "number",
-      step: 0.05,
+      step: 0.01,
       min: 0,
-      max: 1
+      max: 0.5
     },
     mergeAlpha: {
       type: "boolean"
@@ -731,14 +731,15 @@ class FilterMask extends Filter {
   generate(img, o) {
     const baseData = img.layerDataFromKey(this.od.base);
     const compareData = img.layerDataFromKey(o.maskBase);
-    let compareValue = 0;
     //the values being compared will be between 0 and the number of channels being compared
-    if(o.useRed) compareValue += o.maskValue;
-    if(o.useGreen) compareValue += o.maskValue;
-    if(o.useBlue) compareValue += o.maskValue;
-    if(o.useAlpha) compareValue += o.maskValue;
-    
-    const channelCount = compareValue / o.maskValue;
+    let channelCount = 0;
+    if(o.useRed) channelCount++;
+    if(o.useGreen) channelCount++;
+    if(o.useBlue) channelCount++;
+    if(o.useAlpha) channelCount++;
+    //minimize floating point error by doing multiplication instead of repeated addition
+    let compareValue = o.maskValue * channelCount;
+    const error = o.error * channelCount;
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
@@ -754,8 +755,6 @@ class FilterMask extends Filter {
         if(o.useGreen) compareColor += compareData[idx * 4 + 1];
         if(o.useBlue) compareColor += compareData[idx * 4 + 2];
         if(o.useAlpha) compareColor += compareData[idx * 4 + 3];
-        //0 is the highest precision, 1 is 0 or 1
-        if(o.precision != 0) compareColor = Math.round(compareColor / (o.precision * channelCount)) * o.precision * channelCount;
           
         switch(o.mode) {
           case O_MASK_GREATER_THAN:                
@@ -769,12 +768,14 @@ class FilterMask extends Filter {
             }
             break;
           case O_MASK_EQUAL_TO:                
-            if(compareColor == compareValue) {
+            if(compareColor <= compareValue + error
+            && compareColor >= compareValue - error) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
             break;
-          case O_MASK_NOT_EQUAL_TO:                
-            if(compareColor != compareValue) {
+          case O_MASK_NOT_EQUAL_TO:               
+            if(compareColor > compareValue + error
+            || compareColor < compareValue - error) {
               img.plotPixel([rb, gb, bb, ab], x, y);
             }
             break;
@@ -1347,7 +1348,7 @@ class FilterFunctionPass extends Filter {
   
   options = {
     n0: 2,
-    mode: O_FUNCTION_CLAMP
+    mode: O_FUNCTION_POWER
   };
   
   types = {
@@ -1360,16 +1361,20 @@ class FilterFunctionPass extends Filter {
     mode: {
       type: "keyvalues",
       keys: [
-        "clamp(pixel)",
-        "wrap(pixel)",
-        "sqrt(pixel)",
-        "pixel ^ n0"
+        /*"clamp (pixel) between (a) to (b)",
+        "wrap (pixel) around (a) and (b)",
+        "sqrt (pixel)",
+        "(pixel) ^ (a)"*/
+        "(pixel) ^ (n0)",
+        "sqrt (pixel)",
+        "clamp (pixel) between 0 and 1",
+        "wrap (pixel) around 0 and 1"
       ],
       values: [
-        O_FUNCTION_CLAMP,
-        O_FUNCTION_WRAP,
+        O_FUNCTION_POWER,
         O_FUNCTION_SQRT,
-        O_FUNCTION_POWER
+        O_FUNCTION_CLAMP,
+        O_FUNCTION_WRAP
       ]
     }
   };

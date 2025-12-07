@@ -1,24 +1,10 @@
-//////////////////////////////////////////////
-//    All Procedraw Material is Licensed    //
-//     December, 2024-???? under MIT by.    //
-//         Backshot Betty #killtf2.         //
-//                 _______                  //
-//                |   |_|+|                 //
-//                |___|+|_|                 //
-//                |_|+|   |                 //
-//                |+|_|___|                 //
-//                                          //
-//   *Any names, or persons, illustrated    //
-// in any of the Procedraw Programs, except //
-//     that of Backshot Betty #killtf2,     //
-//          that may seem similar           //
-//               to anyone                  //
-//   in real life, are purely coincidental, //
-//         or otherwise parodic.*           //
-//////////////////////////////////////////////
+//
+// All Procedraw material is licensed under MIT
+// Authors: Marioood, Buj
+// Purpose: global layer management (data funnelling n processing)
+//
 
 "use strict";
-//global layer management (data funnelling n processing)
 
 class ProcedrawImage {
   //height and width
@@ -65,6 +51,9 @@ class ProcedrawImage {
     valueNoise: LayerValueNoise,
     waveTable: LayerWaveTable,
     bitmapText: LayerBitmapText,
+    tileMap: LayerTileMap,
+    mandelbrot: LayerMandelbrot,
+    seedFractal: LayerSeedFractal,
     //filters
     tweak: FilterTweak,
     tile: FilterTile,
@@ -133,14 +122,14 @@ class ProcedrawImage {
     //get alpha n blend from global memory... its less to type
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
-    const pos = x + y * this.w;
+    const pos = (x + y * this.w) * 4;
     //this is for when the data layer gets written to but we still don't want the layer displayed (filters)
     const alpha = this.layer.od.shown ? this.layer.od.alpha * color[3] : 0;
     //color offsets
-    const rOffs = pos * 4;
-    const gOffs = pos * 4 + 1;
-    const bOffs = pos * 4 + 2;
-    const aOffs = pos * 4 + 3;
+    const rOffs = pos;
+    const gOffs = pos + 1;
+    const bOffs = pos + 2;
+    const aOffs = pos + 3;
     //layer color
     const rl = color[0] * tint[0];
     const gl = color[1] * tint[1];
@@ -366,8 +355,8 @@ class ProcedrawImage {
         const yBias = y - yFloor;
         //THANK YOU wikipedia user Cmglee for making an amazing diagram that helped me FINALLY implement bilinear interpolation
         //TODO (?): this could be optimized a little (inline the functions), but it's pretty fast as it is
-        const col0 = colorMix([r0, g0, b0, a0], [r1, g1, g1, a1], xBias);
-        const col2 = colorMix([r2, g2, g2, a2], [r3, g3, b3, a3], xBias);
+        const col0 = colorMix([r0, g0, b0, a0], [r1, g1, b1, a1], xBias);
+        const col2 = colorMix([r2, g2, b2, a2], [r3, g3, b3, a3], xBias);
         
         return colorMix(col0, col2, yBias);
       }
