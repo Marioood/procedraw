@@ -5,28 +5,12 @@
 //
 
 "use strict";
-//REMINDER: DON'T MOVE THIS STUFF TO HELPER.JS! that is for minor functions that are used everywhere, including image processing. Maybe make a "mathhelper.js" and "uihelper.js?"
-
-//something i hate about javascript and just the web in general is that they started out with these super high level abstractions
-//creating good abstractions is quite hard (see: web development)
-//they require creating something from a low level, seeing what patterns repeat and that could be compressed, and compressing those
-//if you start out with super high level abstractions, or creating abstractions to ANTICIPATE code, instead of creating abstractions based off of useful code, then those abstractions are gonna suck 9 times out of 10
-//another thing with abstractions is that they can lead to super ugly, hack-y, or illegable code if no low-level alternatives exist and you have to make something that those abstractions do not support (example: custom html elements; see InputColor and InputColorControl code)
-
-//TODO: what are these? i forgot
-//TODO: cut down on global variables. also, this whole stuff is just jank
-//this is the current selected color input
-let colpGlobalDisplay = null;
-//this is what happens when the color picker changes
-let colpGlobalOninput = null;
-//???
-let colpGlobalUpdate = null;
 
 function InputColor(inputCol, oninput, onupdate, isSquare = false) { //[R, G, B, A] from 0...1
   const colpDisplay = Button("", (e) => {
-    colpGlobalDisplay = e.target;
+    colp.globalDisplay = e.target;
     let oldTime;
-    colpGlobalOninput = (newCol) => {
+    colp.globalOninput = (newCol) => {
       memcpy(inputCol, newCol);
       oninput(newCol);
       //intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
@@ -37,7 +21,7 @@ function InputColor(inputCol, oninput, onupdate, isSquare = false) { //[R, G, B,
         onupdate();
       }
     }
-    colpGlobalUpdate = onupdate;
+    colp.globalUpdate = onupdate;
     colp.externalUpdate(inputCol);
     
   }, "aero-btn colp-input");
@@ -64,14 +48,12 @@ function InputColor(inputCol, oninput, onupdate, isSquare = false) { //[R, G, B,
     palCont.style.display = "initial";
     //have position based off of screen quadrents, so the palette doesn't clip off the screen
     const inputBounds = e.target.getBoundingClientRect();
-    //FUCKING KILL ALL PEOPLE INVOLVED WITH THE CREATION OF THE WEB FUCK YOU YOU MADE FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU I HATE YOU FUCK YOU WWW CONSORTIUM FUCK YOU TIM BERNERS LEE FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU
-    //set the positions to initial, otherwise clicking on the bg input will fuck the position when you try viewing the palette with other color inputs!! FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU
+    
     if(e.pageX > window.innerWidth / 2) {
       //on the right side
       palCont.style.left = "initial";
       palCont.style.right = (window.innerWidth - inputBounds.left) + "px";
-    } else { //FUCK YOU NETSCAPE FUCK YOU MICROSOFT FUCK YOU APPLE FUCK YOU LINUS TORVALDS FUCK YOU TIM APPLE FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU FUCK YOU
-      //on the left side
+    } else {
       palCont.style.right = "initial";
       palCont.style.left = (inputBounds.left + inputBounds.width) + "px";
     }
@@ -86,9 +68,9 @@ function InputColor(inputCol, oninput, onupdate, isSquare = false) { //[R, G, B,
       palCont.style.top = (inputBounds.top + inputBounds.height) + "px";
     }
     
-    colpGlobalDisplay = e.target;
+    colp.globalDisplay = e.target;
     let oldTime;
-    colpGlobalOninput = (newCol) => {
+    colp.globalOninput = (newCol) => {
       memcpy(inputCol, newCol);
       oninput(newCol);
       //intentionally lag the input so your pc doesnt sound like a jet engine when you drag too fast
@@ -114,312 +96,13 @@ function setBgInputColor(colpDisplay, inputCol) {
   colpDisplay.style.background = `linear-gradient(0deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
 }
 
-class InputColorControl {
-  target = null;
-  localDisplay = null;
-  redSlider = null;
-  redBox = null;
-  greenSlider = null;
-  greenBox = null;
-  blueSlider = null;
-  blueBox = null;
-  hexBox = null;
-  hueSlider = null;
-  hueBox = null;
-  sattySlider = null;
-  sattyBox = null;
-  valueSlider = null;
-  valueBox = null;
-  alphaSlider = null;
-  alphaBox = null;
-  RGB = null;
-  HSV = null;
-  alpha = 0;
-
-  constructor() { //[R, G, B, A] from 0...1
-    //custom color picker because i use firefox and it uses the ms paint color picker
-    this.localDisplay = divWrap("colp-display");
-    this.RGB = [0, 0, 0]; //R, G, B
-    this.localDisplay.style.backgroundColor = "#" + RGB2Hex(this.RGB);
-    this.HSV = byteRGB2HSV(this.RGB) //H, S, V
-    this.alpha = 255;
-
-    //make this a function to call another function, because colpGlobalUpdate changes what function it is (and is also sometimes null!!)
-    function onupdate() {
-      if(colpGlobalUpdate != null) colpGlobalUpdate();
-    }
-    //chris chan reference...????
-    this.hexBox = InputText("000000ff", (e) => {
-      const hex = e.target.value;
-      let newCol;
-      //color of display and color of output don't match if the input is invalid... but i dont care
-      if(hex.length < 6) {
-        newCol = intRGB2RGB(Number("0x" + hex));
-      } else if(hex.length == 6) {
-        newCol = intRGB2RGB(Number("0x" + hex + "ff"));
-      } else {
-        newCol = intRGB2RGB(Number("0x" + hex));
-      }
-      
-      this.RGB[0] = Math.floor(newCol[0] * 255);
-      this.RGB[1] = Math.floor(newCol[1] * 255);
-      this.RGB[2] = Math.floor(newCol[2] * 255);
-      this.HSV = RGB2HSV(newCol);
-      this.alpha = Math.floor(newCol[3] * 255);
-      
-      this.updateDisplay();
-      this.setSlidersRGB();
-      this.setSlidersHSV();
-      this.setSlidersAlpha();
-      this.updateColors();
-      
-      if(colpGlobalOninput != null) colpGlobalOninput(newCol);
-    }, "colp-text");
-
-    // RGB //
-    this.redSlider = InputRange(0, 255, 0, (e) => {
-      const red = Number(e.target.value);
-      this.RGB[0] = red;
-      this.redBox.value = red;
-      this.updateSlidersRGB();
-    
-    });
-    this.redSlider.onmouseup = onupdate;
-    this.redBox = InputNumber(0, 255, 0, (e) => {
-      const red = Number(e.target.value);
-      this.RGB[0] = red;
-      this.redSlider.value = red;
-      this.updateSlidersRGB();
-    });
-    
-    this.greenSlider = InputRange(0, 255, 0, (e) => {
-      const green = Number(e.target.value);
-      this.RGB[1] = green;
-      this.greenBox.value = green;
-      this.updateSlidersRGB();
-    });
-    this.greenSlider.onmouseup = onupdate;
-    this.greenBox = InputNumber(0, 255, 0, (e) => {
-      const green = Number(e.target.value);
-      this.RGB[1] = green;
-      this.greenSlider.value = green;
-      this.updateSlidersRGB();
-    });
-    
-    this.blueSlider = InputRange(0, 255, 0, (e) => {
-      const blue = Number(e.target.value);
-      this.RGB[2] = blue;
-      this.blueBox.value = blue;
-      this.updateSlidersRGB();
-    });
-    this.blueSlider.onmouseup = onupdate;
-    this.blueBox = InputNumber(0, 255, 0, (e) => {
-      const blue = Number(e.target.value);
-      this.RGB[2] = blue;
-      this.blueSlider.value = blue;
-      this.updateSlidersRGB();
-    });
-    // HSV //
-    this.hueSlider = InputRange(0, 359, 0, (e) => {
-      const hue = Number(e.target.value);
-      this.HSV[0] = hue;
-      this.hueBox.value = hue;
-      this.updateSlidersHSV();
-    }, "woke-bg");
-    this.hueSlider.onmouseup = onupdate;
-    this.hueBox = InputNumber(0, 359, 0, (e) => {
-      const hue = Number(e.target.value);
-      this.HSV[0] = hue;
-      this.hueSlider.value = hue;
-      this.updateSlidersHSV();
-    });
-    
-    this.sattySlider = InputRange(0, 100, 0, (e) => {
-      const satty = Number(e.target.value);
-      this.HSV[1] = satty;
-      this.sattyBox.value = satty;
-      this.updateSlidersHSV();
-    });
-    this.sattySlider.onmouseup = onupdate;
-    this.sattyBox = InputNumber(0, 100, 0, (e) => {
-      const satty = Number(e.target.value);
-      this.HSV[1] = satty;
-      this.sattySlider.value = satty;
-      this.updateSlidersHSV();
-    });
-    
-    this.valueSlider = InputRange(0, 100, 0, (e) => {
-      const value = Number(e.target.value);
-      this.HSV[2] = value;
-      this.valueBox.value = value;
-      this.updateSlidersHSV();
-    });
-    this.valueSlider.onmouseup = onupdate;
-    this.valueBox = InputNumber(0, 100, 0, (e) => {
-      const value = Number(e.target.value);
-      this.HSV[2] = value;
-      this.valueSlider.value = value;
-      this.updateSlidersHSV();
-    });
-    
-    // alpha //
-    this.alphaSlider = InputRange(0, 255, 0, (e) => {
-      const alpha = Number(e.target.value);
-      this.alpha = alpha;
-      this.alphaBox.value = alpha;
-      this.updateSlidersAlpha();
-    });
-    this.alphaSlider.onmouseup = onupdate;
-    this.alphaBox = InputNumber(0, 255, 0, (e) => {
-      const alpha = Number(e.target.value);
-      this.alpha = alpha;
-      this.alphaSlider.value = alpha;
-      this.updateSlidersAlpha();
-    });
-    
-    const colpContainer = divWrap(
-      "colp-container",
-      this.localDisplay,
-      document.createElement("br"),
-      Label("red"),
-      this.redSlider,
-      this.redBox,
-      document.createElement("br"),
-      Label("green"),
-      this.greenSlider,
-      this.greenBox,
-      document.createElement("br"),
-      Label("blue"),
-      this.blueSlider,
-      this.blueBox,
-      document.createElement("br"),
-      Label("hex"),
-      this.hexBox,
-      document.createElement("br"),
-      Label("hue"),
-      this.hueSlider,
-      this.hueBox,
-      document.createElement("br"),
-      Label("satty"),
-      this.sattySlider,
-      this.sattyBox,
-      document.createElement("br"),
-      Label("value"),
-      this.valueSlider,
-      this.valueBox,
-      document.createElement("br"),
-      Label("alpha"),
-      this.alphaSlider,
-      this.alphaBox
-    );
-        
-    this.setSlidersRGB();
-    this.setSlidersHSV();
-    this.setSlidersAlpha();
-    this.updateColors();
-    
-    this.target = colpContainer;
-  }
-  externalUpdate(inputCol) {
-    colp.RGB[0] = Math.floor(inputCol[0] * 255);
-    colp.RGB[1] = Math.floor(inputCol[1] * 255);
-    colp.RGB[2] = Math.floor(inputCol[2] * 255);
-    colp.alpha = Math.floor(inputCol[3] * 255);
-    colp.HSV = RGB2HSV(inputCol);
-    
-    colp.setSlidersRGB();
-    colp.setSlidersHSV();
-    colp.setSlidersAlpha();
-    colp.updateColors();
-    colp.hexBox.value = RGB2Hex(inputCol);
-    //TODO: move this sorta code to uihelper.js
-    let trans = `rgba(${colp.RGB[0]}, ${colp.RGB[1]}, ${colp.RGB[2]}, ${colp.alpha / 255})`;
-    let opaque = `rgb(${colp.RGB[0]}, ${colp.RGB[1]}, ${colp.RGB[2]})`;
-    colp.localDisplay.style.background = `linear-gradient(90deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
-  }
-  updateColors() {
-    this.redSlider.style.background = `linear-gradient(90deg, rgb(0, ${this.RGB[1]}, ${this.RGB[2]}) 0%, rgb(255, ${this.RGB[1]}, ${this.RGB[2]}) 100%)`;
-    this.greenSlider.style.background = `linear-gradient(90deg, rgb(${this.RGB[0]}, 0, ${this.RGB[2]}) 0%, rgb(${this.RGB[0]}, 255, ${this.RGB[2]}) 100%)`;
-    this.blueSlider.style.background = `linear-gradient(90deg, rgb(${this.RGB[0]}, ${this.RGB[1]}, 0) 0%, rgb(${this.RGB[0]}, ${this.RGB[1]}, 255) 100%)`;
-    const valByte = Math.floor(this.HSV[2] * 2.55);
-    const fullSatty = HSV2ByteRGB([this.HSV[0], 100, this.HSV[2]]);
-    const fullVally = HSV2ByteRGB([this.HSV[0], this.HSV[1], 100]);
-    this.sattySlider.style.background = `linear-gradient(90deg, rgb(${valByte}, ${valByte}, ${valByte}) 0%, rgb(${fullSatty[0]}, ${fullSatty[1]}, ${fullSatty[2]}) 100%)`;
-    this.valueSlider.style.background = `linear-gradient(90deg, black 0%, rgb(${fullVally[0]}, ${fullVally[1]}, ${fullVally[2]}) 100%)`;
-    this.alphaSlider.style.background = `linear-gradient(90deg, transparent 0%, rgb(${this.RGB[0]}, ${this.RGB[1]}, ${this.RGB[2]}) 100%), url("img/ui/checker.png")`
-  }
-  updateDisplay() {
-    let trans = `rgba(${this.RGB[0]}, ${this.RGB[1]}, ${this.RGB[2]}, ${this.alpha / 255})`;
-    let opaque = `rgb(${this.RGB[0]}, ${this.RGB[1]}, ${this.RGB[2]})`;
-    if(this.localDisplay != null) this.localDisplay.style.background = `linear-gradient(90deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
-    if(colpGlobalDisplay != null) colpGlobalDisplay.style.background = `linear-gradient(0deg, ${trans} 0%, ${opaque} 100%), url("img/ui/checker.png")`;
-  }
-  setSlidersRGB() {
-    this.redSlider.value = this.RGB[0];
-    this.greenSlider.value = this.RGB[1];
-    this.blueSlider.value = this.RGB[2];
-    this.redBox.value = this.RGB[0];
-    this.greenBox.value = this.RGB[1];
-    this.blueBox.value = this.RGB[2];
-  }
-  setSlidersHSV() {
-    this.hueSlider.value = this.HSV[0];
-    this.sattySlider.value = this.HSV[1];
-    this.valueSlider.value = this.HSV[2];
-    this.hueBox.value = this.HSV[0];
-    this.sattyBox.value = this.HSV[1];
-    this.valueBox.value = this.HSV[2];
-  }
-  setSlidersAlpha() {
-    this.alphaSlider.value = this.alpha;
-    this.alphaBox.value = this.alpha;
-  }
-  updateSlidersRGB() {
-    this.HSV = byteRGB2HSV(this.RGB);
-    const hex = byteRGB2Hex(this.RGB);
-    this.updateHexBox();
-    this.updateDisplay();
-    this.updateColors();
-    this.setSlidersHSV();
-    
-    const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
-    if(colpGlobalOninput != null) colpGlobalOninput(newCol);
-  }
-  updateSlidersHSV() {
-    this.RGB = HSV2ByteRGB(this.HSV);
-    const hex = byteRGB2Hex(this.RGB);
-    this.updateHexBox();
-    this.updateDisplay();
-    this.localDisplay.style.backgroundColor = '#' + hex;
-    this.updateColors();
-    this.setSlidersRGB();
-    
-    const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
-    if(colpGlobalOninput != null) colpGlobalOninput(newCol);
-  }
-  updateSlidersAlpha() {
-    const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
-    if(colpGlobalOninput != null) colpGlobalOninput(newCol);
-    this.updateHexBox();
-    this.updateDisplay();
-  }
-  updateHexBox() {
-    const hex = byteRGB2Hex(this.RGB);
-    let a = this.alpha.toString(16);
-    if(a.length < 2) a = "0" + a;
-    this.hexBox.value = hex + a;
-  }
-}
-//TODO: put somewhere else
-const colp = new InputColorControl();
-
 function InputPaletteColor(colorInt, title) {
   const color = intRGB2RGB(colorInt);
   
   const colpDisplay = Button("", (e) => {
-    if(colpGlobalOninput != null) colpGlobalOninput(color);
+    if(colp.globalOninput != null) colp.globalOninput(color);
     colp.externalUpdate(color);
-    if(colpGlobalDisplay != null) colpGlobalDisplay.style.background = '#' + RGBA2Hex(color);
+    if(colp.globalDisplay != null) colp.globalDisplay.style.background = '#' + RGBA2Hex(color);
     document.getElementById("palette-container").style.display = "none";
     
   }, "aero-btn colp-palette-entry");
@@ -608,20 +291,17 @@ function InputGlyph(img, t, glyph) {
           memcpy(colLeft, curColor);
           setBgInputColor(colLeftInput, colLeft);
           //the color picker now affects this input
-          //colpGlobalDisplay = colLeftInput;
-          if(colpGlobalDisplay == colLeftInput) {
+          if(colp.globalDisplay == colLeftInput) {
             colp.externalUpdate(colLeft);
           }
         } else if(curClickType == MOUSE_RIGHT) {
           memcpy(colRight, curColor);
           setBgInputColor(colRightInput, colRight);
           //the color picker now affects this input
-          //colpGlobalDisplay = colRightInput;
-          if(colpGlobalDisplay == colRightInput) {
+          if(colp.globalDisplay == colRightInput) {
             colp.externalUpdate(colRight);
           }
         }
-        //colp.externalUpdate(curColor);
         break;
         
       case TOOL_BUCKET:
@@ -832,8 +512,6 @@ class Tether {
     this.canvas = document.getElementById("render");
     this.ctx = this.canvas.getContext("2d");
     
-    const colpContainer = document.getElementById("colp-container")
-    colpContainer.appendChild(colp.target);
     
     const palCont = document.getElementById("palette-container");
     palCont.appendChild(InputPaletteColor(0xFFFF00FF, "North West"));
@@ -1552,9 +1230,6 @@ class Tether {
       
       layerTable.appendChild(topRow);
       layerTable.appendChild(bottomRow);
-      //layerContainer.appendChild(layerSelect);
-      //layerSelect.appendChild(eyeContainer);
-      //eyeContainer.appendChild(eye);
       listContainer.appendChild(layerTable);
     }
     this.unhighlightLayer(this.previousLayer);
