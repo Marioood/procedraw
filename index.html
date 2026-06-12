@@ -26,8 +26,15 @@
           <!-- image options go here -->
       </div>
       <p id="render-time">render time goes here</p>
-      <div id="colp-container">
-      </div>
+      <table id="colp-tabber" class="colp-tabber">
+        <tr>
+          <td><button class="colp-tabber-tab" id="colp-tabber-tab">color display</button></td>
+          <td><button class="colp-tabber-tab" id="vecp-tabber-tab">vector display</button></td>
+        </tr>
+        <tr>
+          <td id="colp-container" colspan="2"></td>
+        </tr>
+      </table>
     </div>
     <div class="right-container">
       <div class="layer-control-container">
@@ -54,7 +61,10 @@
       </div>
     </div>
     <div class="top-container" id="top-container"></div>
-    <div class="credits-container" id="credits-container">
+    
+    <div class="window-underlay" id="window-underlay" style="display: none"></div>
+    
+    <div class="credits-container window" id="credits-container">
       <div class="credits-header">
         <h2>credits</h2>
       </div>
@@ -84,20 +94,92 @@
         </a>
       </div>
     </div>
+    <div id="save-dialog-container" class="save-dialog-container window" style="display: none">
+      <!-- text area, inputs -->
+      <table style="width: 100%">
+        <tr style="width: 100%">
+          <td>
+            <h2>save shtuff</h2>
+          </td>
+          <td>
+            <button id="save-dialog-x" style="float:right">X</button>
+          </td>
+        </tr>
+        <tr>
+          <td style="width: 50%">
+            <textarea id="save-box" class="save-box" placeholder="data is saved here" readonly></textarea>
+            <table style="width: 100%">
+              <td>
+                <span>url:</span>
+              </td>
+              <td style="width: 100%">
+                <input id="url-save-box" class="url-save-box" placeholder="earl data is saved here" type="text" readonly></input>
+              </td>
+            </table>
+          </td>
+          <td id="save-dialog-setting-container" style="width: 50%">
+            <!-- shit go here -->
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div id="load-dialog-container" class="save-dialog-container window" style="display: none">
+      <!-- text area, inputs -->
+      <table style="width: 100%">
+        <tr style="width: 100%">
+          <td>
+            <h2>load shtuff</h2>
+          </td>
+          <td>
+            <button id="load-dialog-x" style="float:right">X</button>
+          </td>
+        </tr>
+        <tr>
+          <td style="width: 50%">
+            <textarea id="load-box" class="load-box" placeholder="data is saved here"></textarea>
+            <button style="width: 100%" id="load-from-textarea-button">load!</button>
+          </td>
+          <td id="save-dialog-setting-container" style="width: 50%">
+            <!-- shit go here -->
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div id="export-dialog-container" class="save-dialog-container window" style="display: none">
+      <!-- text area, inputs -->
+      <table style="width: 100%">
+        <tr style="width: 100%">
+          <td>
+            <h2>export shtuff</h2>
+          </td>
+          <td>
+            <button id="export-dialog-x" style="float:right">X</button>
+          </td>
+        </tr>
+        <tr>
+          <td id="export-dialog-left-container" style="width: 50%">
+            <p>BUG: timing shit in javascript is tricky, so if you're exporting a big image you might have to hold down the export button for it to download correctly.</p>
+          </td>
+          <td id="export-dialog-right-container" style="width: 50%">
+            <!-- shit go here -->
+          </td>
+        </tr>
+      </table>
+    </div>
     <div class="palette-container" id="palette-container">
       <!-- PALETTE GOES HERE -->
     </div>
     <table id="layer-select-table" class="layer-select-table">
       <tbody id="layer-select-render-layers">
         <tr>
-          <th>static</th>
-          <th>noise</th>
-          <th>shapes</th>
+          <th>simple</th>
+          <th>random</th>
+          <th>bizarre</th>
         </tr>
       </tbody>
       <tbody id="layer-select-filter-layers">
         <tr>
-          <th>transforms</th>
+          <th>transform</th>
           <th>color mod</th>
           <th>detection</th>
         </tr>

@@ -89,6 +89,7 @@ function main() {
     });
   }
   if(DEBUG) console.log("debug mode is enabled; some features may be disabled or enabled");
+  img.updateSize();
   tether.updateSize(img);
   tether.printImage(img, true);
 }
@@ -246,58 +247,62 @@ function setupLayerManagementButtons(img, tether) {
     }
     layerSelectShown = !layerSelectShown;
   };
-  assert(Object.keys(img.layerClasses).length == 34, "layer-select-table expects 31 layers.");
+  assert(Object.keys(img.layerClasses).length == 39, "layer-select-table expects 39 layers.");
   document.getElementById("layer-select-table").style.display = "none";
   //TODO: maybe have this be decided based on some value in the layer?
   const regularNames = [
     [
-      "xorFractal",
       "solid",
       "border",
       "checkers",
       "gradient",
+      "advancedGradient",
       "waveTable",
-      "mandelbrot",
-      "seedFractal"
+      "bitmapText",
+      "tileMap"
     ],
     [
       "noise",
       "liney",
       "worley",
-      "valueNoise"
-    ],
-    [
+      "valueNoise",
       "wandering",
       "blobs",
-      "bitmapText",
-      "tileMap"
+      "cellularBlobs"
+    ],
+    [
+      "xorFractal",
+      "mandelbrot",
+      "seedFractal",
+      "wolfram"
     ]
   ]
   const filterNames = [
     [
       "tweak",
-      //rotate
-      "shear",
       "scale",
+      "rotate",
+      "shear",
       "tile",
       "repeat",
       "mask",
-      "offset"
+      "offset",
+      "merge"
     ],
     [
       "invert",
       "contrast",
       "HSV",
-      "blur",
       "sine",
       "functionPass"
     ],
     [
+      "blur",
       "emboss",
       "sharpen",
-      "merge",
       "vectorize",
-      "sunlight"
+      "sunlight",
+      "raytrace"
     ]
   ];
   
@@ -411,6 +416,11 @@ function setupImageOptions(img, tether, serial) {
   authorInput.id = "img-author-input";
   
   const widthInput = InputNumber(1, 512, img.h, (e) => {
+    if(e.target.value > 512) {
+      e.target.value = 512;
+    } else if(e.target.value < 1) {
+      e.target.value = 1;
+    }
     img.w = Number(e.target.value);
     img.updateSize();
     tether.updateSize(img);
@@ -419,6 +429,11 @@ function setupImageOptions(img, tether, serial) {
   widthInput.id = "img-width-input";
   
   const heightInput = InputNumber(1, 512, img.w, (e) => {
+    if(e.target.value > 512) {
+      e.target.value = 512;
+    } else if(e.target.value < 1) {
+      e.target.value = 1;
+    }
     img.h = Number(e.target.value);
     img.updateSize();
     tether.updateSize(img);
@@ -430,7 +445,7 @@ function setupImageOptions(img, tether, serial) {
     img.bg = newCol;
   }, () => {
     tether.printImage(img);
-  });
+  }, "background color");
   bgInput.id = "img-bg-input";
   
   const scaleInput = InputNumber(0, 64, tether.canvasScale, (e) => {
@@ -439,17 +454,14 @@ function setupImageOptions(img, tether, serial) {
   });
   scaleInput.step = 0.25;
   scaleInput.id = "img-scale-input";
-
-  function generateSaveUrl(data) {
-    const url = new URL(location.href);
-    url.searchParams.set("save", data);
-    return url.toString();
-  }
   
-  const saveImageText = Textarea("data is saved here", null, "save-box");
-  saveImageText.readOnly = true;
+  const saveImageText = document.getElementById("save-box");
+  const saveDialogContainer = document.getElementById("save-dialog-container");
   
   const saveImageButton = Button("save!", async (e) => {
+    saveDialogContainer.style.display = "block";
+    tether.showWindowUnderlay(true);
+    
     if(tether.compressSaves) {
       const url = generateSaveUrl(saveImageText.value = await serial.saveEnc(img));
       if (window.history.replaceState && tether.saveURL) {
@@ -458,32 +470,43 @@ function setupImageOptions(img, tether, serial) {
     } else {
       saveImageText.value = serial.save(img);
     }
-  }, "aero-btn");
-  const loadImageText = Textarea("you put data here", null, "save-box");
+    
+    const urlSaveBox = document.getElementById("url-save-box");
+    
+    const earl = await serial.saveEnc(img);
+    urlSaveBox.value = generateSaveUrl(earl);
+    
+  }, "aero-btn img-ctrl-btn");
+  
+  document.getElementById("save-dialog-x").onclick = (e) => {
+    saveDialogContainer.style.display = "none";
+    tether.showWindowUnderlay(false);
+  }
+  
+  const loadDialogContainer = document.getElementById("load-dialog-container");
   
   const loadImageButton = Button("load!", async (e) => {
-    if(confirm("load image?")) {
-      try {
-        await serial.loadEnc(img, loadImageText.value);
-        tether.generateLayerList(img);
-        img.updateSize();
-        tether.updateSize(img);
-        tether.printImage(img, true);
-        setTitle(img.name);
-        //DOESNT WORK!!!! color input still uses old color when clicked
-        document.getElementById("img-bg-input").style.backgroundColor = '#' + RGB2Hex(img.bg);
-        authorInput.value = img.author;
-        //bgInput.remove();
-        if(window.history.replaceState && tether.saveURL) {
-          window.history.replaceState({}, "", generateSaveUrl(await serial.saveEnc(img)));
-        }
-      } catch(error) {
-        window.alert("couldn't parse data! \n\n" + error);
-        if(DEBUG) console.error(error);
-        return;
-      }
-    }
-  }, "aero-btn");
+    loadDialogContainer.style.display = "block";
+    tether.showWindowUnderlay(true);
+  }, "aero-btn img-ctrl-btn");
+  
+  document.getElementById("load-dialog-x").onclick = (e) => {
+    loadDialogContainer.style.display = "none";
+    tether.showWindowUnderlay(false);
+  }
+  
+  const exportDialogContainer = document.getElementById("export-dialog-container");
+  
+  const exportButton = Button("export!", async (e) => {
+    exportDialogContainer.style.display = "block";
+    tether.showWindowUnderlay(true);
+  }, "aero-btn img-ctrl-btn");
+  
+  document.getElementById("export-dialog-x").onclick = (e) => {
+    exportDialogContainer.style.display = "none";
+    tether.showWindowUnderlay(false);
+  }
+  
   //TODO: make inputs consistent with layer options
   imageOptions.appendChild(divWrap(
     nameInput,
@@ -501,25 +524,223 @@ function setupImageOptions(img, tether, serial) {
     heightInput,
     document.createElement("br"),
     Tag("hr"),
-    divWrap(
-      "label-container",
-      saveImageButton
-    ),
-    saveImageText,
+    saveImageButton,
     document.createElement("br"),
-    divWrap(
-      "label-container",
-      loadImageButton
-    ),
-    loadImageText,
+    loadImageButton,
     document.createElement("br"),
-    Label("zoom"),
-    scaleInput,
-    document.createElement("br"),
+    exportButton,
+    Tag("hr"),
     Button("render", (e) => {
       tether.printImage(img, true);
-    }, "aero-btn")
+    }, "aero-btn img-ctrl-btn")
   ));
+  
+  
+  const exportDialogLeftContainer = document.getElementById("export-dialog-left-container");
+  
+  let exportWidth = img.w;
+  const exportWidthInput = InputNumber(1, 4096, img.w, (e) => {
+    if(e.target.value > 4096) {
+      e.target.value = 4096;
+    } else if(e.target.value < 1) {
+      e.target.value = 1;
+    }
+    exportWidth = Number(e.target.value);
+  });
+  let exportHeight = img.h;
+  const exportHeightInput = InputNumber(1, 4096, img.w, (e) => {
+    if(e.target.value > 4096) {
+      e.target.value = 4096;
+    } else if(e.target.value < 1) {
+      e.target.value = 1;
+    }
+    exportHeight = Number(e.target.value);
+  });
+  
+  let oldW = -1;
+  let oldH = -1;
+  function doExportRender() {
+    oldW = img.w;
+    oldH = img.h;
+    img.w = exportWidth;
+    img.h = exportHeight;
+    img.updateSize();
+    img.renderImage();
+  }
+  
+  function setNormalRender() {
+    img.w = oldW;
+    img.h = oldH;
+    img.updateSize();
+  }
+  
+  const exportPFMImageButton = DynamicDownloadButton(
+    "export as portable floatmap (?)",
+    () => {
+      //https://www.pauldebevec.com/Research/HDR/PFM/
+      //https://en.wikipedia.org/wiki/Netpbm#32-bit
+      doExportRender();
+      const endianness = -1;
+      const headerLength = 6 + img.w.toString().length + img.h.toString().length + endianness.toString().length;
+      const imageLength = img.w * img.h * 3 * 4;
+      const buf = new ArrayBuffer(headerLength + imageLength);
+      const view = new DataView(buf);
+      
+      function setString(fOffs, str) {
+        for(let i = 0; i < str.length; i++) {
+          view.setInt8(fOffs + i, str.codePointAt(i));
+        }
+        return str.length;
+      }
+      
+      let offs = 0;
+      //header goes like: "PF\nWIDTH\nHEIGHT\nENDIANNESS\n"
+      //NOT WITH "\r\n"
+      offs += setString(offs, "PF");
+      view.setInt8(offs, 0x0A);
+      offs++;
+      offs += setString(offs, img.w.toString());
+      view.setInt8(offs, 0x0A);
+      offs++;
+      offs += setString(offs, img.h.toString());
+      view.setInt8(offs, 0x0A);
+      offs++;
+      offs += setString(offs, endianness.toString());
+      view.setInt8(offs, 0x0A);
+      offs++;
+      
+      for(let y = img.h - 1; y >= 0; y--) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = (x + y * img.w) * 4;
+          view.setFloat32(offs, img.data[idx], true);
+          offs += 4;
+          view.setFloat32(offs, img.data[idx + 1], true);
+          offs += 4;
+          view.setFloat32(offs, img.data[idx + 2], true);
+          offs += 4;
+        }
+      }
+      setNormalRender();
+      return new Blob([view], {type: "image/x-portable-pixmap"});
+    },
+    () => img.name + ".pfm",
+    "aero-btn img-ctrl-btn"
+  );
+  exportPFMImageButton.title = "Preserves blown out colors; no alpha; very inefficient size-wise; colors/orientation may get messed up on import."
+  
+  const exportPNGImageButton = document.createElement("a");
+  const saveFileInput = document.createElement("button");
+  
+  saveFileInput.innerText = "export as PNG (?)";
+  saveFileInput.className = "aero-btn img-ctrl-btn";
+  exportPNGImageButton.href = "dummy";
+  exportPNGImageButton.download = "dummy";
+  
+  let blobURL = "";
+  
+  exportPNGImageButton.onmousedown = (e) => {
+    document.body.style.cursor = "wait";
+    try {
+      doExportRender();
+      const dummyCanvas = document.createElement("canvas");
+      dummyCanvas.width = img.w;
+      dummyCanvas.height = img.h;
+      const dummyCtx = dummyCanvas.getContext("2d");
+      const dummyData = dummyCtx.createImageData(img.w, img.h);
+      for(let i = 0; i < img.w * img.h * 4; i++) {
+        //convert from 0 - 1 to 0 - 255
+        dummyData.data[i] = img.data[i] * 255;
+      }
+      dummyCtx.putImageData(dummyData, 0, 0);
+      
+      function setTheBlob(blob) {
+        blobURL = URL.createObjectURL(blob);
+        exportPNGImageButton.href = blobURL;
+        exportPNGImageButton.download = img.name + ".png";
+      }
+      
+      dummyCanvas.toBlob(setTheBlob, "image/png");
+      setNormalRender();
+      
+    } catch(ex) {
+      alert(ex);
+      e.preventDefaults();
+    }
+    document.body.style.cursor = "auto";
+  }
+  exportPNGImageButton.onmouseup = (e) => {
+    URL.revokeObjectURL(blobURL);
+  }
+  exportPNGImageButton.appendChild(saveFileInput);
+  
+  exportPNGImageButton.title = "Does not preserve blown out colors; includes alpha; very compact size-wise; very portable.";
+  
+  exportDialogLeftContainer.appendChild(Label("exportWidth"));
+  exportDialogLeftContainer.appendChild(exportWidthInput);
+  exportDialogLeftContainer.appendChild(document.createElement("br"));
+  exportDialogLeftContainer.appendChild(Label("exportHeight"));
+  exportDialogLeftContainer.appendChild(exportHeightInput);
+  
+  const exportDialogRightContainer = document.getElementById("export-dialog-right-container");
+  
+  exportDialogRightContainer.appendChild(exportPNGImageButton);
+  exportDialogRightContainer.appendChild(exportPFMImageButton);
+  
+  function generateSaveUrl(data) {
+    const url = new URL(location.href);
+    url.searchParams.set("save", data);
+    return url.toString();
+  }
+  
+  const saveDialogHalfContainer = document.getElementById("save-dialog-setting-container");
+  
+  const saveFileLink = DynamicDownloadButton(
+    "save as file",
+    () => new Blob([serial.save(img)], {type: "application/json"}),
+    () => img.name + ".pdimg",
+    "aero-btn img-ctrl-btn"
+  );
+  
+  const loadFromTextareaButton = document.getElementById("load-from-textarea-button");
+  const loadImageText = document.getElementById("load-box");
+  
+  loadFromTextareaButton.onclick = async (e) => {
+    if(confirm("load image?")) {
+      try {
+        await serial.loadEnc(img, loadImageText.value);
+        tether.generateLayerList(img);
+        img.updateSize();
+        tether.updateSize(img);
+        tether.printImage(img, true);
+        setTitle(img.name);
+        //DOESNT WORK!!!! color input still uses old color when clicked
+        document.getElementById("img-bg-input").style.backgroundColor = '#' + RGB2Hex(img.bg);
+        authorInput.value = img.author;
+        if(window.history.replaceState && tether.saveURL) {
+          window.history.replaceState({}, "", generateSaveUrl(await serial.saveEnc(img)));
+        }
+      } catch(error) {
+        window.alert("couldn't parse data! \n\n" + error);
+        console.error(error);
+        return;
+      }
+    }
+  };
+  
+  saveDialogHalfContainer.appendChild(saveFileLink);
+  
+  const colpTabberTab = document.getElementById("colp-tabber-tab");
+  const vecpTabberTab = document.getElementById("vecp-tabber-tab");
+  
+  colpTabberTab.onclick = (e) => {
+    colp.target.style.display = "block";
+    vecp.target.style.display = "none";
+    console.log(colp);
+  };
+  vecpTabberTab.onclick = (e) => {
+    vecp.target.style.display = "block";
+    colp.target.style.display = "none";
+  };
 }
 
 function setupHeaderMenu(img, tether, serial) {
@@ -551,12 +772,13 @@ function setupHeaderMenu(img, tether, serial) {
     
     if(showCredits) {
       creditBox.style.display = "initial";
+      tether.showWindowUnderlay(true);
     } else {
       creditBox.style.display = "none";
+      tether.showWindowUnderlay(false);
     }
   });
-  const godButton = Button("create god image", (e) => {
-    
+  const godButton = Button("create God image", (e) => {
     img.name = godText(16);
     img.author = "God";
     document.getElementById("img-name-input").value = img.name;
@@ -592,23 +814,7 @@ function setupHeaderMenu(img, tether, serial) {
       Button("file", (e) => {
         makeItems(e, 0, divWrap(
           "header-items",
-          Button("save as file"),
-          document.createElement("br"),
-          Button("load from file"),
-          document.createElement("br"),
-          Button("share"),
-          document.createElement("br"),
-          godButton,
-          document.createElement("br"),
-          Label("compressSaves", "header-label"),
-          InputCheckbox(tether.compressSaves, (checked, e) => {
-            tether.compressSaves = checked;
-          }),
-          document.createElement("br"),
-          Label("saveURL", "header-label"),
-          InputCheckbox(tether.saveURL, (checked, e) => {
-            tether.saveURL = checked;
-          })
+          godButton
         ));
       }, "header-dropdown"),
       Button("edit", (e) => {
@@ -842,12 +1048,56 @@ function setupKeybinds(img, tether) {
               }
               alert(text);
               clearInterval(intervalId);
-            }/* else if(iterationsLeft > 0) {
-              setTimeout(runMonkeyTest(iterationsLeft - 1), 1000);
-            }*/
+            }
           }
           
           intervalId = setInterval(runMonkeyTest, 2000);
+        } else if((e.key == "s" || e.key == "S") && e.altKey) {
+          let willRun = confirm("Alt + S enters 'Slog Mode.' It is used to test rendering times.\n\Slog Mode will DELETE the current image!\n\nIf you wish to cancel, press cancel.");
+          if(!willRun) return;
+          
+          const testCount = prompt("How many tests per layer do you wish to run?\n\nMore tests will be more accurate, but will require more time.", 10);
+          
+          let totalTimeStart = Date.now();
+          const layers = Object.keys(img.layerClasses);
+          //start tests
+          for(let i = 0; i < layers.length; i++) {
+            const layerType = layers[i];
+            img.name = `${layerType} Test`;
+            img.author = "Slog";
+            document.getElementById("img-name-input").value = img.name;
+            document.getElementById("img-author-input").value = img.author;
+            //go down a layer if we're in the middle, stay in place if we're at the bottom
+            tether.setCurrentLayer(0);
+            img.layers = [];
+            //these were causing an error because i accidentally added an s after the 'layer' part...
+            //thanks javascript for not catching that one
+            img.layerKeys = [];
+            img.layerKeysFreed = [];
+            
+            for(let l = 0; l < 4; l++) {
+              const curLayer = new img.layerClasses[layerType];
+              curLayer.displayName = l;
+              //proper link count for filters
+              img.insertLayer(img.layers.length, curLayer);
+              tether.currentLayer++;
+            }
+            tether.currentLayer--;
+            //TODO: what?
+            tether.setCurrentLayer(tether.currentLayer);
+            tether.updateLayerOptions(img);
+            tether.generateLayerList(img);
+            
+            let layerTime = Date.now();
+            for(let l = 0; l < testCount; l++) {
+              tether.printImage(img);
+            }
+            layerTime = (Date.now() - layerTime) / testCount;
+            console.log(`${layerType} tests in ${layerTime}ms`);
+          }
+          //end tests
+          const totalTimeTaken = Date.now() - totalTimeStart;
+          alert("Ding!");
         }
       }
     }

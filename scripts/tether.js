@@ -22,9 +22,10 @@ let colpGlobalOninput = null;
 //???
 let colpGlobalUpdate = null;
 
-function InputColor(inputCol, oninput, onupdate, isSquare = false) { //[R, G, B, A] from 0...1
+function InputColor(inputCol, oninput, onupdate, colorSource = "???", isSquare = false) { //[R, G, B, A] from 0...1
   const colpDisplay = Button("", (e) => {
     colpGlobalDisplay = e.target;
+    //colp.setColorSource(colorSource);
     let oldTime;
     colpGlobalOninput = (newCol) => {
       memcpy(inputCol, newCol);
@@ -38,7 +39,9 @@ function InputColor(inputCol, oninput, onupdate, isSquare = false) { //[R, G, B,
       }
     }
     colpGlobalUpdate = onupdate;
+    
     colp.externalUpdate(inputCol);
+    vecp.externalUpdate(inputCol);
     
   }, "aero-btn colp-input");
   
@@ -136,7 +139,7 @@ class InputColorControl {
   HSV = null;
   alpha = 0;
 
-  constructor() { //[R, G, B, A] from 0...1
+  constructor() {
     //custom color picker because i use firefox and it uses the ms paint color picker
     this.localDisplay = divWrap("colp-display");
     this.RGB = [0, 0, 0]; //R, G, B
@@ -278,7 +281,6 @@ class InputColorControl {
     });
     
     const colpContainer = divWrap(
-      "colp-container",
       this.localDisplay,
       document.createElement("br"),
       Label("red"),
@@ -384,6 +386,7 @@ class InputColorControl {
     
     const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
     if(colpGlobalOninput != null) colpGlobalOninput(newCol);
+    vecp.externalUpdate(newCol);
   }
   updateSlidersHSV() {
     this.RGB = HSV2ByteRGB(this.HSV);
@@ -396,10 +399,12 @@ class InputColorControl {
     
     const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
     if(colpGlobalOninput != null) colpGlobalOninput(newCol);
+    vecp.externalUpdate(newCol);
   }
   updateSlidersAlpha() {
     const newCol = [this.RGB[0] / 255, this.RGB[1] / 255, this.RGB[2] / 255, this.alpha / 255];
     if(colpGlobalOninput != null) colpGlobalOninput(newCol);
+    vecp.externalUpdate(newCol);
     this.updateHexBox();
     this.updateDisplay();
   }
@@ -410,8 +415,340 @@ class InputColorControl {
     this.hexBox.value = hex + a;
   }
 }
+
+class InputVectorControl {
+  //TODO: clamp length via GEOMETRY!!!!
+  vecpContainer;
+  target;
+  vectorCanvas;
+  theVector;
+  theRGB;
+  
+  xSlider;
+  xBox;
+  ySlider;
+  yBox;
+  lengthSlider;
+  lengthBox;
+  angleSlider;
+  angleBox;
+  
+  constructor() {
+    this.theVector = [Math.random() * 2 - 1, Math.random() * 2 - 1];
+    this.theRGB = [0.5, 0.5, 0];
+    
+    this.vectorCanvas = document.createElement("canvas");
+    this.vectorCanvas.width = 200;
+    this.vectorCanvas.height = 200;
+    this.vectorCanvas.className = "aero-box";
+    
+    function onupdate() {
+      if(colpGlobalUpdate != null) colpGlobalUpdate();
+    }
+    
+    this.xSlider = InputRange(-1, 1, 0, (e) => {
+      const x = Number(e.target.value);
+      this.theVector[0] = x;
+      this.xBox.value = x;
+      this.updatePolarInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    this.xSlider.step = 0.01;
+    this.xSlider.onmouseup = onupdate;
+    this.xBox = InputNumber(-1, 1, 0, (e) => {
+      const x = Number(e.target.value);
+      this.theVector[0] = x;
+      this.xSlider.value = x;
+      this.updatePolarInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    this.xBox.step = 0.01;
+    
+    this.ySlider = InputRange(-1, 1, 0, (e) => {
+      const y = Number(e.target.value);
+      this.theVector[1] = y;
+      this.yBox.value = y;
+      this.updatePolarInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    this.ySlider.step = 0.01;
+    this.ySlider.onmouseup = onupdate;
+    this.yBox = InputNumber(-1, 1, 0, (e) => {
+      const y = Number(e.target.value);
+      this.theVector[1] = y;
+      this.ySlider.value = y;
+      this.updatePolarInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    this.yBox.step = 0.01;
+    
+    this.lengthSlider = InputRange(0, 1, 0, (e) => {
+      const len = Number(e.target.value);
+      const oldLength = Math.hypot(this.theVector[0], this.theVector[1]);
+      if(oldLength != oldLength) {
+        this.theVector[0] = Math.sin(-this.angleSlider.value * Math.PI / 180) * len;
+        this.theVector[1] = Math.cos(this.angleSlider.value * Math.PI / 180) * len;
+      } else {
+        this.theVector[0] = this.theVector[0] / oldLength * len;
+        this.theVector[1] = this.theVector[1] / oldLength * len;
+      }
+      this.lengthBox.value = len;
+      this.updateCarteseanInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    this.lengthSlider.step = 0.01;
+    this.lengthSlider.onmouseup = onupdate;
+    this.lengthBox = InputNumber(0, 1, 0, (e) => {
+      const len = Number(e.target.value);
+      const oldLength = Math.hypot(this.theVector[0], this.theVector[1]);
+      if(oldLength != oldLength) {
+        this.theVector[0] = Math.sin(-this.angleSlider.value * Math.PI / 180) * len;
+        this.theVector[1] = Math.cos(this.angleSlider.value * Math.PI / 180) * len;
+      } else {
+        this.theVector[0] = this.theVector[0] / oldLength * len;
+        this.theVector[1] = this.theVector[1] / oldLength * len;
+      }
+      this.lengthSlider.value = len;
+      this.updateCarteseanInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    this.lengthBox.step = 0.01;
+    
+    this.angleSlider = InputRange(0, 360, 0, (e) => {
+      const len = Math.hypot(this.theVector[0], this.theVector[1]);
+      this.theVector[0] = Math.sin(-this.angleSlider.value * Math.PI / 180) * len;
+      this.theVector[1] = Math.cos(this.angleSlider.value * Math.PI / 180) * len;
+      this.angleBox.value = this.angleSlider.value;
+      this.updateCarteseanInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    this.angleSlider.onmouseup = onupdate;
+    this.angleBox = InputNumber(0, 360, 0, (e) => {
+      const len = Math.hypot(this.theVector[0], this.theVector[1]);
+      this.theVector[0] = Math.sin(-this.angleBox.value * Math.PI / 180) * len;
+      this.theVector[1] = Math.cos(this.angleBox.value * Math.PI / 180) * len;
+      this.angleSlider.value = this.angleBox.value;
+      this.updateCarteseanInputs();
+      this.updateSliderColors();
+      this.render();
+      this.oninput();
+    });
+    
+    this.vecpContainer = divWrap(
+      divWrap(
+        "vecp-canvas-container",
+        Table(
+          Tr(
+            Td(), Td(Text("N")), Td()
+          ),
+          Tr(
+            Td(Text("W")), Td(this.vectorCanvas), Td(Text("E"))
+          ),
+          Tr(
+            Td(), Td(Text("S")), Td()
+          ),
+          "vecp-container"
+        ),
+      ),
+      Label("x"),
+      this.xSlider,
+      this.xBox,
+      Br(),
+      Label("y"),
+      this.ySlider,
+      this.yBox,
+      Br(),
+      Label("angle"),
+      this.angleSlider,
+      this.angleBox,
+      Br(),
+      Label("length"),
+      this.lengthSlider,
+      this.lengthBox
+    );
+    this.vecpContainer.style.display = "none";
+      
+    const width = this.vectorCanvas.width;
+    const height = this.vectorCanvas.height;
+    
+    let isClicking = false;
+    this.vectorCanvas.onmousedown = (e) => {
+      if(e.buttons != 1) return;
+      const cursorX = (e.offsetX / width) * 2 - 1;
+      const cursorY = (e.offsetY / height) * 2 - 1;
+      this.theVector[0] = cursorX;
+      this.theVector[1] = -cursorY;
+      isClicking = true;
+      this.render();
+      this.updateCarteseanInputs();
+      this.updatePolarInputs();
+      this.updateSliderColors();
+      this.oninput();
+    };
+    this.vectorCanvas.onmouseup = (e) => {
+      isClicking = false;
+      this.oninput();
+    };
+    this.vectorCanvas.onmousemove = (e) => {
+      if(!isClicking || e.buttons != 1) return;
+
+      const cursorX = (e.offsetX / width) * 2 - 1;
+      const cursorY = (e.offsetY / height) * 2 - 1;
+      this.theVector[0] = cursorX;
+      this.theVector[1] = -cursorY;
+      this.render();
+      this.updateCarteseanInputs();
+      this.updatePolarInputs();
+      this.updateSliderColors();
+      this.oninput();
+    };
+    
+    this.target = this.vecpContainer;
+    this.render();
+    this.updateCarteseanInputs();
+    this.updatePolarInputs();
+    this.updateSliderColors();
+  }
+  
+  render() {
+    const width = this.vectorCanvas.width;
+    const height = this.vectorCanvas.height;
+    const ctx = this.vectorCanvas.getContext("2d");
+    
+    const screenVecX = (this.theVector[0] / 2 + 0.5) * width;
+    const screenVecY = (-this.theVector[1] / 2 + 0.5) * height;
+    const vecAngle = Math.atan2(this.theVector[0], this.theVector[1]);
+    const vecLength = Math.hypot(this.theVector[0], this.theVector[1]);
+    
+    ctx.fillStyle = `rgb(0, 0, ${this.theRGB[2] * 255})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = "lighter";
+    const xGrad = ctx.createLinearGradient(0, 0, width, 0);
+    xGrad.addColorStop(0, "red");
+    xGrad.addColorStop(1, "black");
+    ctx.fillStyle = xGrad;
+    ctx.fillRect(0, 0, width, height);
+    const yGrad = ctx.createLinearGradient(0, 0, 0, height);
+    yGrad.addColorStop(0, "lime");
+    yGrad.addColorStop(1, "black");
+    ctx.fillStyle = yGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.globalCompositeOperation = "source-over";
+
+    ctx.beginPath();
+    ctx.strokeStyle = "black"
+    ctx.lineWidth = 1;
+    ctx.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
+    ctx.moveTo(width / 2, 0);
+    ctx.lineTo(width / 2, height / 2);
+    ctx.stroke();
+    ctx.beginPath();
+    const angleRadius = Math.min(vecLength * width / 2, 16);
+    ctx.arc(width / 2, height / 2, angleRadius, vecAngle - Math.PI / 2, 0 - Math.PI / 2);
+    ctx.stroke();
+
+    const headSize = vecLength * 12 + 4;
+    const lineVecX = screenVecX - this.theVector[0] * headSize / 2;
+    const lineVecY = screenVecY + this.theVector[1] * headSize / 2;
+
+    ctx.strokeStyle = "black";
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.moveTo(width / 2, height / 2);
+    ctx.lineWidth = 4;
+    ctx.lineTo(lineVecX, lineVecY);
+    ctx.stroke();
+
+    ctx.strokeStyle = "white"
+    ctx.fillStyle = "white"
+    ctx.beginPath();
+    ctx.moveTo(width / 2, height / 2);
+    ctx.lineWidth = 2;
+    ctx.lineTo(lineVecX, lineVecY);
+    ctx.stroke();
+    
+    ctx.strokeStyle = "black"
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(screenVecX + Math.cos(vecAngle + Math.PI / 3) * headSize, screenVecY + Math.sin(vecAngle + Math.PI / 3) * headSize);
+    ctx.lineTo(screenVecX, screenVecY);
+    ctx.lineTo(screenVecX + Math.cos(vecAngle - (Math.PI / 3 - Math.PI)) * headSize, screenVecY + Math.sin(vecAngle - (Math.PI / 3 - Math.PI)) * headSize);
+    ctx.fill();
+    ctx.closePath();
+    ctx.stroke();
+  }
+  
+  fractionDigits = 1000;
+  
+  updateCarteseanInputs() {
+    const x = Math.round(this.theVector[0] * this.fractionDigits) / this.fractionDigits;
+    const y = Math.round(this.theVector[1] * this.fractionDigits) / this.fractionDigits;
+    this.xSlider.value = x;
+    this.xBox.value = x;
+    this.ySlider.value = y;
+    this.yBox.value = y;
+  }
+  updatePolarInputs() {
+    let ang = -Math.atan2(this.theVector[0], this.theVector[1]) * 180 / Math.PI;
+    if(ang < 0) ang = 360 + ang;
+    ang = Math.round(ang * this.fractionDigits) / this.fractionDigits;
+    const len = Math.round(Math.hypot(this.theVector[0], this.theVector[1]) * this.fractionDigits) / this.fractionDigits;
+    this.lengthSlider.value = len;
+    this.lengthBox.value = len;
+    this.angleSlider.value = ang;
+    this.angleBox.value = ang;
+  }
+  updateSliderColors() {
+    const vecXByte = (-this.theVector[0] / 2 + 0.5) * 255;
+    const vecYByte = (this.theVector[1] / 2 + 0.5) * 255;
+    const blue = this.theRGB[2] * 255;
+    this.xSlider.style.background = `linear-gradient(90deg, rgb(255, ${vecYByte}, ${blue}) 0%, rgb(0, ${vecYByte}, ${blue}) 100%)`;
+    this.ySlider.style.background = `linear-gradient(90deg, rgb(${vecXByte}, 0, ${blue}) 0%, rgb(${vecXByte}, 255, ${blue}) 100%)`;
+    const ang = Number(this.angleSlider.value * Math.PI / 180);
+    
+    const lenRed = (Math.sin(ang) / 2 + 0.5) * 255;
+    const lenGreen = (Math.cos(ang) / 2 + 0.5) * 255;
+    this.lengthSlider.style.background = `linear-gradient(90deg, rgb(127, 127, ${blue}) 0%, rgb(${lenRed}, ${lenGreen}, ${blue}) 100%)`;
+    this.angleSlider.style.background = `linear-gradient(90deg, rgb(127, 255, ${blue}) 0%, rgb(217, 217, ${blue}) 12.5%, rgb(255, 127, ${blue}) 25%, rgb(217, 37, ${blue}) 37.5%, rgb(127, 0, ${blue}) 50%, rgb(37, 37, ${blue}) 62.5%, rgb(0, 127, ${blue}) 75%, rgb(37, 217, ${blue}) 87.5%, rgb(127, 255, ${blue}) 100%)`;
+  }
+  externalUpdate(inputCol) {
+    this.theRGB[0] = inputCol[0];
+    this.theRGB[1] = inputCol[1];
+    this.theRGB[2] = inputCol[2];
+    this.theVector[0] = -(inputCol[0] * 2 - 1);
+    this.theVector[1] = inputCol[1] * 2 - 1;
+    
+    this.render();
+    this.updateCarteseanInputs();
+    this.updatePolarInputs();
+    this.updateSliderColors();
+  }
+  oninput() {
+    const newCol = [-this.theVector[0] / 2 + 0.5, this.theVector[1] / 2 + 0.5, this.theRGB[2], 1];
+    if(colpGlobalOninput != null) colpGlobalOninput(newCol);
+    if(colpGlobalDisplay != null) colpGlobalDisplay.style.background = `rgb(${newCol[0] * 255}, ${newCol[1] * 255}, ${newCol[2] * 255})`;
+    colp.externalUpdate(newCol);
+  }
+}
+
 //TODO: put somewhere else
 const colp = new InputColorControl();
+const vecp = new InputVectorControl();
 
 function InputPaletteColor(colorInt, title) {
   const color = intRGB2RGB(colorInt);
@@ -464,17 +801,19 @@ function InputGlyph(img, t, glyph) {
   let colLeft = [0.5, 0, 1, 1];
   let colRight = [1, 1, 1, 1];
   
+  const colorSource = `glyph color of ${t.currentLayer}. ${img.layers[t.currentLayer].name}`;
+  
   const colLeftInput = InputColor(colLeft, (newCol) => {
     colLeft = newCol;
   }, () => {
     //blank
-  }, true);
+  }, "foreground " + colorSource, true);
   
   const colRightInput = InputColor(colRight, (newCol) => {
     colRight = newCol;
   }, () => {
     //blank
-  }, true);
+  }, "background " + colorSource, true);
   
   const colSwapInput = Button("<\n|\n<", (e) => {
   }, "aero-btn input-glyph-swap");
@@ -834,6 +1173,7 @@ class Tether {
     
     const colpContainer = document.getElementById("colp-container")
     colpContainer.appendChild(colp.target);
+    colpContainer.appendChild(vecp.target);
     
     const palCont = document.getElementById("palette-container");
     palCont.appendChild(InputPaletteColor(0xFFFF00FF, "North West"));
@@ -1041,6 +1381,7 @@ class Tether {
           break;
         case "color":
           const inputCol = options[optionKeys[i]];
+          const colorSource = `${optionKeys[i]} of ${this.currentLayer}. ${layer.name}`;
           const colBox = InputColor(inputCol, (newCol) => {
             if(limits.external) {
               const brother = document.getElementById(limits.brotherId + this.currentLayer);
@@ -1048,7 +1389,7 @@ class Tether {
             }
           }, () => {
             this.printImage(img);
-          });
+          }, colorSource);
           container.appendChild(colBox);
           break;
         case "keyvalues":
@@ -1584,5 +1925,10 @@ class Tether {
     const tileScale = (this.tileView) ? 3 : 1;
     this.canvas.style.height = img.h * this.canvasScale * tileScale + "px";
     this.canvas.style.width = img.w * this.canvasScale * tileScale + "px";
+  }
+  
+  showWindowUnderlay(shown) {
+    const windowUnderlay = document.getElementById("window-underlay");
+    windowUnderlay.style.display = shown ? "block" : "none";
   }
 }

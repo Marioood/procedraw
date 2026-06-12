@@ -1,0 +1,1 @@
+{"img":{"bg":"808080ff","w":256,"h":256,"name":"pascal","author":"marioood","version":"VOLATILE 0.9.2","format":0},"layers":[{"name":"gradient","od":{"tint":"ffffffff"},"options":{"col1":"ffffffff","col2":"000000ff"}},{"name":"xorFractal","od":{"alpha":0.5,"blend":14,"tint":"ffffffff"},"options":{"operation":2}}]}

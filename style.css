@@ -27,6 +27,10 @@ canvas {
 }
 h2 {
   font-style: italic;
+  font-weight: bold;
+  font-size: 1.75em;
+  margin: 8px;
+  font-family: serif;
 }
 a {
   color: cyan;
@@ -130,7 +134,14 @@ hr {
   background-color: var(--bg);
 }
 .save-box {
-  max-width: 256px;
+  min-width: 100%;
+  height: 256px;
+  resize: none;
+}
+.url-save-box {
+  min-width: 100%;
+  height: 18px;
+  resize: none;
 }
 .layer-select {
   width: auto;
@@ -219,6 +230,12 @@ hr {
   color: transparent;
 }
 /******** INPUT ********/
+.img-ctrl-btn {
+  width: 100%;
+}
+.window-half-container {
+  width: 50%;
+}
 input[type=text] {
   border: 0;
   border-bottom: var(--otln) 1px solid;
@@ -278,7 +295,6 @@ input[type=range]::-moz-range-thumb {
   width: 4px;
 }
 input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
-  /*TODO: just make this borders n shit*/
   color: white;
   background: linear-gradient(180deg, black 0, #404040 100%);
   border-bottom: 1px solid black;
@@ -288,6 +304,16 @@ input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
   outline: 1px solid var(--otln);
   margin: 1px;
   height: 24px;
+}
+.aero-box {
+  color: white;
+  background: linear-gradient(180deg, black 0, #404040 100%);
+  border-bottom: 1px solid black;
+  border-top: 1px solid #808080;
+  border-left: 1px solid #606060;
+  border-right: 1px solid #202020;
+  outline: 1px solid var(--otln);
+  margin: 1px;
 }
 .checkbox-true {
   width: 16px;
@@ -422,6 +448,9 @@ button {
 .woke-bg {
   background: linear-gradient(90deg, #ff0000 0%, #ffff00 16%, #00ff00 33%, #00ffff 50%, #0000ff 66%, #ff00ff 83%, #ff0000 100%);
 }
+.colp-source:before {
+  content: "editing: ";
+}
 .colp-input {
   width: 222px;
   height: 32px;
@@ -441,13 +470,35 @@ button {
   width: 16px;
   height: 16px;
 }
-.colp-container {
-  padding: 4px;
+.colp-tabber {
+  width: 100%;
+  /*padding: 4px;
   outline: 1px solid var(--otln);
   background: var(--bg-cont);
   width: 100%;
   position: absolute;
-  bottom: 0;
+  bottom: 0;*/
+}
+.colp-tabber-tab {
+  width: 100%;
+}
+.colp-tabber td {
+  /*outline: 1px solid var(--otln);*/
+}
+.colp-container {
+  width: 320px;
+  height: 128px;
+}
+.vecp-container {
+}
+.vecp-container td {
+  text-align: center;
+}
+.vecp-canvas-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 .colp-x-container {
   width: 100%;
@@ -576,15 +627,10 @@ button {
   white-space: nowrap;
 }
 .credits-container {
-  position: absolute;
   width: 512px;
   height: 360px;
   top: calc(50% - 180px);
   left: calc(50% - 256px);
-  border: 1px solid var(--otln);
-  padding: 4px;
-  box-sizing: border-box;
-  background: var(--bg-cont);
 }
 .valid-icon-container {
   position: absolute;
@@ -614,4 +660,26 @@ button {
   height: 24px;
   border-bottom-right-radius: 24px;
   border-bottom-left-radius: 24px;
+}
+/* save dinwo */
+.window {
+  border: 1px solid var(--otln);
+  padding: 4px;
+  box-sizing: border-box;
+  background: var(--bg-cont);
+  position: absolute;
+}
+.save-dialog-container {
+  width: 512px;
+  height: 360px;
+  top: calc(50% - 180px);
+  left: calc(50% - 256px);
+}
+.window-underlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(180deg, black 0, #00000080 100%);
 }

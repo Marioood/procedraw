@@ -1,0 +1,7 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <text x="8" y="39.5" fill="black" stroke="black" stroke-width="2" font-size="32">f(x)</text>
+  <text x="8" y="39" fill="white" font-size="32">f(x)</text>
+  <text x="8" y="40" fill="#a0a0a0" font-size="32">f(x)</text>
+</svg>

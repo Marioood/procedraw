@@ -1,0 +1,43 @@
+pattern sets:
+  0. MIN: 0, MAX: 9. 0:1, 2:3, 9:69
+  1. MIN: 0, MAX: 0. 0:1
+
+INSTR_MATCH_PATTERN {patternId} case -- value
+---
+
+label fac:
+match pattern {1}
+return
+
+
+
+push 6
+subroutine {fac}
+
+
+------------------------------
+
+
+
+
+
+[graph         ]
+[f(x,y)=x XOR y] -> [out]
+[              ]
+
+--------
+
+SUB0:
+  XOR
+  RETURN
+
+
+
+
+PUSH 
+
+
+
+
+
+

@@ -37,11 +37,11 @@ class Serialization {
           const type = types[key].type;
           let refIsEqual = val == refVal;
           
-          if(type == "color") {
+          /*if(type == "color") {
             //colors are arrays during runtime - but theyre smaller as hex strings
             val = RGBA2Hex(val);
             
-          } else if(type == "layer") {
+          } else */if(type == "layer") {
             //save layer index, because the keys get lost after saving
             val = img.layerKeys[val];
             
@@ -127,12 +127,13 @@ class Serialization {
           const val = fauxOptions[key];
           const type = types[key].type;
           if(type == "color") {
-            if(typeof val == "object") {
+            /*if(typeof val == "object") {
               //if the value is from the default layer
               newOptions[key] = val;
             } else {
               newOptions[key] = hex2RGB('#' + val);
-            }
+            }*/
+            newOptions[key] = val;
             
           } else if(type == "layer") {
             newOptions[key] = val;

@@ -1,0 +1,30 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="64" height="64" fill="black"/>
+	<defs>
+		<linearGradient id="light-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+	</defs>
+  <path d="M63 1 L63 63 L1 63 Z" fill="white"/>
+  <path d="M63 3 L63 63 L3 63 Z" fill="url(#light-grad)"/>
+  <line x1="1" y1="62.5" x2="63" y2="62.5" stroke="#00000080" stroke-width="1"/>
+  
+  <path d="M56 12 L59 12 L56 15 Z" fill="black"/>
+  <path d="M40 28 L43 28 L40 31 Z" fill="black"/>
+  <path d="M56 32 L59 32 L56 35 Z" fill="black"/>
+  <path d="M56 40 L59 40 L56 43 Z" fill="black"/>
+  <path d="M56 60 L59 60 L56 63 Z" fill="black"/>
+  <path d="M24 44 L27 44 L24 47 Z" fill="black"/>
+  <path d="M8 60 L11 60 L8 63 Z" fill="black"/>
+  
+  <path d="M16 52 L27 52 L16 63 Z" fill="black"/>
+  <path d="M48 48 L59 48 L48 59 Z" fill="black"/>
+  <path d="M48 20 L59 20 L48 31 Z" fill="black"/>
+  
+  <path d="M32 36 L51 36 L32 55 Z" fill="black"/>
+  
+  <path d="M28 60 L35 60 L32 63 L28 63 Z" fill="black"/>
+</svg>

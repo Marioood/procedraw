@@ -1,0 +1,167 @@
+class LayerCellularBlobs extends Layer {
+  name = "cellularBlobs";
+  
+  static description = "A cellular automaton that is designed to make blobs with clean gaps between each blob.";
+  
+  options = {
+    iterations: 12,
+    spacing: 64,
+    spreadChance: 0.5,
+    fade: false,
+    closeCol: [1, 1, 1, 1],
+    farCol: [0, 0, 0, 1],
+    drawEmptiness: false,
+    strictEdges: true
+  };
+  
+  types = {
+    iterations: {
+      type: "number",
+      min: 0,
+      max: 64,
+      unsafe: true
+    },
+    spacing: {
+      type: "number",
+      min: 1,
+      max: 256
+    },
+    spreadChance: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    drawEmptiness: {
+      type: "boolean"
+    },
+    strictEdges: {
+      type: "boolean"
+    },
+    closeCol: {
+      type: "color"
+    },
+    farCol: {
+      type: "color"
+    },
+    fade: {
+      type: "boolean"
+    }
+  };
+  
+  generate(img, o) {
+    const buffer1 = new Array(img.w * img.h);
+    const buffer2 = new Array(img.w * img.h);
+    const distanceBuffer = o.fade ? new Array(img.w * img.h) : null;
+   
+    const CELL_EMPTY = -1;
+    const MAX_CELL_IDS = Number.MAX_SAFE_INTEGER;
+    
+    for(let i = 0; i < img.w * img.h; i++) {
+      buffer1[i] = Math.floor(Math.random() * o.spacing) == 0 ? Math.random() * Math.floor(MAX_CELL_IDS) : CELL_EMPTY;
+    }
+    
+    if(o.fade) {
+      for(let i = 0; i < img.w * img.h; i++) {
+        distanceBuffer[i] = 0;
+      }
+    }
+    //these buffers get swapped
+    let inBuffer = buffer1; //this buffer is used as input (not modified)
+    let outBuffer = buffer2; //this buffer is used as the output (is modified)
+    
+    //a random amount of outer cells will be set to outter cells with a different id
+    //each iteration, empty cells that border outer cells in a DIAMOND shape BUT also border outer cells of the same type in a SQUARE shape will become outer cells
+    //outer cells do nothing
+    
+    for(let i = 0; i <= o.iterations; i++) {
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = x + y * img.w;
+          const cell = inBuffer[idx];
+          
+          if(cell == CELL_EMPTY) {
+            const topCell = inBuffer[x + mod(y - 1, img.h) * img.w];
+            const bottomCell = inBuffer[x + (y + 1) % img.h * img.w];
+            const leftCell = inBuffer[mod(x - 1, img.w) + y * img.w];
+            const rightCell = inBuffer[(x + 1) % img.w + y * img.w];
+            
+            /*const next2cell = topCell != CELL_EMPTY
+                              || leftCell != CELL_EMPTY
+                              || bottomCell != CELL_EMPTY
+                              || rightCell != CELL_EMPTY;*/
+            const neighborCell = topCell != CELL_EMPTY ? topCell : 
+                                 (bottomCell != CELL_EMPTY ? bottomCell :
+                                 (leftCell != CELL_EMPTY ? leftCell :
+                                 (rightCell != CELL_EMPTY ? rightCell : CELL_EMPTY)));
+            
+            if(neighborCell != CELL_EMPTY && Math.random() < o.spreadChance) {
+              const topLeftCell = inBuffer[mod(x - 1, img.w) + mod(y - 1, img.h) * img.w];
+              const topRightCell = inBuffer[(x + 1) % img.w + mod(y - 1, img.h) * img.w];
+              const bottomLeftCell = inBuffer[mod(x - 1, img.w) + (y + 1) % img.h * img.w];
+              const bottomRightCell = inBuffer[(x + 1) % img.w + (y + 1) % img.h * img.w];
+              let neighborSet;
+              
+              if(o.strictEdges) {
+                const topTopCell = inBuffer[x + mod(y - 2, img.h) * img.w];
+                const bottomBottomCell = inBuffer[x + (y + 2) % img.h * img.w];
+                const leftLeftCell = inBuffer[mod(x - 2, img.w) + y * img.w];
+                const rightRightCell = inBuffer[(x + 2) % img.w + y * img.w];
+                neighborSet = new Set([topCell, topRightCell, rightCell, bottomRightCell, bottomCell, bottomLeftCell, leftCell, topLeftCell, topTopCell, bottomBottomCell, leftLeftCell, rightRightCell]);
+              } else {
+                neighborSet = new Set([topCell, topRightCell, rightCell, bottomRightCell, bottomCell, bottomLeftCell, leftCell, topLeftCell]);
+              }
+              //if all neighbors have the same id OR are empty
+              if(neighborSet.size <= 2) {
+                outBuffer[idx] = neighborCell;
+                if(o.fade)
+                  distanceBuffer[idx] = i + 1;
+              } else {
+                outBuffer[idx] = CELL_EMPTY;
+              }
+            } else {
+              outBuffer[idx] = CELL_EMPTY;
+            }
+          } else {
+            outBuffer[idx] = cell;
+          }
+        }
+      }
+      
+      if(inBuffer == buffer1) {
+        inBuffer = buffer2;
+        outBuffer = buffer1;
+      } else {
+        inBuffer = buffer1;
+        outBuffer = buffer2;
+      }
+    }
+    if(o.fade) {
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = x + y * img.w
+          const cell = outBuffer[idx];
+          let col = (1 - distanceBuffer[idx] / o.iterations) * (cell / MAX_CELL_IDS);
+          if(cell == CELL_EMPTY) {
+            continue;
+          }
+          const mixed = colorMix(o.farCol, o.closeCol, col);
+          img.plotPixel(mixed[0], mixed[1], mixed[2], mixed[3], x, y);
+        }
+      }
+    } else {
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = x + y * img.w
+          const cell = outBuffer[idx];
+          let col = 1;
+          if(cell == CELL_EMPTY) {
+            continue;
+          }
+          const mixed = colorMix(o.farCol, o.closeCol, col * (cell / MAX_CELL_IDS));
+          img.plotPixel(mixed[0], mixed[1], mixed[2], mixed[3], x, y);
+        }
+      }
+    }
+  }
+}

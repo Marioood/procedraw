@@ -13,11 +13,13 @@ class ProcedrawImage {
   //max height and width
   wMax = 512;
   hMax = 512;
-  //the canvas pixel data
-  data = [];
+  //the canvas pixel data (always a Float64Array)
+  data;
   //the current layer being printed
   //TODO: jank, rewrite
   layer = null;
+  curLayerX = 0;
+  curLayerY = 0;
   //the background color (grey)
   bg = [0.5, 0.5, 0.5, 1];
   layers = [];
@@ -54,6 +56,9 @@ class ProcedrawImage {
     tileMap: LayerTileMap,
     mandelbrot: LayerMandelbrot,
     seedFractal: LayerSeedFractal,
+    cellularBlobs: LayerCellularBlobs,
+    wolfram: LayerWolfram,
+    advancedGradient: LayerAdvancedGradient,
     //filters
     tweak: FilterTweak,
     tile: FilterTile,
@@ -72,9 +77,11 @@ class ProcedrawImage {
     vectorize: FilterVectorize,
     sunlight: FilterSunlight,
     shear: FilterShear,
-    functionPass: FilterFunctionPass
+    functionPass: FilterFunctionPass,
+    raytrace: FilterRaytrace,
+    rotate: FilterRotate
   };
-  //TODO: make this return image data?
+
   renderImage() {
     //write the background color
     for(let i = 0; i < this.w * this.h; i++) {
@@ -87,8 +94,10 @@ class ProcedrawImage {
     for(let i = 0; i < this.layers.length; i++) {
       if(this.layers[i].od.shown || this.layers[i].linkCount > 0) {
         this.layer = this.layers[i];
+        this.curLayerX = UnitLength.getLength(this.layer.od.x, this.w, true);
+        this.curLayerY = UnitLength.getLength(this.layer.od.y, this.h, true);
         if(this.layer.linkCount > 0) {
-          this.layer.data = new Array(this.w * this.h);
+          this.layer.data = new Float64Array(this.w * this.h * 4);
           for(let i = 0; i < this.w * this.h * 4; i++) {
             this.layer.data[i] = 0;
           }
@@ -100,40 +109,29 @@ class ProcedrawImage {
   }
   
   updateSize() {
-    //if the width or height is too big then i predict that everything will expode
-    if(this.w > 512) {
-      this.w = 512;
-      console.log("hey, quit doing that!");
-    }
-    if(this.h > 512) {
-      this.h = 512;
-      console.log("hey, quit doing that!");
-    }
-    this.data = new Array(this.w * this.h * 4);
+    this.data = new Float64Array(this.w * this.h * 4);
   }
 
-  plotPixel(color, x, y) {
+  plotPixel(rInput, gInput, bInput, aInput, x, y) {
     //each channel goes from 0...1
-    //[red, blue, green, alpha]
-
     //wrap around image
-    x = mod(x + UnitLength.getLength(this.layer.od.x, this.w, true), this.w);
-    y = mod(y + UnitLength.getLength(this.layer.od.y, this.h, true), this.h);
+    x = mod(x + this.curLayerX, this.w);
+    y = mod(y + this.curLayerY, this.h);
     //get alpha n blend from global memory... its less to type
     const blend = this.layer.od.blend;
     const tint = this.layer.od.tint;
     const pos = (x + y * this.w) * 4;
     //this is for when the data layer gets written to but we still don't want the layer displayed (filters)
-    const alpha = this.layer.od.shown ? this.layer.od.alpha * color[3] : 0;
+    const alpha = this.layer.od.shown ? this.layer.od.alpha * aInput : 0;
     //color offsets
     const rOffs = pos;
     const gOffs = pos + 1;
     const bOffs = pos + 2;
     const aOffs = pos + 3;
     //layer color
-    const rl = color[0] * tint[0];
-    const gl = color[1] * tint[1];
-    const bl = color[2] * tint[2];
+    const rl = rInput * tint[0];
+    const gl = gInput * tint[1];
+    const bl = bInput * tint[2];
     //base color
     const rb = this.data[rOffs];
     const gb = this.data[gOffs];
@@ -141,15 +139,18 @@ class ProcedrawImage {
     const bb = this.data[bOffs];
     //moved from combinePixel(), gained ~10 ms on a 512x512 image by doing this -- nice!!
     switch(blend) {
+      //alpha >1 doesnt matter on a canvas, but DOES matter for filters modifying the whole image
       case O_BLEND_ADD:
         this.data[rOffs] = rl * alpha + rb;
         this.data[gOffs] = gl * alpha + gb;
         this.data[bOffs] = bl * alpha + bb;
+        this.data[aOffs] = Math.min(this.data[aOffs] + alpha, 1);
         break;
       case O_BLEND_MULTIPLY:
         this.data[rOffs] = (rl * alpha + 1 - alpha) * rb;
         this.data[gOffs] = (gl * alpha + 1 - alpha) * gb;
         this.data[bOffs] = (bl * alpha + 1 - alpha) * bb;
+        this.data[aOffs] = lerp(this.data[aOffs] * alpha, Math.min(this.data[aOffs] + alpha, 1), this.data[aOffs]);
         break;
       case O_BLEND_PLAIN:
         //lerp
@@ -157,11 +158,13 @@ class ProcedrawImage {
         this.data[rOffs] = rb + alpha * (rl - rb);
         this.data[gOffs] = gb + alpha * (gl - gb);
         this.data[bOffs] = bb + alpha * (bl - bb);
+        this.data[aOffs] = Math.min(this.data[aOffs] + alpha, 1);
         break;
       case O_BLEND_SCREEN:
         this.data[rOffs] = 1 - (1 - rl * alpha) * (1 - rb);
         this.data[gOffs] = 1 - (1 - gl * alpha) * (1 - gb);
         this.data[bOffs] = 1 - (1 - bl * alpha) * (1 - bb);
+        this.data[aOffs] = lerp(this.data[aOffs] * alpha, Math.min(this.data[aOffs] + alpha, 1), this.data[aOffs]);
         break;
       case O_BLEND_OVERLAY:
         if(rl < 0.5) {
@@ -179,22 +182,35 @@ class ProcedrawImage {
         } else {
           this.data[bOffs] = 1 - (1 - (bl - 0.5) * 2 * alpha) * (1 - bb);
         }
+        this.data[aOffs] = lerp(this.data[aOffs] * alpha, Math.min(this.data[aOffs] + alpha, 1), this.data[aOffs]);
         break;
       case O_BLEND_SUBTRACT:
-          this.data[rOffs] = rb - (rl * alpha);
-          this.data[gOffs] = gb - (gl * alpha);
-          this.data[bOffs] = bb - (bl * alpha);
+        this.data[rOffs] = rb - (rl * alpha);
+        this.data[gOffs] = gb - (gl * alpha);
+        this.data[bOffs] = bb - (bl * alpha);
+        this.data[aOffs] = Math.min(this.data[aOffs] + alpha, 1);
         break;
       case O_BLEND_CHANNEL_DISSOLVE:
-          if(alpha > Math.random()) this.data[rOffs] = rl;
-          if(alpha > Math.random()) this.data[gOffs] = gl;
-          if(alpha > Math.random()) this.data[bOffs] = bl;
+        if(alpha > Math.random()) {
+          this.data[rOffs] = rl;
+          this.data[aOffs] += 1/3;
+        }
+        if(alpha > Math.random()) {
+          this.data[gOffs] = gl;
+          this.data[aOffs] += 1/3;
+        }
+        if(alpha > Math.random()) {
+          this.data[bOffs] = bl;
+          this.data[aOffs] += 1/3;
+        }
+        this.data[aOffs] = Math.min(this.data[aOffs], 1);
         break;
       case O_BLEND_DISSOLVE:
         if(alpha > Math.random()) {
           this.data[rOffs] = rl;
           this.data[gOffs] = gl;
           this.data[bOffs] = bl;
+          this.data[aOffs] = 1;
         }
         break;
       case O_BLEND_SHIFT_OVERLAY:
@@ -213,6 +229,7 @@ class ProcedrawImage {
         } else {
           this.data[bOffs] = (bl - 0.5) * 2 * alpha + bb;
         }
+        this.data[aOffs] = lerp(this.data[aOffs] * alpha, Math.min(this.data[aOffs] + alpha, 1), this.data[aOffs]);
         break;
       case O_BLEND_OVERBLOWN_TEST:
         //the layer color is displayed as magenta if it's is overblown
@@ -249,12 +266,14 @@ class ProcedrawImage {
         } else {
           this.data[bOffs] = bb + alpha * (bl - bb);
         }
+        this.data[aOffs] = Math.min(this.data[aOffs] + alpha, 1);
         break;
       case O_BLEND_BAYER:
         if(alpha > BLEND_TABLE_BAYER[x % 4 + y % 4 * 4]) {
           this.data[rOffs] = rl;
           this.data[gOffs] = gl;
           this.data[bOffs] = bl;
+          this.data[aOffs] = 1;
         }
         break;
       case O_BLEND_HALFTONE:
@@ -262,12 +281,14 @@ class ProcedrawImage {
           this.data[rOffs] = rl;
           this.data[gOffs] = gl;
           this.data[bOffs] = bl;
+          this.data[aOffs] = 1;
         }
         break;
       case O_BLEND_XOR:
         this.data[rOffs] = ((rl * 255 * alpha) ^ (rb * 255)) / 255;
         this.data[gOffs] = ((gl * 255 * alpha) ^ (gb * 255)) / 255;
         this.data[bOffs] = ((bl * 255 * alpha) ^ (bb * 255)) / 255;
+        this.data[aOffs] = lerp(this.data[aOffs] * alpha, Math.min(this.data[aOffs] + alpha, 1), this.data[aOffs]);
         break;
       case O_BLEND_HSV_HUE: {
         let hsvLayer = RGB2HSV([rl, gl, bl]);
@@ -277,6 +298,7 @@ class ProcedrawImage {
         this.data[rOffs] = rgbMerged[0];
         this.data[gOffs] = rgbMerged[1];
         this.data[bOffs] = rgbMerged[2];
+        this.data[aOffs] = lerp(this.data[aOffs] * alpha, Math.min(this.data[aOffs] + alpha, 1), this.data[aOffs]);
         break;
       }
       case O_BLEND_HSV_SATTY: {
@@ -288,14 +310,12 @@ class ProcedrawImage {
         this.data[rOffs] = rgbMerged[0];
         this.data[gOffs] = rgbMerged[1];
         this.data[bOffs] = rgbMerged[2];
+        this.data[aOffs] = lerp(this.data[aOffs] * alpha, Math.min(this.data[aOffs] + alpha, 1), this.data[aOffs]);
         break;
       }
       default:
         throw new ProcedrawError(`unknown blend mode ${blend}`);
     }
-    //add the alphas together
-    //alpha >1 doesnt matter on a canvas, but DOES matter for filters modifying the whole image
-    this.data[aOffs] = Math.min(this.data[aOffs] + alpha, 1);
     //set rendered layer data (for filters)
     if(this.layer.linkCount > 0) {
       this.layer.data[rOffs] = rl;
@@ -305,8 +325,12 @@ class ProcedrawImage {
       //allows for a layer being filtered to be hidden while a filter is using it, which is done very often
       
       //add alpha together for more accurate layer data (albeit still inaccurate)
-      this.layer.data[aOffs] = Math.min(this.layer.data[aOffs] + color[3], 1);
+      this.layer.data[aOffs] = Math.min(this.layer.data[aOffs] + aInput, 1);
     }
+  }
+  
+  plotPixelArr(col, x, y) {
+    this.plotPixel(col[0], col[1], col[2], col[3], x, y);
   }
   
   getPixelFromData(x, y, baseData, interpMode) {

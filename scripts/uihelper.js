@@ -1,25 +1,9 @@
-//////////////////////////////////////////////
-//    All Procedraw Material is Licensed    //
-//     December, 2024-???? under MIT by.    //
-//         Backshot Betty #killtf2.         //
-//                 _______                  //
-//                |   |_|+|                 //
-//                |___|+|_|                 //
-//                |_|+|   |                 //
-//                |+|_|___|                 //
-//                                          //
-//   *Any names, or persons, illustrated    //
-// in any of the Procedraw Programs, except //
-//     that of Backshot Betty #killtf2,     //
-//          that may seem similar           //
-//               to anyone                  //
-//   in real life, are purely coincidental, //
-//         or otherwise parodic.*           //
-//////////////////////////////////////////////
-
-//very simple "framework" (ew...) to make intermingling js with html slightly more bearable
-//somewhat inspired, but not really like gretcha.js by Tsoding (https://github.com/tsoding/grecha.js)
-
+//
+// All Procedraw material is licensed under MIT
+// Author: Marioood
+// Purpose: very simple "framework" (ew...) to make intermingling js with html slightly more bearable. somewhat inspired, but not really like gretcha.js by Tsoding (https://github.com/tsoding/grecha.js)
+//
+"use strict";
 //TODO: cut down on these wrapper functions, a lot of them are not very useful and are only used twice
 function Tag(tagName, className) {
   let tag = document.createElement(tagName);
@@ -27,6 +11,9 @@ function Tag(tagName, className) {
       tag.className = className;
   }
   return tag;
+}
+function Br(className) {
+  return Tag("br", className);
 }
 function Text(text, className) {
   let span = Tag("span", className);
@@ -125,13 +112,45 @@ function Table(...tags) {
   let table = Tag("table");
   //hack to have the args be (...tags) OR (...tags, className)
   //operator overloading wouldn't work because you can't require specific types in javascript
+  let end = tags.length;
   if(typeof(tags[tags.length - 1]) == "string") {
       table.className = tags.pop();
+      end--;
   }
-  for(let i = 0; i < tags.length; i++) {
+  for(let i = 0; i < end; i++) {
       table.appendChild(tags[i]);
   }
   return table;
+}
+function DynamicDownloadButton(name, getBlob, getFileName, className) {
+  const saveFileLink = document.createElement("a");
+  const saveFileInput = document.createElement("button");
+  
+  saveFileInput.innerText = name;
+  saveFileInput.className = className;
+  saveFileLink.href = "dummy";
+  saveFileLink.download = "dummy";
+  
+  let blobURL = "";
+  
+  saveFileInput.onmousedown = (e) => {
+    document.body.style.cursor = "wait";
+    try {
+      const blob = getBlob();
+      blobURL = URL.createObjectURL(blob);
+      saveFileLink.href = blobURL;
+      saveFileLink.download = getFileName();
+    } catch(ex) {
+      alert(ex);
+      e.preventDefaults();
+    }
+    document.body.style.cursor = "auto";
+  }
+  saveFileLink.onmouseup = (e) => {
+    URL.revokeObjectURL(blobURL);
+  }
+  saveFileLink.appendChild(saveFileInput);
+  return saveFileLink;
 }
 
 function setTitle(text) {

@@ -9,7 +9,7 @@
 
 
 //////// PROGRAM INFO ////////
-PD_VERSION = "VOLATILE 0.9.1"; //scarily close to 1.0
+PD_VERSION = "VOLATILE 0.9.2"; //scarily close to 1.0
 //this gets changed when the SAVE FORMAT is changed, not when layer paramters are changed
 //do not change until Procedraw exits the VOLATILE stage of development  
 PD_SAVE_FORMAT = 0;
@@ -95,7 +95,7 @@ const O_BLEND_XOR = 14;
 
 const COUNT_BLEND_MODES = 15;
 
-assert(COUNT_BLEND_MODES == 15, "plotPixel() expects 15 blend modes");
+assert(COUNT_BLEND_MODES == 15, "plotPixel() and the merge layer expect 15 blend modes");
        
 const O_MIX_PLAIN = 0;
 const O_MIX_HALF = 1;
@@ -113,10 +113,17 @@ const O_INTERP_BILINEAR_COS = 2;
 const O_BITWISE_XOR = 0;
 const O_BITWISE_AND = 1;
 const O_BITWISE_OR = 2;
+const O_BITWISE_RAW = 3;
+const O_BITWISE_HAMMING_DIST = 4;
+const O_BITWISE_INTERLACE = 5;
+const O_BITWISE_PANFUNC = 6;
 
 const O_OUTPUT_COLOR = 0;
 const O_OUTPUT_ALPHA = 1;
 const O_OUTPUT_BOTH = 2;
+
+const O_START_MANUAL = 0;
+const O_START_RANDOM = 1;
 
 //////// OTHER ////////
 //do NOT change these values! they are used in saves
@@ -127,7 +134,7 @@ const UNIT_PIXELS = 0;
 const UNIT_PERCENTAGE = 1;
 const UNIT_VAR = 2;
 const UNIT_RATIO = 3;
-//the layer keys technically aren't options, but are also technically options
+//the layer keys technically aren't options, but are also used IN options
 const KEY_FREED = -1;
 const KEY_CANVAS = -2;
 
@@ -192,7 +199,7 @@ const LIMITS_BLEND = {
     O_BLEND_XOR,
     O_BLEND_OVERBLOWN_TEST
   ]
-}
+};
 
 const LIMITS_MIX = {
   type: "keyvalues",
@@ -216,7 +223,7 @@ const LIMITS_MIX = {
     O_MIX_DAFT_Y,
     O_MIX_HALF_DITHER
   ]
-}
+};
 
 const LIMITS_INTERP = {
   type: "keyvalues",
@@ -230,7 +237,23 @@ const LIMITS_INTERP = {
     O_INTERP_BILINEAR,
     O_INTERP_BILINEAR_COS
   ]
-}
+};
+
+const LIMITS_EDGE = {
+  type: "keyvalues",
+  keys: [
+    "wrap",
+    "clamp",
+    "void",
+    "reflect"
+  ],
+  values: [
+    O_WRAP,
+    O_CLAMP,
+    O_VOID,
+    O_REFLECT
+  ]
+};
 
 //////// FONTS ////////
 
@@ -1508,196 +1531,3 @@ const GLYPHS_CLASCII = {
   ],
   "\u03A7": 'X'
 };
-
-const GLYPHS_ERROR = {
-  ' ': [
-    "MMMM",
-    "MMMM",
-    "MMMM",
-    "MMMM",
-    "MMMM",
-    "MMMM",
-    "MMMM",
-    "MMMM"
-  ],
-  '\\': [
-    " MMM",
-    " MMM",
-    " MMM",
-    "M MM",
-    "MM M",
-    "MM M",
-    "MM M",
-    "MMMM"
-  ],
-  'u': [
-    "MMMM",
-    "MMMM",
-    "MMMM",
-    " M M",
-    " M M",
-    " M M",
-    "M  M",
-    "MMMM"
-  ],
-  '0': [
-    "   M",
-    " M M",
-    " M M",
-    " M M",
-    " M M",
-    " M M",
-    "   M",
-    "MMMM"
-  ],
-  '1': [
-    "M M",
-    "  MM",
-    "M MM",
-    "M MM",
-    "M MM",
-    "M MM",
-    "   M",
-    "MMMM"
-  ],
-  '2': [
-    "   M",
-    "MM M",
-    "MM M",
-    "M MM",
-    " MMM",
-    " MMM",
-    "   M",
-    "MMMM"
-  ],
-  '3': [
-    "   M",
-    "MM M",
-    "MM M",
-    "M  M",
-    "MM M",
-    "MM M",
-    "   M",
-    "MMMM"
-  ],
-  '4': [
-    " M M",
-    " M M",
-    " M M",
-    "MM M",
-    "MM M",
-    "MM M",
-    "MM M",
-    "MMMM"
-  ],
-  '5': [
-    "   M",
-    " MMM",
-    " MMM",
-    "M MM",
-    "MM M",
-    "MM M",
-    "   M",
-    "MMMM"
-  ],
-  '6': [
-    "   M",
-    " MMM",
-    " MMM",
-    "   M",
-    " M M",
-    " M M",
-    "   M",
-    "MMMM"
-  ],
-  '7': [
-    "   M",
-    "MM M",
-    "MM M",
-    "M MM",
-    " MMM",
-    " MMM",
-    " MMM",
-    "MMMM"
-  ],
-  '8': [
-    "   M",
-    " M M",
-    " M M",
-    "   M",
-    " M M",
-    " M M",
-    "   M",
-    "MMMM"
-  ],
-  '9': [
-    "   M",
-    " M M",
-    " M M",
-    "   M",
-    "MM M",
-    "MM M",
-    "MM M",
-    "MMMM"
-  ],
-  'A': [
-    "   M",
-    " M M",
-    " M M",
-    "   M",
-    " M M",
-    " M M",
-    " M M",
-    "MMMM"
-  ],
-  'B': [
-    "  MM",
-    " M M",
-    " M M",
-    "  MM",
-    " M M",
-    " M M",
-    "  MM",
-    "MMMM"
-  ],
-  'C': [
-    "M  M",
-    " MMM",
-    " MMM",
-    " MMM",
-    " MMM",
-    " MMM",
-    "M  M",
-    "MMMM"
-  ],
-  'D': [
-    "  MM",
-    " M M",
-    " M M",
-    " M M",
-    " M M",
-    " M M",
-    "  MM",
-    "MMMM"
-  ],
-  'E': [
-    "   M",
-    " MMM",
-    " MMM",
-    "  MM",
-    " MMM",
-    " MMM",
-    "   M",
-    "MMMM"
-  ],
-  'F': [
-    "   M",
-    " MMM",
-    " MMM",
-    "  MM",
-    " MMM",
-    " MMM",
-    " MMM",
-    "MMMM"
-  ]
-}

@@ -1,15 +1,40 @@
 URGENT
 
-make plotPixel() accept 4 values instead of 1 array? (could be faster???)
-math expression UnitLength type?
+save colors as arrays. color picker invalid colors. ? ehh invalid hex display
+color picker hide when no color is selected
+multi-part layers: e.g. a solid blobs layer that you can use the distance values from
+option for seed fractal shapes to join onto other seed fractal shapes
++M+
+MMM
++M+
+"whitespace filling"
+
+color picker. select a color to edit -> click on canvas to pick that color
+ui for points and dimensions on the canvas ui
+xDiamter and yDiameter for blurs
+taxicab blur mode
+additive color mix (gud for liney layer)
+absolute value filter
+noise / white layer inputs median filter smoth shading reapply filter tiling options for tilemap 
+layer option separators
+image title doesn't get updated when a save is loaded
+game of life filter? takes in pixels and outputs gol states
+color blending for the uhhhhh cellular blobs
+layer presets
+centered shear / pivot point (do this for most transform filters, actually)
+offset for wavetable (curvy)
+//color ramp
+quantize filter
+mistyping something in an unsafe option makes shit freeze!
+voronoi mask (control point's brightness with another layer)
+math expression UnitLength type? calculator?
+crop filter (just add more options to tile layer? like the scale layer options)
 multi-layer merge
   layer groups that are just treated as one layer?
   
 append an image onto another image
 transformation layers based off of other layers? like the offset layer, but for scaling, rotation, shearing, etc.
 fix gradient layer -- it sucks ass
-verify if the normal map stuff is even correct (create a heightmap of a coin, then sunlight it blahhhh)
-crop filter
 ctrl + scroll to zoom in and out
 scroll to move up and down
 shift + scroll to move left and right
@@ -17,22 +42,18 @@ gradient think with css variables
 undo
 ADD CHANGES TO CHANGE LOG!!!
 proper layer icons
-save as file
 make loading more safe (test ways to break / exploit saving)
   save format is not finalized, do this way later
   less cryptic error messages
 list of controls
 ui looks like shit!
-restructure code to allow for the image/layer renderer to be used on it's own (without the editor). people (kit) have told me that procedraw could be useful for html5 game textures.....
+restructure code to allow for the image/layer renderer to be used on its own (without the editor). people (kit) have told me that procedraw could be useful for html5 game textures.....
   layer wrappers
   actual documentation / tutorials
-layer presets
 the code is getting stale! rewrite it soon....
 better width and height customization (set limit, with warning)
-//variables and math expressions
 MAYBE?: tether should be written in a way that one could just rewrite functions for a different ui system and everything would still work (doesnt make sense, since it's javascript)
 download dialog. actually, just dialogs in general
-"no color selected" thing for color picker, it's confusing otherwise
 i had a dream about the normalize layer, therefore add it
 //could be a "map" filter?
 
@@ -50,21 +71,18 @@ i had a dream about the normalize layer, therefore add it
 
 STUPID
 replace direction input (old school boolean version) with either a fancy dial or less fancy keyvalue list
-centered shear / pivot point (do this for most transform filters, actually)
-offset for wavetable (curvy)
+
 image layer that has is an embedded image
 test browser support (and provide appropriate taxes)
 //overlap option (see wandering lines)
 "no layers exist" text
 decompress thing for save repair
-//color ramp
 option limit skeletons (for documentation)
 HILARIOUS parody logos!
 fix tiling for worley (none powers of 2)
 PBR material creation (???)
 remove some mix types? a couple of them feel like filler
 bring back direction inputs!!!
-quantize filter
 disable corners or edges
 merge liney and noise layers? a lot of their options are awfully similar...
 mix options for the blobs layer (col0 -> col1)
@@ -84,7 +102,6 @@ rotate filter
 rgb normal for contrast layer
 lacunarity for noise layers? 
 easeMode for wandering
-option for wandering lines to stay proportional (like errrrr when rotated they stay the same euclidean length)
 blend types for layer interpolation (e.g. border corners, vornoi noise) "mix types"
 perlin noise layer
 //img.blend function is broken! when the col1 alpha smaller than col0 thing look weird
@@ -93,7 +110,6 @@ more accurate layer icons
 proper direction input... again!
 merge the blend modes and mix modes? some of them are quite similar in purpose and functionality...
 make controls more visible on mobile (see: firefox device simulation mode)
-ehhhhh astroids preset is broken for worley noise
 consistent ease modes and ease modes for more layers
 look into what the unit length stuff is actually doing... some results seem funky when printed out
 merge layer bugs, specifically with the dissolve, halftone, and bayer modes

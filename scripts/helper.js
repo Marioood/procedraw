@@ -168,9 +168,11 @@ function dirFrom(x1, y1, x2, y2) {
 function mod(dividend, divisor) {
     //% is remainder and there's no built in mod function...
     //thanks https://stackoverflow.com/a/17323608
+    
+    //investigate just taking the absolute?
     return ((dividend % divisor) + divisor) % divisor;
 }
-function clamp(num, min, max) {
+function clamp(num, min = 0, max = 1) {
   if(num > max) {
     return max;
   } else if(num < min) {
