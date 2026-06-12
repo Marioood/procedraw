@@ -1,0 +1,27 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="64" height="64" fill="black"/>
+	<defs>
+		<linearGradient id="light-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+	</defs>
+  <circle r="1" cx="15" cy="25" fill="url(#light-grad)"/>
+  <circle r="1" cx="15" cy="39" fill="url(#light-grad)"/>
+  <circle r="1" cx="32" cy="17" fill="url(#light-grad)"/>
+  <circle r="1" cx="32" cy="47" fill="url(#light-grad)"/>
+  <circle r="1" cx="47" cy="4" fill="url(#light-grad)"/>
+  <circle r="1" cx="47" cy="60" fill="url(#light-grad)"/>
+  <circle r="1" cx="60" cy="17" fill="url(#light-grad)"/>
+  <circle r="1" cx="60" cy="47" fill="url(#light-grad)"/>
+  <circle r="1" cx="4" cy="32" fill="url(#light-grad)"/>
+  
+  <circle r="3" cx="47" cy="10" fill="url(#light-grad)"/>
+  <circle r="3" cx="47" cy="54" fill="url(#light-grad)"/>
+  <circle r="3" cx="10" cy="32" fill="url(#light-grad)"/>
+  
+  <circle r="7" cx="22" cy="32" fill="url(#light-grad)"/>
+  <path d="M56 32 A10 10 0 0 0 47 15 A16 16 0 0 0 47 49 A10 10 0 0 0 56 32" fill="url(#light-grad)"/>-
+</svg>

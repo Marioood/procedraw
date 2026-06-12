@@ -2,7 +2,7 @@ TODO: (separate commits!)
   * save and load dialogs as windows from toomuch branch
   * vector picker from toomuch branch
   * add language support (optional save to cookies, auto-detection of language?)
-  * graph layer, with custom programming language (weigh power vs. simplicity)
+  * graph layer, with custom programming language (single-line, arithmetic only, no branching)(weigh power vs. simplicity)
 
 
 //TODO: less global variables?

@@ -17,7 +17,7 @@ class Layer {
   static description;
   //user defined name
   displayName;
-  //rendered pixel data, used by filter layers
+  //rendered pixel data, used by filter layers (always a Float64Array)
   data;
   //this should be self explanatory
   isFilter = false;
@@ -98,7 +98,7 @@ class Layer {
 class LayerXorFractal extends Layer {
   name = "xorFractal";
   
-  static description = "A bitwise XOR fractal. Can also be changed to an AND or OR fractal.";
+  static description = "A bitwise XOR fractal. It can also render several other bitwise operations.";
   
   options = {
     width: new UnitLength(100, UNIT_PERCENTAGE),
@@ -126,26 +126,34 @@ class LayerXorFractal extends Layer {
       keys: [
         "xor",
         "and",
-        "or"
+        "or",
+        "binary digits",
+        "Hamming distance",
+        "interlace"
       ],
       values: [
         O_BITWISE_XOR,
         O_BITWISE_AND,
-        O_BITWISE_OR
+        O_BITWISE_OR,
+        O_BITWISE_RAW,
+        O_BITWISE_HAMMING_DIST,
+        O_BITWISE_INTERLACE
       ]
     }
   };
   
   generate(img, o) {
-    const xScale = 256 / UnitLength.getLength(o.width, img.w);
-    const yScale = 256 / UnitLength.getLength(o.height, img.h);
+    const optionWidth = UnitLength.getLength(o.width, img.w);
+    const optionHeight = UnitLength.getLength(o.height, img.h);
+    const xScale = 256 / optionWidth;
+    const yScale = 256 / optionHeight;
     //TODO: fractals are too dark around their edges (not normalized)
     switch(o.operation) {
       case O_BITWISE_XOR:
         for(let y = 0; y < img.h; y++) {
           for(let x = 0; x < img.w; x++) {
             let col = ((x * xScale) ^ (y * yScale)) / 255;
-            img.plotPixel([col, col, col, 1], x, y);
+            img.plotPixel(col, col, col, 1, x, y);
           }
         }
         break;
@@ -153,7 +161,7 @@ class LayerXorFractal extends Layer {
         for(let y = 0; y < img.h; y++) {
           for(let x = 0; x < img.w; x++) {
             let col = ((x * xScale) & (y * yScale)) / 255;
-            img.plotPixel([col, col, col, 1], x, y);
+            img.plotPixel(col, col, col, 1, x, y);
           }
         }
         break;
@@ -161,11 +169,62 @@ class LayerXorFractal extends Layer {
         for(let y = 0; y < img.h; y++) {
           for(let x = 0; x < img.w; x++) {
             let col = ((x * xScale) | (y * yScale)) / 255;
-            img.plotPixel([col, col, col, 1], x, y);
+            img.plotPixel(col, col, col, 1, x, y);
+          }
+        }
+        break;
+      case O_BITWISE_RAW:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            const xB = x / (img.w / optionWidth);
+            const yB = y / (img.h / optionHeight);
+            let col = ((yB >> xB) & 1);
+            img.plotPixel(col, col, col, 1, x, y);
+          }
+        }
+        break;
+      case O_BITWISE_HAMMING_DIST:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            const xB = x * xScale;
+            const yB = y * yScale;
+            let col = (this.popcount(xB) / 16 - this.popcount(yB) / 16) + 0.5;
+            img.plotPixel(col, col, col, 1, x, y);
+          }
+        }
+        break;
+      case O_BITWISE_INTERLACE:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            const xB = x * xScale / 2;
+            const yB = y * yScale;
+            let col = ((xB & 0x55555555) | (yB & 0xAAAAAAAA)) / 255;
+            img.plotPixel(col, col, col, 1, x, y);
+          }
+        }
+        break;
+      case O_BITWISE_PANFUNC:
+        for(let y = 0; y < img.h; y++) {
+          for(let x = 0; x < img.w; x++) {
+            const xB = x * xScale;
+            const yB = y * yScale;
+            let col = (((xB & yB) & 0x49249249) | ((xB ^ yB) & 0x92492492) | ((xB | yB) & 0x24924924)) / 255;
+            img.plotPixel(col, col, col, 1, x, y);
           }
         }
         break;
     }
+  }
+  
+  popcount(n) {
+    //implementation sourced from https://en.wikipedia.org/wiki/Hamming_weight
+     let x = n | 0; //convert to integer
+     x = (x & 0x55555555) + ((x >> 1) & 0x55555555);
+     x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+     x = (x & 0x0F0F0F0F) + ((x >> 4) & 0x0F0F0F0F);
+     x = (x & 0x00FF00FF) + ((x >> 8) & 0x00FF00FF);
+     x = (x & 0x0000FFFF) + ((x >> 16) & 0x0000FFFF);
+     return x;
   }
 }
 
@@ -204,7 +263,7 @@ class LayerSolid extends Layer {
     
     for(let y = 0; y < height; y++) {
       for(let x = 0; x < width; x++) {
-        img.plotPixel([1, 1, 1, 1], x, y);
+        img.plotPixel(1, 1, 1, 1, x, y);
       }
     }
   }
@@ -247,13 +306,17 @@ class LayerNoise extends Layer {
           if(o.correlated) {
             const weight = Math.random();
             const col = colorMix(o.lowColor, o.highColor, weight);
-            img.plotPixel(col, x, y);
+            const r = col[0];
+            const g = col[1];
+            const b = col[2];
+            const a = col[3];
+            img.plotPixel(r, g, b, a, x, y);
           } else {
             const r = colorMix(o.lowColor, o.highColor, Math.random())[0];
             const g = colorMix(o.lowColor, o.highColor, Math.random())[1];
             const b = colorMix(o.lowColor, o.highColor, Math.random())[2];
             const a = colorMix(o.lowColor, o.highColor, Math.random())[3];
-            img.plotPixel([r, g, b, a], x, y);
+            img.plotPixel(r, g, b, a, x, y);
           }
         }
       }
@@ -336,6 +399,9 @@ class LayerBorder extends Layer {
     function fade(c, alp) {
       return [c[0], c[1], c[2], c[3] * alp];
     }
+    function plotArr(col, x, y) {
+      img.plotPixel(col[0], col[1], col[2], col[3], x, y)
+    }
     const thickness = UnitLength.getLength(o.thickness, Math.min(img.w, img.h), true);
     
     const alphaStep = 1 / thickness;
@@ -353,19 +419,21 @@ class LayerBorder extends Layer {
       }
       //left and right edges
       for(let y = t; y < height - t; y++) {
-        img.plotPixel(fade(o.colorLeft, alpha), t - 1, y);
-        img.plotPixel(fade(o.colorRight, alpha), width - t, y);
+        img.plotPixel(o.colorLeft[0] * alpha,o.colorLeft[1] * alpha, o.colorLeft[2] * alpha, o.colorLeft[3] * alpha, t - 1, y);
+        img.plotPixel(o.colorRight[0] * alpha,o.colorRight[1] * alpha, o.colorRight[2] * alpha, o.colorRight[3] * alpha, width - t, y);
       }
       //top and bottom edges
       for(let x = t; x < width - t; x++) {
-        img.plotPixel(fade(o.colorTop, alpha), x, t - 1);
-        img.plotPixel(fade(o.colorBottom, alpha), x, height - t);
+        img.plotPixel(o.colorTop[0] * alpha,o.colorTop[1] * alpha, o.colorTop[2] * alpha,o.colorTop[3] * alpha, x, t - 1);
+        img.plotPixel(o.colorBottom[0] * alpha,o.colorBottom[1] * alpha, o.colorBottom[2] * alpha, o.colorBottom[3] * alpha, x, height - t);
+        //img.plotPixel(fade(o.colorTop, alpha), x, t - 1);
+        //img.plotPixel(fade(o.colorBottom, alpha), x, height - t);
       }
       //corners
-      img.plotPixel(blend(o.colorTop, o.colorLeft, alpha), t - 1, t - 1);
-      img.plotPixel(blend(o.colorTop, o.colorRight, alpha), width - t, t - 1);
-      img.plotPixel(blend(o.colorBottom, o.colorLeft, alpha), t - 1, height - t);
-      img.plotPixel(blend(o.colorBottom, o.colorRight, alpha), width - t, height - t);
+      plotArr(blend(o.colorTop, o.colorLeft, alpha), t - 1, t - 1);
+      plotArr(blend(o.colorTop, o.colorRight, alpha), width - t, t - 1);
+      plotArr(blend(o.colorBottom, o.colorLeft, alpha), t - 1, height - t);
+      plotArr(blend(o.colorBottom, o.colorRight, alpha), width - t, height - t);
       
       if(o.fadeMode == O_FADE_NEAR_START) {
         alpha -= alphaStep;
@@ -467,7 +535,16 @@ class LayerLiney extends Layer {
           x = i;
           y = l + randOffs;
         }
-        if(isDrawn) img.plotPixel(colorMix(o.lowColor, o.highColor, col), x, y);
+        if(isDrawn) {
+          const arr = colorMix(o.lowColor, o.highColor, col)
+          img.plotPixel(arr[0], arr[1], arr[2], arr[3], x, y);
+          /*img.plotPixel(
+            (o.lowColor[0] + o.highColor[0]) / 2,
+            (o.lowColor[1] + o.highColor[1]) / 2,
+            (o.lowColor[2] + o.highColor[2]) / 2,
+            (o.lowColor[3] + o.highColor[3]) / 2,
+          x, y);*/
+        }
       }
     }
   }
@@ -613,7 +690,7 @@ class LayerWandering extends Layer {
         let xOffs = Math.floor(lx * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * o.randomness - 1);
         let yOffs = Math.floor(ly * spacing + spacing / 2 + (Math.random() - 0.5) * spacing * o.randomness - 1);
         //round so that lines are properly variated
-        const len = Math.round(Math.random() * (maxLength - minLength) + minLength);
+        let len = Math.round(Math.random() * (maxLength - minLength) + minLength);
         let progress = 0;
         //round so that lines are properly variated
         const thickness = Math.round(Math.random() * (maxWidth - minWidth) + minWidth);
@@ -622,6 +699,9 @@ class LayerWandering extends Layer {
         const alphaMult = Math.random() * (1 - o. minAlpha) + o.minAlpha;
         //draw a line
         if(Math.abs(xChange) < Math.abs(yChange)) {
+          if(o.constantLength) {
+            len *= Math.abs(Math.cos(dir * DEG2RAD));
+          }
           for(let i = 0; i < len; i++) {
             progress += xChange;
             const randOffs = (Math.random() - 0.5) * o.spread * 2;
@@ -633,7 +713,7 @@ class LayerWandering extends Layer {
             }
             
             for(let t = 0; t < thickness; t++) {
-              img.plotPixel([1, 1, 1, alpha * alphaMult], Math.round(progress) + xOffs + t, i * yFlip + yOffs);
+              img.plotPixel(1, 1, 1, alpha * alphaMult, Math.round(progress) + xOffs + t, i * yFlip + yOffs);
             }
             
             if(o.fadeMode == O_FADE_NEAR_END) {
@@ -641,6 +721,9 @@ class LayerWandering extends Layer {
             }
           }
         } else {
+          if(o.constantLength) {
+            len *= Math.abs(Math.sin(dir * DEG2RAD));
+          }
           for(let i = 0; i < len; i++) {
             progress += yChange;
             const randOffs = (Math.random() - 0.5) * o.spread * 2;
@@ -652,7 +735,7 @@ class LayerWandering extends Layer {
             }
             
             for(let t = 0; t < thickness; t++) {
-              img.plotPixel([1, 1, 1, alpha * alphaMult], i * xFlip + xOffs, Math.round(progress) + yOffs + t);
+              img.plotPixel(1, 1, 1, alpha * alphaMult, i * xFlip + xOffs, Math.round(progress) + yOffs + t);
             }
             
             if(o.fadeMode == O_FADE_NEAR_END) {
@@ -725,7 +808,7 @@ class LayerCheckers extends Layer {
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         let col = (Math.floor((x - xShift * (Math.floor(y / yScale) % 2)) / xScale) + Math.floor((y - yShift * (Math.floor(x / xScale) % 2)) / yScale)) % 2 == 0 ? o.evenColor : o.oddColor;
-        img.plotPixel(col, x, y);
+        img.plotPixel(col[0], col[1], col[2], col[3], x, y);
       }
     }
   }
@@ -900,7 +983,7 @@ class LayerBlobs extends Layer {
                     default:
                       throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
-                  img.plotPixel([1, 1, 1, clamp((r - dist) * o.hardness, hardnessDist, 1) * alpha], x, y);
+                  img.plotPixel(1, 1, 1, clamp((r - dist) * o.hardness, hardnessDist, 1) * alpha, x, y);
                 } else {
                   switch(o.easeMode) {
                     case O_EASE_LINEAR:
@@ -920,7 +1003,7 @@ class LayerBlobs extends Layer {
                     default:
                       throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
-                  img.plotPixel([1, 1, 1, clamp(r - dist, (dist / r) / r, 1) * Math.min(hardnessDist + o.hardness, 1) * alpha], x, y);
+                  img.plotPixel(1, 1, 1, clamp(r - dist, (dist / r) / r, 1) * Math.min(hardnessDist + o.hardness, 1) * alpha, x, y);
                 }
               }
             }
@@ -968,10 +1051,13 @@ class LayerBlobs extends Layer {
                       hardnessDist = dist / r;
                       hardnessDist = 1 - (hardnessDist * hardnessDist);
                       break;
+                    case O_EASE_COSINE:
+                      hardnessDist = easeCos((r - dist) / r);
+                      break;
                     default:
                       throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
-                  img.plotPixel([1, 1, 1, Math.min(hardnessDist + o.hardness, 1) * alpha], x, y);
+                  img.plotPixel(1, 1, 1, Math.min(hardnessDist + o.hardness, 1) * alpha, x, y);
                 } else {
                   switch(o.easeMode) {
                     case O_EASE_LINEAR:
@@ -985,10 +1071,13 @@ class LayerBlobs extends Layer {
                       hardnessDist = (r - dist) / r;
                       hardnessDist = 1 - (hardnessDist * hardnessDist);
                       break;
+                    case O_EASE_COSINE:
+                      hardnessDist = easeCos(dist / r);
+                      break;
                     default:
                       throw new ProcedrawError("unknown ease mode " + o.easeMode);
                   }
-                  img.plotPixel([1, 1, 1, Math.min(hardnessDist + o.hardness, 1) * alpha], x, y);
+                  img.plotPixel(1, 1, 1, Math.min(hardnessDist + o.hardness, 1) * alpha, x, y);
                 }
               }
             }
@@ -1129,7 +1218,7 @@ class LayerWorley extends Layer {
         normalDivisor = 1;
         break;
       case O_METRIC_INVERSE_EUCLIDEAN:
-        normalDivisor = Math.sqrt(2) - 1;
+        normalDivisor = Math.sqrt(2) + 1;
         break;
       case O_METRIC_SQUARE_OIL:
         normalDivisor = 1;
@@ -1174,8 +1263,8 @@ class LayerWorley extends Layer {
               const xCell = Math.floor(x / xSpacing) + xi;
               const yCell = Math.floor(y / ySpacing) + yi;
               const pointIdx = mod(xCell, xGrid) + mod(yCell, yGrid) * xGrid;
-              const xSqr = (x - (points[pointIdx][0] + xCell * xSpacing));
-              const ySqr = (y - (points[pointIdx][1] + yCell * ySpacing));
+              const xSqr = x - (points[pointIdx][0] + xCell * xSpacing);
+              const ySqr = y - (points[pointIdx][1] + yCell * ySpacing);
               let dist;
               
               switch(o.metricMode) {
@@ -1252,7 +1341,8 @@ class LayerWorley extends Layer {
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         //img.plotPixel(img.blend(o.closeColor, o.farColor, output[x + y * img.w]), x, y)
-        img.plotPixel(colorMix(o.closeColor, o.farColor, output[x + y * img.w]), x, y)
+        const arr = colorMix(o.closeColor, o.farColor, output[x + y * img.w]);
+        img.plotPixel(arr[0], arr[1], arr[2], arr[3], x, y)
       }
     }
      /* interesting
@@ -1497,10 +1587,10 @@ class LayerGradient extends Layer {
         //const col = mix(col1, col2, Math.floor(bias * 4) / 4);
         if(o.edgeMode == O_VOID) {
           if(bias <= 1 && bias >= 0) {
-            img.plotPixel(col, x, y);
+            img.plotPixel(col[0], col[1], col[2], col[3], x, y);
           }
         } else {
-          img.plotPixel(col, x, y);
+          img.plotPixel(col[0], col[1], col[2], col[3], x, y);
         }
         
         if(xStart == 0) xi += xChange;
@@ -1676,7 +1766,7 @@ class LayerValueNoise extends Layer {
       for(let x = 0; x < img.w; x++) {
         let bias = fractalNoise[x + y * img.w];
         let col = colorMix(o.lowColor, o.highColor, bias);
-        img.plotPixel(col, x, y);
+        img.plotPixel(col[0], col[1], col[2], col[3], x, y);
       }
     }
   }
@@ -1743,7 +1833,8 @@ class LayerWaveTable extends Layer {
       for(let x = 0; x < img.w; x++) {
         let xWave = Math.sin(x * Math.PI / xPeriod);
         const bias = (xWave + 1) / 2 * o.xAmplitude + (yWave + 1) / 2 * o.yAmplitude;
-        img.plotPixel(colorMix(o.lowColor, o.highColor, bias), x, y);
+        const arr = colorMix(o.lowColor, o.highColor, bias);
+        img.plotPixel(arr[0], arr[1], arr[2], arr[3], x, y);
       }
     }
   }
@@ -2014,8 +2105,9 @@ class LayerBitmapText extends Layer {
         }
         for(let yi = 0; yi < glyphHeight; yi++) {
           for(let xi = 0; xi < glyphWidth; xi++) {
-            if(glyphData[Math.floor(yi / glyphHeight * 8)][Math.floor(xi / glyphWidth * 8)] != ' ') {
-              img.plotPixel([1, 1, 1, 1], xi + xText, yi + yText);
+            let i = BigInt(Math.floor(xi / glyphWidth * 8)) + BigInt(Math.floor(yi / glyphHeight * 8) * 8);
+            if((glyphData >> i) & 1n) {
+              img.plotPixel(1, 1, 1, 1, xi + xText, yi + yText);
             }
           }
         }
@@ -2076,7 +2168,7 @@ class LayerTileMap extends Layer {
         let g = o.tile.data[glyphIdx * 4 + 1];
         let b = o.tile.data[glyphIdx * 4 + 2];
         let a = o.tile.data[glyphIdx * 4 + 3];
-        img.plotPixel([r, g, b, a], x, y);
+        img.plotPixel(r, g, b, a, x, y);
       }
     }
   }
@@ -2215,11 +2307,11 @@ class LayerMandelbrot extends Layer {
         const col = i / (o.maxIterations - (o.discardInside ? 1 : 0));
         
         if(o.outputMode == O_OUTPUT_COLOR)
-          img.plotPixel([col, col, col, 1], x, y);
+          img.plotPixel(col, col, col, 1, x, y);
         else if(o.outputMode == O_OUTPUT_ALPHA)
-          img.plotPixel([1, 1, 1, col], x, y);
+          img.plotPixel(1, 1, 1, col, x, y);
         else
-          img.plotPixel([col, col, col, col], x, y);
+          img.plotPixel(col, col, col, col, x, y);
       }
     }
   }
@@ -2316,7 +2408,347 @@ class LayerSeedFractal extends Layer {
       for(let x = 0; x < img.w; x++) {
         if(isFilled(Math.abs(Math.floor(x * xScale) + o.xOffs * Math.floor(img.w)),
         Math.abs(Math.floor(y * yScale) + o.yOffs * Math.floor(img.h))))
-          img.plotPixel([1, 1, 1, 1], x, y);
+          img.plotPixel(1, 1, 1, 1, x, y);
+      }
+    }
+  }
+}
+
+class LayerCellularBlobs extends Layer {
+  name = "cellularBlobs";
+  
+  static description = "A cellular automaton that is designed to make blobs with clean gaps between each blob.";
+  
+  options = {
+    iterations: 12,
+    spreadChance: 0.5,
+    xSpacing: new UnitLength(8, UNIT_PIXELS),
+    ySpacing: new UnitLength(8, UNIT_PIXELS),
+    xRandomness: 1,
+    yRandomness: 1,
+    fade: false,
+    minAlpha: 1,
+    invert: false,
+    strictEdges: true
+  };
+  
+  types = {
+    iterations: {
+      type: "number",
+      min: 0,
+      max: 64,
+      unsafe: true
+    },
+    xSpacing: {
+      type: "length",
+      subtype: "width",
+      absoluteMin: 1,
+      scaledMax: 1,
+      step: 1,
+      unsafe: true
+    },
+    ySpacing: {
+      type: "length",
+      subtype: "height",
+      absoluteMin: 1,
+      scaledMax: 1,
+      step: 1,
+      unsafe: true
+    },
+    xRandomness: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    yRandomness: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    spreadChance: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    minAlpha: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    strictEdges: {
+      type: "boolean"
+    },
+    fade: {
+      type: "boolean"
+    },
+    invert: {
+      type: "boolean"
+    }
+  };
+  
+  generate(img, o) {
+    const xSpacing = Math.max(UnitLength.getLength(o.xSpacing, img.w, true), 1);
+    const ySpacing = Math.max(UnitLength.getLength(o.ySpacing, img.h, true), 1);
+    
+    const buffer1 = new Array(img.w * img.h);
+    const buffer2 = new Array(img.w * img.h);
+    const distanceBuffer = o.fade ? new Array(img.w * img.h) : null;
+   
+    const CELL_EMPTY = -1;
+    
+    /*for(let i = 0; i < img.w * img.h; i++) {
+      buffer1[i] = Math.floor(Math.random() * o.spacing) == 0 ? Math.random() * Math.floor(MAX_CELL_IDS) : CELL_EMPTY;
+    }*/
+    
+    for(let i = 0; i < img.w * img.h; i++) {
+      buffer1[i] = CELL_EMPTY;
+    }
+    for(let yi = 0; yi < img.h; yi += ySpacing) {
+      for(let xi = 0; xi < img.w; xi += xSpacing) {
+        const x = Math.floor(xi + Math.random() * xSpacing * o.xRandomness + xSpacing / 2) % img.w;
+        const y = Math.floor(yi + Math.random() * ySpacing * o.yRandomness + ySpacing / 2) % img.h;
+        buffer1[x + y * img.w] = Math.random();
+      }
+    }
+    
+    if(o.fade) {
+      for(let i = 0; i < img.w * img.h; i++) {
+        distanceBuffer[i] = 0;
+      }
+    }
+    //these buffers get swapped
+    let inBuffer = buffer1; //this buffer is used as input (not modified)
+    let outBuffer = buffer2; //this buffer is used as the output (is modified)
+    
+    //a random amount of outer cells will be set to outter cells with a different id
+    //each iteration, empty cells that border outer cells in a DIAMOND shape BUT also border outer cells of the same type in a SQUARE shape will become outer cells
+    //outer cells do nothing
+    
+    for(let i = 0; i <= o.iterations; i++) {
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = x + y * img.w;
+          const cell = inBuffer[idx];
+          
+          if(cell == CELL_EMPTY) {
+            const topCell = inBuffer[x + mod(y - 1, img.h) * img.w];
+            const bottomCell = inBuffer[x + (y + 1) % img.h * img.w];
+            const leftCell = inBuffer[mod(x - 1, img.w) + y * img.w];
+            const rightCell = inBuffer[(x + 1) % img.w + y * img.w];
+
+            const neighborCell = topCell != CELL_EMPTY ? topCell : 
+                                 (bottomCell != CELL_EMPTY ? bottomCell :
+                                 (leftCell != CELL_EMPTY ? leftCell :
+                                 (rightCell != CELL_EMPTY ? rightCell : CELL_EMPTY)));
+            
+            if(neighborCell != CELL_EMPTY && Math.random() < o.spreadChance) {
+              const topLeftCell = inBuffer[mod(x - 1, img.w) + mod(y - 1, img.h) * img.w];
+              const topRightCell = inBuffer[(x + 1) % img.w + mod(y - 1, img.h) * img.w];
+              const bottomLeftCell = inBuffer[mod(x - 1, img.w) + (y + 1) % img.h * img.w];
+              const bottomRightCell = inBuffer[(x + 1) % img.w + (y + 1) % img.h * img.w];
+              let neighborSet;
+              //TODO: replace the set method of finding neighbors using other ids with something faster
+              if(o.strictEdges) {
+                const topTopCell = inBuffer[x + mod(y - 2, img.h) * img.w];
+                const bottomBottomCell = inBuffer[x + (y + 2) % img.h * img.w];
+                const leftLeftCell = inBuffer[mod(x - 2, img.w) + y * img.w];
+                const rightRightCell = inBuffer[(x + 2) % img.w + y * img.w];
+                neighborSet = new Set([topCell, topRightCell, rightCell, bottomRightCell, bottomCell, bottomLeftCell, leftCell, topLeftCell, topTopCell, bottomBottomCell, leftLeftCell, rightRightCell]);
+              } else {
+                neighborSet = new Set([topCell, topRightCell, rightCell, bottomRightCell, bottomCell, bottomLeftCell, leftCell, topLeftCell]);
+              }
+              //if all neighbors have the same id OR are empty
+              if(neighborSet.size <= 2) {
+                outBuffer[idx] = neighborCell;
+                if(o.fade)
+                  distanceBuffer[idx] = i + 1;
+              } else {
+                outBuffer[idx] = CELL_EMPTY;
+              }
+            } else {
+              outBuffer[idx] = CELL_EMPTY;
+            }
+          } else {
+            outBuffer[idx] = cell;
+          }
+        }
+      }
+      
+      if(inBuffer == buffer1) {
+        inBuffer = buffer2;
+        outBuffer = buffer1;
+      } else {
+        inBuffer = buffer1;
+        outBuffer = buffer2;
+      }
+    }
+    if(o.fade) {
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = x + y * img.w
+          const cell = outBuffer[idx];
+          if(cell == CELL_EMPTY) {
+            if(o.invert) {
+              img.plotPixel(1, 1, 1, 1, x, y);
+            } else {
+              continue;
+            }
+          }
+          let alp = 1 - distanceBuffer[idx] / (o.iterations + 1);
+          alp *= cell * (1 - o.minAlpha) + o.minAlpha;
+          if(o.invert) {
+            alp = 1 - alp;
+          }
+          img.plotPixel(1, 1, 1, alp, x, y);
+        }
+      }
+    } else {
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = x + y * img.w
+          const cell = outBuffer[idx];
+          if(cell == CELL_EMPTY) {
+            if(o.invert) {
+              img.plotPixel(1, 1, 1, 1, x, y);
+              continue;
+            } else {
+              continue;
+            }
+          }
+          let alp = cell * (1 - o.minAlpha) + o.minAlpha;
+          if(o.invert) {
+            alp = 1 - alp;
+          }
+          img.plotPixel(1, 1, 1, alp, x, y);
+        }
+      }
+    }
+  }
+}
+
+class LayerWolfram extends Layer {
+  name = "wolfram";
+  
+  static description = "A layer of elementary cellular automata that uses a bit pattern (number) to determine the next generation.\n\nGood patterns to try are 18, 30, 45, 90, 102, 110, 122, 193, 225 and 254";
+  
+  options = {
+    pattern: 110, //01101110 (bin)
+    startMode: O_START_MANUAL,
+    startPos: new UnitLength(100, UNIT_PERCENTAGE),
+    startChance: 0.5,
+    compression: 1,
+    outputMode: O_OUTPUT_ALPHA
+  };
+  
+  types = {
+    pattern: {
+      type: "number",
+      min: 0,
+      max: 255,
+      step: 1
+    },
+    startMode: {
+      type: "keyvalues",
+      keys: [
+        "manually positioned",
+        "randomly positioned"
+      ],
+      values: [
+        O_START_MANUAL,
+        O_START_RANDOM
+      ]
+    },
+    startPos: {
+      type: "length",
+      subtype: "width",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1,
+      unsafe: true
+    },
+    startChance: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    compression: {
+      type: "number",
+      min: 1,
+      max: 8,
+      step: 1,
+      unsafe: true
+    },
+    outputMode: {
+      type: "keyvalues",
+      keys: [
+        "color only",
+        "alpha only",
+        "alpha and color"
+      ],
+      values: [
+        O_OUTPUT_COLOR,
+        O_OUTPUT_ALPHA,
+        O_OUTPUT_BOTH
+      ]
+    }
+  };
+  
+  generate(img, o) {
+    const dispWidth = img.w;
+    const width = dispWidth * o.compression;
+    const iterations = img.h;
+    const buffer1 = new Array(width);
+    const buffer2 = new Array(width);
+    
+    if(o.startMode == O_START_MANUAL) {
+      for(let x = 0; x < width; x++) {
+        buffer1[x] = 0;
+      }
+      const pos = UnitLength.getLength(o.startPos, width, true);
+      buffer1[Math.floor((pos / width) * (width - 1))] = 1;
+    } else {
+      for(let x = 0; x < width; x++) {
+        buffer1[x] = Math.random() < o.startChance ? 1 : 0;
+      }
+    }
+
+    let inBuffer = buffer1;
+    let outBuffer = buffer2;
+    
+    for(let i = 0; i < iterations; i++) {
+      for(let x = 0; x < width; x++) {
+        const leftCell = x == 0 ? 0 : inBuffer[x - 1];
+        const midCell = inBuffer[x];
+        const rightCell = x == width - 1 ? 0 : inBuffer[x + 1];
+        const bitIdx = (leftCell << 2) | (midCell << 1) | (rightCell);
+        outBuffer[x] = (o.pattern >> bitIdx) & 1;
+
+        const curCell = inBuffer[x];
+      }
+      if(inBuffer == buffer1) {
+        inBuffer = buffer2;
+        outBuffer = buffer1;
+      } else {
+        inBuffer = buffer1;
+        outBuffer = buffer2;
+      }
+      
+      for(let x = 0; x < dispWidth; x++) {
+        let idx = x * o.compression;
+        let val = 0;//outBuffer[idx + o.compression - 1];
+        for(let bi = o.compression - 1; bi >= 0; bi--) {
+          val |= outBuffer[idx + bi] << bi;
+        }
+        val /= 2 ** (o.compression) - 1;
+        
+        const col = o.outputMode == O_OUTPUT_ALPHA ? 1 : val;
+        const alp = o.outputMode == O_OUTPUT_COLOR ? 1 : val;
+        img.plotPixel(col, col, col, alp, x, i);
       }
     }
   }

@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html>
+  <script>
+  //NOTE: only used for generating constants, code is never run in actual website
+  
+const GLYPHS_CLASCII = {
+  unknown: [
+    "MMMMMMMM",
+    "MM    MM",
+    "M  MM  M",
+    "MMMM  MM",
+    "MMM  MMM",
+    "MMMMMMMM",
+    "MMM  MMM",
+    "MMMMMMMM"
+  ],
+  A: [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  B: [
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "        "
+  ],
+  C: [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  D: [
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "        "
+  ],
+  E: [
+    "MMMMMMM ",
+    "MM      ",
+    "MM      ",
+    "MMMMM   ",
+    "MM      ",
+    "MM      ",
+    "MMMMMMM ",
+    "        "
+  ],
+  F: [
+    "MMMMMMM ",
+    "MM      ",
+    "MM      ",
+    "MMMMM   ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "        "
+  ],
+  G: [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM      ",
+    "MM MMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  H: [
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  I: [
+    "MMMMMM  ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "MMMMMM  ",
+    "        "
+  ],
+  J: [
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  K: [
+    "MM   MM ",
+    "MM  MM  ",
+    "MM MM   ",
+    "MMMM    ",
+    "MM MM   ",
+    "MM  MM  ",
+    "MM   MM ",
+    "        "
+  ],
+  L: [
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MMMMMMM ",
+    "        "
+  ],
+  M: [
+    "MM   MM ",
+    "MMM MMM ",
+    "MMMMMMM ",
+    "MM M MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  N: [
+    "MM   MM ",
+    "MMM  MM ",
+    "MMMM MM ",
+    "MM MMMM ",
+    "MM  MMM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  O: [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  P: [
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "        "
+  ],
+  Q: [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM  MM  ",
+    " MMM MM ",
+    "        "
+  ],
+  R: [
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  S: [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM      ",
+    " MMMMM  ",
+    "     MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  T: [
+    "MMMMMM  ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "        "
+  ],
+  U: [
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  V: [
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MM MM  ",
+    "  MMM   ",
+    "   M    ",
+    "        "
+  ],
+  W: [
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM M MM ",
+    "MM M MM ",
+    "MM M MM ",
+    " MM MM  ",
+    "        "
+  ],
+  X: [
+    "MM  MM  ",
+    "MM  MM  ",
+    " MMMM   ",
+    "  MM    ",
+    " MMMM   ",
+    "MM  MM  ",
+    "MM  MM  ",
+    "        "
+  ],
+  Y: [
+    "MM  MM  ",
+    "MM  MM  ",
+    " MMMM   ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "        "
+  ],
+  Z: [
+    "MMMMMMM ",
+    "    MM  ",
+    "   MM   ",
+    "  MM    ",
+    " MM     ",
+    "MM      ",
+    "MMMMMMM ",
+    "        "
+  ],
+  '.': [
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "   MM   ",
+    "   MM   ",
+    "        "
+  ],
+  ',': [
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "   MM   ",
+    "   MM   ",
+    "  MM    "
+  ],
+  '/': [
+    "      MM",
+    "     MM ",
+    "    MM  ",
+    "   MM   ",
+    "  MM    ",
+    " MM     ",
+    "MM      ",
+    "M       "
+  ],
+  '\\': [
+    "MM      ",
+    " MM     ",
+    "  MM    ",
+    "   MM   ",
+    "    MM  ",
+    "     MM ",
+    "      MM",
+    "       M"
+  ],
+  '$': [
+    "   M    ",
+    " MMMMM  ",
+    "MM M MM ",
+    " MMM    ",
+    "   MMM  ",
+    "MM M MM ",
+    " MMMMM  ",
+    "   M    "
+  ],
+  '0': [
+    " MMMMM  ",
+    "MMM  MM ",
+    "MMMM MM ",
+    "MM MMMM ",
+    "MM  MMM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  '1': [
+    " MMM    ",
+    "MMMM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "MMMMMM  ",
+    "        "
+  ],
+  '2': [
+    " MMMM   ",
+    "MM  MM  ",
+    "    MM  ",
+    "   MM   ",
+    "  MM    ",
+    " MM     ",
+    "MMMMMM  ",
+    "        "
+  ],
+  '3': [
+    " MMMMM  ",
+    "MM   MM ",
+    "     MM ",
+    "   MMM  ",
+    "     MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  '4': [
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "        "
+  ],
+  '5': [
+    "MMMMMMM ",
+    "MM      ",
+    "MM      ",
+    " MMMMM  ",
+    "     MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  '6': [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM      ",
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  '7': [
+    "MMMMMMM ",
+    "     MM ",
+    "    MM  ",
+    "   MM   ",
+    "  MM    ",
+    " MM     ",
+    "MM      ",
+    "        "
+  ],
+  '8': [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  '9': [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMMM ",
+    "     MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  '-': [
+    "        ",
+    "        ",
+    "        ",
+    "MMMMMMM ",
+    "        ",
+    "        ",
+    "        ",
+    "        "
+  ],
+  '+': [
+    "   M    ",
+    "   M    ",
+    "   M    ",
+    "MMMMMMM ",
+    "   M    ",
+    "   M    ",
+    "   M    ",
+    "        "
+  ],
+  '*': [
+    "   M    ",
+    " MMMMM  ",
+    "  MMM   ",
+    " MMMMM  ",
+    "   M    ",
+    "        ",
+    "        ",
+    "        "
+  ],
+  '^': [
+    "   M    ",
+    "  MMM   ",
+    " MM MM  ",
+    " M   M  ",
+    "        ",
+    "        ",
+    "        ",
+    "        "
+  ],
+  '&': [
+    " MMM    ",
+    "MM MM   ",
+    "MM MM M ",
+    " MMMMMM ",
+    "MM   MM ",
+    "MM  MM  ",
+    " MMM MM ",
+    "        "
+  ],
+  '%': [
+    "MM    M ",
+    "MM   MM ",
+    "    MM  ",
+    "   MM   ",
+    "  MM    ",
+    " MM  MM ",
+    "MM   MM ",
+    "        "
+  ],
+  '!': [
+    "   MM   ",
+    "  MMMM  ",
+    "  MMMM  ",
+    "   MM   ",
+    "   MM   ",
+    "        ",
+    "   MM   ",
+    "        "
+  ],
+  '?': [
+    "  MMMM  ",
+    " MM  MM ",
+    "     MM ",
+    "    MM  ",
+    "   MM   ",
+    "        ",
+    "   MM   ",
+    "        "
+  ],
+  '=': [
+    "        ",
+    "        ",
+    "MMMMMMM ",
+    "        ",
+    "MMMMMMM ",
+    "        ",
+    "        ",
+    "        "
+  ],
+  '_': [
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "MMMMMMMM",
+    "        "
+  ],
+  '"': [
+    "  MM MM ",
+    "  MM MM ",
+    " MM MM  ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        "
+  ],
+  '\'': [
+    "   MM   ",
+    "   MM   ",
+    "  MM    ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        "
+  ],
+  '`': [
+    "  MM    ",
+    "   MM   ",
+    "    MM  ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        "
+  ],
+  '~': [
+    "        ",
+    "        ",
+    " MM     ",
+    "MMMM  M ",
+    "M  MMMM ",
+    "    MM  ",
+    "        ",
+    "        "
+  ],
+  '|': [
+    "   MM   ",
+    "   MM   ",
+    "   MM   ",
+    "   MM   ",
+    "   MM   ",
+    "   MM   ",
+    "   MM   ",
+    "   MM   "
+  ],
+  ':': [
+    "   MM   ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "   MM   ",
+    "        "
+  ],
+  ';': [
+    "   MM   ",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "   MM   ",
+    "   MM   ",
+    "  MM    "
+  ],
+  '(': [
+    "   MMM  ",
+    "  MM    ",
+    " MM     ",
+    " MM     ",
+    " MM     ",
+    "  MM    ",
+    "   MMM  ",
+    "        "
+  ],
+  ')': [
+    "  MMM   ",
+    "    MM  ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "    MM  ",
+    "  MMM   ",
+    "        "
+  ],
+  '[': [
+    " MMMMM  ",
+    " MM     ",
+    " MM     ",
+    " MM     ",
+    " MM     ",
+    " MM     ",
+    " MMMMM  ",
+    "        "
+  ],
+  ']': [
+    "  MMMMM ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "  MMMMM ",
+    "        "
+  ],
+  '{': [
+    "   MMM  ",
+    "  MM    ",
+    "  MM    ",
+    "MM      ",
+    "  MM    ",
+    "  MM    ",
+    "   MMM  ",
+    "        "
+  ],
+  '}': [
+    "  MMM   ",
+    "    MM  ",
+    "    MM  ",
+    "      MM",
+    "    MM  ",
+    "    MM  ",
+    "  MMM   ",
+    "        "
+  ],
+  '<': [
+    "    MM  ",
+    "   MM   ",
+    "  MM    ",
+    " MM     ",
+    "  MM    ",
+    "   MM   ",
+    "    MM  ",
+    "        "
+  ],
+  '>': [
+    "  MM    ",
+    "   MM   ",
+    "    MM  ",
+    "     MM ",
+    "    MM  ",
+    "   MM   ",
+    "  MM    ",
+    "        "
+  ],
+  '#': [
+    "        ",
+    " MM MM  ",
+    "MMMMMMM ",
+    " MM MM  ",
+    " MM MM  ",
+    "MMMMMMM ",
+    " MM MM  ",
+    "        "
+  ],
+  '@': [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM M MM ",
+    "MM MMMM ",
+    "MM      ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  a: [
+    "        ",
+    "        ",
+    "  MMMM  ",
+    " MM  MM ",
+    "MM   MM ",
+    "MM  MM  ",
+    " MMM MM ",
+    "        "
+  ],
+  b: [
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "        "
+  ],
+  c: [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM      ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  d: [
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    " MMMMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMMM ",
+    "        "
+  ],
+  e: [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "MM      ",
+    " MMMMM  ",
+    "        "
+  ],
+  f: [
+    "  MMMM  ",
+    " MM  MM ",
+    " MM     ",
+    "MMMMM   ",
+    " MM     ",
+    " MM     ",
+    " MM     ",
+    "        "
+  ],
+  g: [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMMM ",
+    "     MM ",
+    "MMMMMM  "
+  ],
+  h: [
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MMMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  i: [
+    "  MM    ",
+    "        ",
+    "MMMM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "MMMMMM  ",
+    "        "
+  ],
+  j: [
+    "     MM ",
+    "        ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "     MM ",
+    "MM   MM ",
+    " MMMMM  "
+  ],
+  k: [
+    "MM      ",
+    "MM  MM  ",
+    "MM MM   ",
+    "MMMM    ",
+    "MM MM   ",
+    "MM  MM  ",
+    "MM   MM ",
+    "        "
+  ],
+  l: [
+    "MMMM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "MMMMMM  ",
+    "        "
+  ],
+  m: [
+    "        ",
+    "        ",
+    "M M MM  ",
+    "MM M MM ",
+    "MM M MM ",
+    "MM M MM ",
+    "MM M MM ",
+    "        "
+  ],
+  n: [
+    "        ",
+    "        ",
+    "MM MMM  ",
+    "MMM  MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  o: [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  p: [
+    "        ",
+    "        ",
+    "MM MMM  ",
+    "MMM  MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM      ",
+    "MM      "
+  ],
+  q: [
+    "        ",
+    "        ",
+    " MMM MM ",
+    "MM  MMM ",
+    "MM   MM ",
+    " MMMMMM ",
+    "     MM ",
+    "     MM "
+  ],
+  r: [
+    "        ",
+    "        ",
+    "MM MMM  ",
+    "MMM  MM ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "        "
+  ],
+  s: [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM      ",
+    " MMMMM  ",
+    "     MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  t: [
+    "  MM    ",
+    "  MM    ",
+    "MMMMMM  ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "        "
+  ],
+  u: [
+    "        ",
+    "        ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM  MMM ",
+    " MMM MM ",
+    "        "
+  ],
+  v: [
+    "        ",
+    "        ",
+    "MM   MM ",
+    "MM   MM ",
+    " MM MM  ",
+    "  MMM   ",
+    "   M    ",
+    "        "
+  ],
+  w: [
+    "        ",
+    "        ",
+    "MM M MM ",
+    "MM M MM ",
+    "MM M MM ",
+    "MM M MM ",
+    " MM MM  ",
+    "        "
+  ],
+  x: [
+    "        ",
+    "        ",
+    "MM   MM ",
+    " MM MM  ",
+    "  MMM   ",
+    " MM MM  ",
+    "MM   MM ",
+    "        "
+  ],
+  y: [
+    "        ",
+    "        ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMMM ",
+    "     MM ",
+    "MMMMMM  "
+  ],
+  z: [
+    "        ",
+    "        ",
+    "MMMMMMM ",
+    "     MM ",
+    "   MM   ",
+    " MM     ",
+    "MMMMMMM ",
+    "        "
+  ],
+  "\u2588": [
+    "MMMMMMMM",
+    "MMMMMMMM",
+    "MMMMMMMM",
+    "MMMMMMMM",
+    "MMMMMMMM",
+    "MMMMMMMM",
+    "MMMMMMMM",
+    "MMMMMMMM"
+  ],
+  "\u2593": [
+    " MMM MMM",
+    "MM MMM M",
+    " MMM MMM",
+    "MM MMM M",
+    " MMM MMM",
+    "MM MMM M",
+    " MMM MMM",
+    "MM MMM M"
+  ],
+  "\u2592": [
+    "M M M M ",
+    " M M M M",
+    "M M M M ",
+    " M M M M",
+    "M M M M ",
+    " M M M M",
+    "M M M M ",
+    " M M M M"
+  ],
+  "\u2591": [
+    "M   M   ",
+    "  M   M ",
+    "M   M   ",
+    "  M   M ",
+    "M   M   ",
+    "  M   M ",
+    "M   M   ",
+    "  M   M "
+  ],
+  "\u03B1": [
+    "        ",
+    "        ",
+    " MMM MM ",
+    "MM  MM  ",
+    "MM  MM  ",
+    "MM  MM  ",
+    " MMM MM ",
+    "        "
+  ],
+  "\u0391": 'A',
+  "\u03B2": [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM   MM ",
+    "MMM  MM ",
+    "MM MMM  ",
+    "MM      "
+  ],
+  "\u0392": 'B',
+  "\u03B3": [
+    "        ",
+    "        ",
+    "MM  MM  ",
+    "MM  MM  ",
+    " MMMM   ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    " 
+  ],
+  "\u0393": [
+    "MMMMMMM ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "MM      ",
+    "        "
+  ],
+  "\u03B4": [
+    "  MMM   ",
+    "  MMM   ",
+    " MM MM  ",
+    " MM MM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "        " 
+  ],
+  "\u0394": [
+    "MMMMMMM ",
+    "MM      ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u03B5": [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    " MM     ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u0395": 'E',
+  "\u03B6": [
+    "MMMMMMM ",
+    "   MM   ",
+    "  MM    ",
+    " MM     ",
+    "MM      ",
+    "MM      ",
+    " MMMMMM ",
+    "     MM "
+  ],
+  "\u0396": 'Z',
+  "\u03B7": [
+    "        ",
+    "        ",
+    "MM MMM  ",
+    "MMM  MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "     MM "
+  ],
+  "\u0397": 'H',
+  "\u03B8": [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u0398": [
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM M MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u03B9": [
+    "        ",
+    "        ",
+    "        ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "   MM   ",
+    "        "
+  ],
+  "\u0399": 'I',
+  "\u03BA": [
+    "        ",
+    "        ",
+    "MM  MM  ",
+    "MM MM   ",
+    "MMMM    ",
+    "MM MM   ",
+    "MM  MM  ",
+    "        "
+  ],
+  "\u039A": 'K',
+  "\u03BB": [
+    "  MM    ",
+    "  MM    ",
+    "   MM   ",
+    "   MM   ",
+    "  MMMM  ",
+    " MM MM  ",
+    "MM   MM ",
+    "        " 
+  ],
+  "\u039B": [
+    "  MMM   ",
+    "  MMM   ",
+    " MM MM  ",
+    " MM MM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        " 
+  ],
+  "\u03BC": [
+    "        ",
+    "        ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMM  MM ",
+    "MM MM MM",
+    "MM      "
+  ],
+  "\u039C": 'M',
+  "\u03BD": 'v',
+  "\u039D": 'N',
+  "\u03BE": [
+    "MMMMMMM ",
+    "MM      ",
+    "MM      ",
+    " MMM    ",
+    "MM      ",
+    "MM      ",
+    " MMMMMM ",
+    "     MM "
+  ],
+  "\u039E": [
+    "MMMMMMM ",
+    "MM   MM ",
+    "        ",
+    "  MMM   ",
+    "        ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "        "
+  ],
+  "\u039F": 'O',
+  "\u03BF": 'o',
+  "\u03C0": [
+    "        ",
+    "        ",
+    "MMMMMMM ",
+    " MM MM  ",
+    " MM MM  ",
+    " MM MM  ",
+    " MM  MM ",
+    "        "
+  ],
+  "\u03A0": [
+    "MMMMMMM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "        "
+  ],
+  "\u03C1": [
+    "        ",
+    "        ",
+    " MMMMM  ",
+    "MM   MM ",
+    "MM   MM ",
+    "MMMMMM  ",
+    "MM      ",
+    "MM      "
+  ],
+  "\u03A1": 'P',
+  "\u03A3": [
+    "MMMMMMM ",
+    "MM   MM ",
+    " MM     ",
+    "  MM    ",
+    " MM     ",
+    "MM   MM ",
+    "MMMMMMM ",
+    "        "
+  ],
+  "\u03C4": [
+    "        ",
+    "        ",
+    "MMMMMM  ",
+    "  MM    ",
+    "  MM    ",
+    "  MM    ",
+    "   MM   ",
+    "        "
+  ],
+  "\u03A4": 'T',
+  "\u03C5": [
+    "        ",
+    "        ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    "MM   MM ",
+    " MMMMM  ",
+    "        "
+  ],
+  "\u03A5": 'Y',
+  "\u03C6": [
+    "        ",
+    "        ",
+    " M  MM  ",
+    "MM M MM ",
+    "MM M MM ",
+    " MMMMM  ",
+    "   M    ",
+    "   M    "
+  ],
+  "\u03A6": [
+    "   M    ",
+    " MMMMM  ",
+    "MM M MM ",
+    "MM M MM ",
+    "MM M MM ",
+    " MMMMM  ",
+    "   M    ",
+    "        "
+  ],
+  "\u03A7": 'X'
+};
+  const keys = Object.keys(GLYPHS_CLASCII);
+  let def = "const GLYPHS_CLASCII = {\n";
+  
+  for(let i = 0; i < keys.length; i++) {
+    let key = keys[i];
+    const val = GLYPHS_CLASCII[key];
+    //only use ASCII encoding in files for consistency
+    const keyCode = key.codePointAt(0);
+    let outKey = keyCode < 128 || key.length > 1 ? key : "\\u" + keyCode.toString(16).padStart(4, '0');
+    
+    if(typeof(val) == "string") {
+      def += `  '${outKey}': '${val}',\n`;
+    } else {
+      let converted = 0n;
+      
+      for(let y = 0n; y < 8n; y++) {
+        for(let x = 0n; x < 8n; x++) {
+          if(val[y][x] != ' ') {
+            converted |= (1n << x) << (y * 8n);
+          }
+        }
+      }
+      if(outKey == '\\') {
+        outKey = "\\\\";
+      } else if(key == '\'') {
+        outKey = "\\'";
+      }
+      def += `  '${outKey}': 0x${converted.toString(16).toUpperCase().padStart(16, '0')}n,\n`;
+    }
+  }
+  
+  def += "};";
+  console.log(def);
+  
+  
+  </script>
+</html>

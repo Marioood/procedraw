@@ -1,0 +1,11 @@
+<!-- made WITHOUT inkscape because it fucking sucks -->
+<!-- made in notepad++ and firefox -->
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<linearGradient id="light-grad" x1="0" x2="0" y1="0" y2="100%">
+			<stop offset="0" stop-color="#a0a0a0"/>
+			<stop offset="100%" stop-color="white"/>
+		</linearGradient>
+	</defs>
+  <path d="M31.5 16.5 L47.5 16.5 L47.5 32.5 L40.5 25.5 L23.5 42.5 23.5 47.5 L16.5 47.5 L16.5 40.5 L21.5 40.5 L38.5 23.5 Z" fill="url(#light-grad)" stroke="black" stroke-width="1"/>
+</svg>

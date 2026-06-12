@@ -359,39 +359,41 @@ function setupLayerManagementButtons(img, tether) {
     }
     layerSelectShown = !layerSelectShown;
   };
-  assert(Object.keys(img.layerClasses).length == 34, "layer-select-table expects 31 layers.");
+  assert(Object.keys(img.layerClasses).length == 37, "layer-select-table expects 37 layers.");
   document.getElementById("layer-select-table").style.display = "none";
   //TODO: maybe have this be decided based on some value in the layer?
   const regularNames = [
     [
-      "xorFractal",
       "solid",
       "border",
       "checkers",
       "gradient",
       "waveTable",
-      "mandelbrot",
-      "seedFractal"
+      "bitmapText",
+      "tileMap"
     ],
     [
       "noise",
       "liney",
       "worley",
-      "valueNoise"
-    ],
-    [
+      "valueNoise",
       "wandering",
       "blobs",
-      "bitmapText",
-      "tileMap"
+      "cellularBlobs"
+    ],
+    [
+      "xorFractal",
+      "mandelbrot",
+      "seedFractal",
+      "wolfram"
     ]
   ]
   const filterNames = [
     [
       "tweak",
-      //rotate
-      "shear",
       "scale",
+      //"rotate",
+      "shear",
       "tile",
       "repeat",
       "mask",
@@ -401,11 +403,11 @@ function setupLayerManagementButtons(img, tether) {
       "invert",
       "contrast",
       "HSV",
-      "blur",
       "sine",
       "functionPass"
     ],
     [
+      "blur",
       "emboss",
       "sharpen",
       "merge",

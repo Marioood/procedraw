@@ -54,6 +54,8 @@ class ProcedrawImage {
     tileMap: LayerTileMap,
     mandelbrot: LayerMandelbrot,
     seedFractal: LayerSeedFractal,
+    cellularBlobs: LayerCellularBlobs,
+    wolfram: LayerWolfram,
     //filters
     tweak: FilterTweak,
     tile: FilterTile,
@@ -72,7 +74,8 @@ class ProcedrawImage {
     vectorize: FilterVectorize,
     sunlight: FilterSunlight,
     shear: FilterShear,
-    functionPass: FilterFunctionPass
+    functionPass: FilterFunctionPass,
+    rotate: FilterRotate
   };
   //TODO: make this return image data?
   renderImage() {
@@ -100,19 +103,10 @@ class ProcedrawImage {
   }
   
   updateSize() {
-    //if the width or height is too big then i predict that everything will expode
-    if(this.w > 512) {
-      this.w = 512;
-      console.log("hey, quit doing that!");
-    }
-    if(this.h > 512) {
-      this.h = 512;
-      console.log("hey, quit doing that!");
-    }
-    this.data = new Array(this.w * this.h * 4);
+    this.data = new Float64Array(this.w * this.h * 4);
   }
 
-  plotPixel(color, x, y) {
+  plotPixel(rInput, gInput, bInput, aInput, x, y) {
     //each channel goes from 0...1
     //[red, blue, green, alpha]
 
@@ -124,16 +118,16 @@ class ProcedrawImage {
     const tint = this.layer.od.tint;
     const pos = (x + y * this.w) * 4;
     //this is for when the data layer gets written to but we still don't want the layer displayed (filters)
-    const alpha = this.layer.od.shown ? this.layer.od.alpha * color[3] : 0;
+    const alpha = this.layer.od.shown ? this.layer.od.alpha * aInput : 0;
     //color offsets
     const rOffs = pos;
     const gOffs = pos + 1;
     const bOffs = pos + 2;
     const aOffs = pos + 3;
     //layer color
-    const rl = color[0] * tint[0];
-    const gl = color[1] * tint[1];
-    const bl = color[2] * tint[2];
+    const rl = rInput * tint[0];
+    const gl = gInput * tint[1];
+    const bl = bInput * tint[2];
     //base color
     const rb = this.data[rOffs];
     const gb = this.data[gOffs];
@@ -305,7 +299,7 @@ class ProcedrawImage {
       //allows for a layer being filtered to be hidden while a filter is using it, which is done very often
       
       //add alpha together for more accurate layer data (albeit still inaccurate)
-      this.layer.data[aOffs] = Math.min(this.layer.data[aOffs] + color[3], 1);
+      this.layer.data[aOffs] = Math.min(this.layer.data[aOffs] + aInput, 1);
     }
   }
   

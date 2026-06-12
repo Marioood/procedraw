@@ -62,7 +62,7 @@ class FilterTweak extends Filter {
         const g = data[idx * 4 + 1];
         const b = data[idx * 4 + 2];
         const a = data[idx * 4 + 3];
-        img.plotPixel([r, g, b, a], x, y);
+        img.plotPixel(r, g, b, a, x, y);
       }
     }
   }
@@ -100,7 +100,7 @@ class FilterTile extends Filter {
     xPivot: {
       type: "length",
       subtype: "width",
-      absoluteMin: -1,
+      scaledMin: -1,
       scaledMax: 1,
       step: 1
     },
@@ -147,7 +147,7 @@ class FilterTile extends Filter {
         const g = data[idx * 4 + 1];
         const b = data[idx * 4 + 2];
         const a = data[idx * 4 + 3];
-        img.plotPixel([r, g, b, a], x - xOffs + xShift * Math.floor(y / height), y - yOffs + yShift * Math.floor(x / width));
+        img.plotPixel(r, g, b, a, x + xShift * Math.floor(y / height), y + yShift * Math.floor(x / width));
       }
     }
   }
@@ -202,7 +202,7 @@ class FilterInvert extends Filter {
         const g = Math.abs(o.greenWeight - data[idx * 4 + 1]);
         const b = Math.abs(o.blueWeight - data[idx * 4 + 2]);
         const a = Math.abs(o.alphaWeight - data[idx * 4 + 3]);
-        img.plotPixel([r, g, b, a], x, y);
+        img.plotPixel(r, g, b, a, x, y);
       }
     }
   }
@@ -232,21 +232,7 @@ class FilterScale extends Filter {
       step: 0.05,
       max: 16
     },
-    edgeMode: {
-      type: "keyvalues",
-      keys: [
-        "wrap",
-        "clamp",
-        "void",
-        "reflect"
-      ],
-      values: [
-        O_WRAP,
-        O_CLAMP,
-        O_VOID,
-        O_REFLECT
-      ]
-    },
+    edgeMode: LIMITS_EDGE,
     interpMode: LIMITS_INTERP
   };
   
@@ -272,7 +258,8 @@ class FilterScale extends Filter {
             const g = data[idx * 4 + 1];
             const b = data[idx * 4 + 2];
             const a = data[idx * 4 + 3];*/
-            img.plotPixel(img.getPixelFromData(xIdx, yIdx, data, o.interpMode), x, y);
+            const col = img.getPixelFromData(xIdx, yIdx, data, o.interpMode);
+            img.plotPixel(col[0], col[1], col[2], col[3], x, y);
           }
         }
         break;
@@ -281,7 +268,8 @@ class FilterScale extends Filter {
           for(let x = 0; x < img.w; x++) {
             const xIdx = Math.max(Math.min(Math.floor(x / xScale), img.w - 1), 0);
             const yIdx = Math.max(Math.min(Math.floor(y / yScale), img.h - 1), 0);
-            img.plotPixel(img.getPixelFromData(xIdx, yIdx, data, o.interpMode), x, y);
+            const col = img.getPixelFromData(xIdx, yIdx, data, o.interpMode);
+            img.plotPixel(col[0], col[1], col[2], col[3], x, y);
           }
         }
         break;
@@ -290,7 +278,8 @@ class FilterScale extends Filter {
           for(let x = 0; x < Math.min(img.w * xScale, img.w); x++) {
             const xIdx = Math.floor(x / xScale);
             const yIdx = Math.floor(y / yScale);
-            img.plotPixel(img.getPixelFromData(xIdx, yIdx, data, o.interpMode), x, y);
+            const col = img.getPixelFromData(xIdx, yIdx, data, o.interpMode);
+            img.plotPixel(col[0], col[1], col[2], col[3], x, y);
           }
         }
         break;
@@ -313,7 +302,8 @@ class FilterScale extends Filter {
             }
             const xIdx = Math.ceil(xNorm * (img.w - 1));
             const yIdx = Math.ceil(yNorm * (img.h - 1));
-            img.plotPixel(img.getPixelFromData(xIdx, yIdx, data, o.interpMode), x, y);
+            const col = img.getPixelFromData(xIdx, yIdx, data, o.interpMode);
+            img.plotPixel(col[0], col[1], col[2], col[3], x, y);
           }
         }
         break;
@@ -348,7 +338,7 @@ class FilterSine extends Filter {
         const g = Math.sin(data[idx * 4 + 1] * Math.PI * o.turns) / 2 + 0.5;
         const b = Math.sin(data[idx * 4 + 2] * Math.PI * o.turns) / 2 + 0.5;
         const a = data[idx * 4 + 3];
-        img.plotPixel([r, g, b, a], x, y);
+        img.plotPixel(r, g, b, a, x, y);
       }
     }
   }
@@ -405,18 +395,20 @@ class FilterMerge extends Filter {
         const gb = bottomData[gOffs];
         const bb = bottomData[bOffs];
         //color that will be printed
-        let r, g, b;
+        let r, g, b, a;
         
         switch(o.mergeBlend) {
           case O_BLEND_ADD:
-            r = (rl * alpha) + rb;
-            g = (gl * alpha) + gb;
-            b = (bl * alpha) + bb;
+            r = rl * alpha + rb;
+            g = gl * alpha + gb;
+            b = bl * alpha + bb;
+            a = Math.min(bottomData[aOffs] + alpha, 1);
             break;
           case O_BLEND_MULTIPLY:
             r = (rl * alpha + 1 - alpha) * rb;
             g = (gl * alpha + 1 - alpha) * gb;
             b = (bl * alpha + 1 - alpha) * bb;
+            a = lerp(bottomData[aOffs] * alpha, Math.min(bottomData[aOffs] + alpha, 1), bottomData[aOffs]);
             break;
           case O_BLEND_PLAIN:
             //lerp
@@ -424,11 +416,13 @@ class FilterMerge extends Filter {
             r = rb + alpha * (rl - rb);
             g = gb + alpha * (gl - gb);
             b = bb + alpha * (bl - bb);
+            a = Math.min(bottomData[aOffs] + alpha, 1);
             break;
           case O_BLEND_SCREEN:
             r = 1 - (1 - rl * alpha) * (1 - rb);
             g = 1 - (1 - gl * alpha) * (1 - gb);
             b = 1 - (1 - bl * alpha) * (1 - bb);
+            a = lerp(bottomData[aOffs] * alpha, Math.min(bottomData[aOffs] + alpha, 1), bottomData[aOffs]);
             break;
           case O_BLEND_OVERLAY:
             if(rl < 0.5) {
@@ -446,22 +440,35 @@ class FilterMerge extends Filter {
             } else {
               b = 1 - (1 - (bl - 0.5) * 2 * alpha) * (1 - bb);
             }
+            a = lerp(bottomData[aOffs] * alpha, Math.min(bottomData[aOffs] + alpha, 1), bottomData[aOffs]);
             break;
           case O_BLEND_SUBTRACT:
-              r = rb - (rl * alpha);
-              g = gb - (gl * alpha);
-              b = bb - (bl * alpha);
+            r = rb - (rl * alpha);
+            g = gb - (gl * alpha);
+            b = bb - (bl * alpha);
+            a = Math.min(bottomData[aOffs] + alpha, 1);
             break;
           case O_BLEND_CHANNEL_DISSOLVE:
-              if(alpha > Math.random()) r = rl;
-              if(alpha > Math.random()) g = gl;
-              if(alpha > Math.random()) b = bl;
+            if(alpha > Math.random()) {
+              r = rl;
+              a += 1/3;
+            }
+            if(alpha > Math.random()) {
+              g = gl;
+              a += 1/3;
+            }
+            if(alpha > Math.random()) {
+              b = bl;
+              a += 1/3;
+            }
+            a = Math.min(a, 1);
             break;
           case O_BLEND_DISSOLVE:
             if(alpha > Math.random()) {
               r = rl;
               g = gl;
               b = bl;
+              a = 1;
             }
             break;
           case O_BLEND_SHIFT_OVERLAY:
@@ -480,6 +487,7 @@ class FilterMerge extends Filter {
             } else {
               b = (bl - 0.5) * 2 * alpha + bb;
             }
+            a = lerp(bottomData[aOffs] * alpha, Math.min(bottomData[aOffs] + alpha, 1), bottomData[aOffs]);
             break;
           case O_BLEND_OVERBLOWN_TEST:
             //the layer color is displayed as magenta if it's is overblown
@@ -516,12 +524,14 @@ class FilterMerge extends Filter {
             } else {
               b = bb + alpha * (bl - bb);
             }
+            a = Math.min(bottomData[aOffs] + alpha, 1);
             break;
           case O_BLEND_BAYER:
             if(alpha > BLEND_TABLE_BAYER[x % 4 + y % 4 * 4]) {
               r = rl;
               g = gl;
               b = bl;
+              a = 1;
             }
             break;
           case O_BLEND_HALFTONE:
@@ -529,12 +539,14 @@ class FilterMerge extends Filter {
               r = rl;
               g = gl;
               b = bl;
+              a = 1;
             }
             break;
           case O_BLEND_XOR:
             r = ((rl * 255 * alpha) ^ (rb * 255)) / 255;
             g = ((gl * 255 * alpha) ^ (gb * 255)) / 255;
             b = ((bl * 255 * alpha) ^ (bb * 255)) / 255;
+            a = lerp(bottomData[aOffs] * alpha, Math.min(bottomData[aOffs] + alpha, 1), bottomData[aOffs]);
             break;
           case O_BLEND_HSV_HUE: {
             let hsvLayer = RGB2HSV([rl, gl, bl]);
@@ -544,6 +556,7 @@ class FilterMerge extends Filter {
             r = rgbMerged[0];
             g = rgbMerged[1];
             b = rgbMerged[2];
+            a = lerp(bottomData[aOffs] * alpha, Math.min(bottomData[aOffs] + alpha, 1), bottomData[aOffs]);
             break;
           }
           case O_BLEND_HSV_SATTY: {
@@ -555,14 +568,13 @@ class FilterMerge extends Filter {
             r = rgbMerged[0];
             g = rgbMerged[1];
             b = rgbMerged[2];
+            a = lerp(bottomData[aOffs] * alpha, Math.min(bottomData[aOffs] + alpha, 1), bottomData[aOffs]);
             break;
           }
           default:
-            throw new ProcedrawError(`unknown blend mode ${o.mergeBlend}`);
+            throw new ProcedrawError(`unknown blend mode ${blend}`);
         }
-        
-        const a = Math.min(topData[aOffs] + bottomData[aOffs], 1);
-        img.plotPixel([r, g, b, a], x, y);
+        img.plotPixel(r, g, b, a, x, y);
       }
     }
   }
@@ -633,7 +645,7 @@ class FilterRepeat extends Filter {
           const r = data[idx * 4];
           const g = data[idx * 4 + 1];
           const b = data[idx * 4 + 2];
-          img.plotPixel([r, g, b, a * alphaMult], Math.round(x + xOffs), Math.round(y + yOffs));
+          img.plotPixel(r, g, b, a * alphaMult, Math.round(x + xOffs), Math.round(y + yOffs));
         }
       }
       xOffs += o.xOffs;
@@ -746,34 +758,34 @@ class FilterMask extends Filter {
         switch(o.mode) {
           case O_MASK_GREATER_THAN:                
             if(compareColor > compareValue) {
-              img.plotPixel([rb, gb, bb, ab], x, y);
+              img.plotPixel(rb, gb, bb, ab, x, y);
             }
             break;
           case O_MASK_LESS_THAN:                
             if(compareColor < compareValue) {
-              img.plotPixel([rb, gb, bb, ab], x, y);
+              img.plotPixel(rb, gb, bb, ab, x, y);
             }
             break;
           case O_MASK_EQUAL_TO:                
             if(compareColor <= compareValue + error
             && compareColor >= compareValue - error) {
-              img.plotPixel([rb, gb, bb, ab], x, y);
+              img.plotPixel(rb, gb, bb, ab, x, y);
             }
             break;
           case O_MASK_NOT_EQUAL_TO:               
             if(compareColor > compareValue + error
             || compareColor < compareValue - error) {
-              img.plotPixel([rb, gb, bb, ab], x, y);
+              img.plotPixel(rb, gb, bb, ab, x, y);
             }
             break;
           case O_MASK_GREATER_THAN_OR_EQUAL_TO:                
             if(compareColor >= compareValue) {
-              img.plotPixel([rb, gb, bb, ab], x, y);
+              img.plotPixel(rb, gb, bb, ab, x, y);
             }
             break;
           case O_MASK_LESS_THAN_OR_EQUAL_TO:                
             if(compareColor <= compareValue) {
-              img.plotPixel([rb, gb, bb, ab], x, y);
+              img.plotPixel(rb, gb, bb, ab, x, y);
             }
             break;
         }
@@ -839,12 +851,12 @@ class FilterEmboss extends Filter {
         
         if(o.onlyUseAlpha) {
           const a = ((ab + 0.5 * (1 - al - ab)) - 0.5) * o.strength + 0.5;
-          img.plotPixel([clamp(a, 0, 1), clamp(a, 0, 1), clamp(a, 0, 1), 1], x, y);
+          img.plotPixel(clamp(a, 0, 1), clamp(a, 0, 1), clamp(a, 0, 1), 1, x, y);
         } else {
           const r = ((rb + 0.5 * (1 - rl - rb)) - 0.5) * o.strength + 0.5;
           const g = ((gb + 0.5 * (1 - gl - gb)) - 0.5) * o.strength + 0.5;
           const b = ((bb + 0.5 * (1 - bl - bb)) - 0.5) * o.strength + 0.5;
-          img.plotPixel([clamp(r, 0, 1), clamp(g, 0, 1), clamp(b, 0, 1), 1], x, y);
+          img.plotPixel(clamp(r, 0, 1), clamp(g, 0, 1), clamp(b, 0, 1), 1, x, y);
         }
       }
     }
@@ -910,7 +922,7 @@ class FilterContrast extends Filter {
           const g = (data[idx * 4 + 1] - min) / (max - min);
           const b = (data[idx * 4 + 2] - min) / (max - min);
           const a = data[idx * 4 + 3];
-          img.plotPixel([r, g, b, a], x, y);
+          img.plotPixel(r, g, b, a, x, y);
         }
       }
     } else {
@@ -922,7 +934,7 @@ class FilterContrast extends Filter {
           const g = clamp((clamp(data[idx * 4 + 1] + o.brightness, 0, 1) - 0.5) * o.strength + 0.5, 0, 1);
           const b = clamp((clamp(data[idx * 4 + 2] + o.brightness, 0, 1) - 0.5) * o.strength + 0.5, 0, 1);
           const a = data[idx * 4 + 3];
-          img.plotPixel([r, g, b, a], x, y);
+          img.plotPixel(r, g, b, a, x, y);
         }
       }
       
@@ -1018,7 +1030,7 @@ class FilterBlur extends Filter {
         g /= totalWeight;
         b /= totalWeight;
         a /= totalWeight;
-        img.plotPixel([r, g, b, a], x, y);
+        img.plotPixel(r, g, b, a, x, y);
       }
     }
   }
@@ -1070,7 +1082,7 @@ class FilterHSV extends Filter {
         hsv[2] = clamp(hsv[2] * o.value, 0, 100);
         let rgb = HSV2RGB(hsv);
         
-        img.plotPixel([rgb[0], rgb[1], rgb[2], a], x, y);
+        img.plotPixel(rgb[0], rgb[1], rgb[2], a, x, y);
       }
     }
   }
@@ -1109,7 +1121,7 @@ class FilterSharpen extends Filter {
         sharpness /= 8;
         sharpness += 0.5;
         
-        img.plotPixel([sharpness, sharpness, sharpness, 1], x, y);
+        img.plotPixel(sharpness, sharpness, sharpness, 1, x, y);
       }
     }
   }
@@ -1164,7 +1176,7 @@ class FilterOffset extends Filter {
         //const gb = baseData[offsetIdx * 4 + 1];
         //const bb = baseData[offsetIdx * 4 + 2];
         //const ab = baseData[offsetIdx * 4 + 3];
-        img.plotPixel(col, x, y);
+        img.plotPixel(col[0], col[1], col[2], col[3], x, y);
       }
     }
   }
@@ -1175,6 +1187,27 @@ class FilterVectorize extends Filter {
   
   static description = "A filter that generates a normal map of a base layer.";
   
+  options = {
+    dirOffs: 45,
+    strength: 1,
+    useDirectly: false
+  };
+  
+  types = {
+    dirOffs: {
+      type: "direction"
+    },
+    strength: {
+      type: "number",
+      min: 0,
+      max: 16,
+      step: 0.05
+    },
+    useDirectly: {
+      type: "boolean"
+    }
+  };
+  
   generate(img, o) {
     const data = img.layerDataFromKey(this.od.base);
     
@@ -1182,9 +1215,26 @@ class FilterVectorize extends Filter {
     //-x +- +x
     //   -y
     
-    //TODO: strength
-    //TODO: invert channels blahhhh
-    //TODO: which channels are which axis
+    const dirOffs = o.dirOffs * DEG2RAD * (o.useDirectly ? 2 : 1);
+    
+    if(o.useDirectly) {
+      for(let y = 0; y < img.h; y++) {
+        for(let x = 0; x < img.w; x++) {
+          const idx = x + y * img.w;
+          
+          const r = data[idx * 4];
+          const g = data[idx * 4 + 1];
+          const b = data[idx * 4 + 2];
+          const brightness = ((r + g + b) / 3) * Math.PI * 2 + dirOffs;
+          const xMag = clamp(Math.cos(brightness * o.strength) / 2 + 0.5);
+          const yMag = clamp(Math.sin(brightness * o.strength) / 2 + 0.5);
+          
+          img.plotPixel(xMag, yMag, 0, 1, x, y);
+        }
+      }
+      return;
+    }
+    
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
@@ -1222,11 +1272,13 @@ class FilterVectorize extends Filter {
         }
         //normalize
         xMag /= 6;
+        xMag *= Math.cos(dirOffs) * 1.4142135 * o.strength;
         xMag += 0.5;
         yMag /= 6;
+        yMag *= Math.sin(dirOffs) * 1.4142135 * o.strength;
         yMag += 0.5;
         
-        img.plotPixel([xMag, yMag, 0, 1], x, y);
+        img.plotPixel(clamp(xMag), clamp(yMag), 0, 1, x, y);
       }
     }
   }
@@ -1275,8 +1327,8 @@ class FilterSunlight extends Filter {
         const yVec = g * 2 - 1;
         //TDOD: this dir conversion stuff should be done earlier to save on time
         const brightness = (xVec * Math.cos(dir) + yVec * Math.sin(dir)) / 2 + 0.5;
-        
-        img.plotPixel(colorMix(o.lightColor, o.ambientColor, brightness), x, y);
+        const col = colorMix(o.lightColor, o.ambientColor, brightness);
+        img.plotPixel(col[0], col[1], col[2], col[3], x, y);
       }
     }
   }
@@ -1321,8 +1373,8 @@ class FilterShear extends Filter {
       for(let x = 0; x < img.w; x++) {
         const xIdx = mod(x + y * xMagnitude, img.w);
         const yIdx = mod(y + x * yMagnitude, img.h);
-        
-        img.plotPixel(img.getPixelFromData(xIdx, yIdx, data, o.interpMode), x, y);
+        const col = img.getPixelFromData(xIdx, yIdx, data, o.interpMode);
+        img.plotPixel(col[0], col[1], col[2], col[3], x, y);
       }
     }
   }
@@ -1405,7 +1457,155 @@ class FilterFunctionPass extends Filter {
             break;
         }
         
-        img.plotPixel([r, g, b, a], x, y);
+        img.plotPixel(r, g, b, a, x, y);
+      }
+    }
+  }
+}
+
+class FilterRaytrace extends Filter {
+  name = "raytrace";
+  
+  static description = "A raytraced light. ADD MORE.";
+  
+  options = {
+    lightX: new UnitLength(50, UNIT_PERCENTAGE),
+    lightY: new UnitLength(50, UNIT_PERCENTAGE),
+    //lightZ: 192,
+    intensity: new UnitLength(100, UNIT_PERCENTAGE),
+    useFalloff: true,
+    coverCrap: true
+  };
+  
+  types = {
+    lightX: {
+      type: "length",
+      subtype: "width",
+      absoluteMin: 1,
+      scaledMax: 1,
+      step: 1
+    },
+    lightY: {
+      type: "length",
+      subtype: "height",
+      absoluteMin: 1,
+      scaledMax: 1,
+      step: 1
+    },
+    /*lightZ: {
+      type: "number",
+      min: 0,
+      max: 255,
+      step: 1
+    },*/
+    intensity: {
+      type: "length",
+      subtype: "longest",
+      absoluteMin: 1,
+      scaledMax: 1,
+      step: 1
+    },
+    useFalloff: {
+      type: "boolean"
+    },
+    coverCrap: {
+      type: "boolean"
+    }
+  };
+  
+  generate(img, o) {
+    const data = img.layerDataFromKey(this.od.base);
+    const lightX = UnitLength.getLength(o.lightX, img.w);
+    const lightY = UnitLength.getLength(o.lightY, img.h);
+    const intensity = UnitLength.getLength(o.intensity, Math.max(img.w, img.h));
+    //should be from 0 to 255?
+    //const MAX_HEIGHT = 256;
+    const lightSampleHeight = data[(Math.floor(lightX) + Math.floor(lightY) * img.w) * 4];
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        const startSampleHeight = o.coverCrap
+          ? lightSampleHeight
+          : data[(x + y * img.w) * 4]
+
+        const xSqr = lightX - x;
+        const ySqr = lightY - y;
+        const dist2d = Math.sqrt(xSqr * xSqr + ySqr * ySqr);
+        const xDir = xSqr / dist2d;
+        const yDir = ySqr / dist2d;
+        let col = o.useFalloff ? Math.max(1 - dist2d / intensity * 2, 0) : 1;
+        
+        for(let i = 0; i < dist2d; i++) {
+          const xi = Math.round(x + i * xDir);
+          const yi = Math.round(y + i * yDir);
+          const curSampleHeight = data[(xi + yi * img.w) * 4];
+          
+          if(curSampleHeight > startSampleHeight) {
+            col = 0;
+            break;
+          }
+        }
+        img.plotPixel(col, col, col, 1, x, y);
+      }
+    }
+  }
+}
+
+class FilterRotate extends Filter {
+  name = "rotate";
+  
+  static description = "A filter that rotates a base layer.";
+  
+  options = {
+    angle: 90,
+    pivotX: new UnitLength(50, UNIT_PERCENTAGE),
+    pivotY: new UnitLength(50, UNIT_PERCENTAGE),
+    edgeMode: O_WRAP,
+    interpMode: O_INTERP_NEAREST
+  };
+  
+  types = {
+    angle: {
+      type: "direction"
+    },
+    pivotX: {
+      type: "length",
+      subtype: "width",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1
+    },
+    pivotY: {
+      type: "length",
+      subtype: "height",
+      scaledMin: 0,
+      scaledMax: 1,
+      step: 1
+    },
+    edgeMode: LIMITS_EDGE,
+    interpMode: LIMITS_INTERP
+  };
+  
+  generate(img, o) {
+    const baseData = img.layerDataFromKey(this.od.base);
+    
+    const pivotX = UnitLength.getLength(o.pivotX, img.w);
+    const pivotY = UnitLength.getLength(o.pivotY, img.h);
+    const angleOffs = o.angle % 360 * Math.PI / 180;
+    
+    const xOffs = Math.cos(angleOffs);
+    const yOffs = Math.sin(angleOffs);
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        //https://stackoverflow.com/questions/695080/how-do-i-rotate-an-image
+        const xNew = x - pivotX;
+        const yNew = y - pivotY;
+        const xRot = Math.round(xOffs * xNew - yOffs * yNew);
+        const yRot = Math.round(yOffs * xNew + xOffs * yNew);
+        const col = img.getPixelFromData(mod(xRot, img.w), mod(yRot, img.h), baseData, o.interpMode);
+        //const col = img.getPixelFromData(clamp(xRot + pivotX, 0, img.w - 1), clamp(yRot + pivotY, 0, img.h - 1), baseData, o.interpMode);
+        img.plotPixel(col[0], col[1], col[2], col[3], x, y);
       }
     }
   }
