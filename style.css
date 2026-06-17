@@ -615,3 +615,12 @@ button {
   border-bottom-right-radius: 24px;
   border-bottom-left-radius: 24px;
 }
+.error-screen {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  z-index: 99999;
+}

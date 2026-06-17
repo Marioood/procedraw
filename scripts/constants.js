@@ -9,10 +9,10 @@
 
 
 //////// PROGRAM INFO ////////
-PD_VERSION = "VOLATILE 0.9.1"; //scarily close to 1.0
+const PD_VERSION = "VOLATILE 0.9.1"; //scarily close to 1.0
 //this gets changed when the SAVE FORMAT is changed, not when layer paramters are changed
 //do not change until Procedraw exits the VOLATILE stage of development  
-PD_SAVE_FORMAT = 0;
+const PD_SAVE_FORMAT = 0;
   
 //////// OPTION ENUMS ////////
 
@@ -257,7 +257,6 @@ const LIMITS_EDGE = {
 //////// FONTS ////////
 
 //8x8 monospace atari and commodore 64 inspired font
-//space is not drawn, any other character is drawn. 'M' is used because it is the closest ascii char to a square
 //each member holds the data for a character
 //if a member stores a bigint, then that is the raw data for the glyph. a 1 bit means white, 0 means transparent
 //if a member stores a string, it acts as an alias to another glyph, which just points to another glyph's data

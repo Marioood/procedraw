@@ -6,242 +6,211 @@
 
 "use strict";
 
-class Serialization {
-  save(img) {
-    let saved = {};
-    saved.img = {
-      bg: RGBA2Hex(img.bg),
-      w: img.w,
-      h: img.h,
-      name: img.name,
-      author: img.author,
-      version: PD_VERSION,
-      format: PD_SAVE_FORMAT
-    };
-    saved.layers = [];
+function serialize(img) {
+  let saved = {};
+  saved.img = {
+    bg: RGBA2Hex(img.bg),
+    w: img.w,
+    h: img.h,
+    name: img.name,
+    author: img.author,
+    version: PD_VERSION,
+    format: PD_SAVE_FORMAT
+  };
+  saved.layers = [];
+  
+  for(let i = 0; i < img.layers.length; i++) {
+    let layer = img.layers[i];
+    let newLayer = {};
+    //factory fresh version of the layer, for parameter stripping
+    let refLayer = new img.layerClasses[layer.name];
     
-    for(let i = 0; i < img.layers.length; i++) {
-      let layer = img.layers[i];
-      let newLayer = {};
-      //factory fresh version of the layer, for parameter stripping
-      let refLayer = new img.layerClasses[layer.name];
-      
-      function copyKeys(oldOptions, types, refOptions) {
-        let newOptions = {};
-        const optionKeys = Object.keys(oldOptions);
-        //replace some options so there's less filler in the save
-        for(let o = 0; o < optionKeys.length; o++) {
-          const key = optionKeys[o];
-          let val = oldOptions[key];
-          let refVal = refOptions[key];
-          const type = types[key].type;
-          let refIsEqual = val == refVal;
+    function copyKeys(oldOptions, types, refOptions) {
+      let newOptions = {};
+      const optionKeys = Object.keys(oldOptions);
+      //replace some options so there's less filler in the save
+      for(let o = 0; o < optionKeys.length; o++) {
+        const key = optionKeys[o];
+        let val = oldOptions[key];
+        let refVal = refOptions[key];
+        const type = types[key].type;
+        let refIsEqual = val == refVal;
+        
+        if(type == "color") {
+          //colors are arrays during runtime - but theyre smaller as hex strings
+          val = RGBA2Hex(val);
           
-          if(type == "color") {
-            //colors are arrays during runtime - but theyre smaller as hex strings
-            val = RGBA2Hex(val);
-            
-          } else if(type == "layer") {
-            //save layer index, because the keys get lost after saving
-            val = img.layerKeys[val];
-            
-          } else if(type == "boolean") {
-            //1 and 0 are slightly smaller than true and false...
-            val = (val) ? 1 : 0;
-            
-          } else if(type == "length") {
-            refIsEqual = val.value == refVal.value && val.unit == refVal.unit;
-            //arrays are smaller than objects
-            val = [val.value, val.unit];
-            
-          } else if(type == "glyph" || type == "binaryglyph") {
-            //even if the height and width are different, there is a (basically zero, but not impossible) chance that both glyph datas will be equal
-            refIsEqual = arrayIsEqualShallow(val.data, refVal.data) && val.width == refVal.width && val.height == refVal.height;
-            
-            val = val.serialize();
-          }
-          if(refIsEqual) continue;
-          newOptions[key] = val;
+        } else if(type == "layer") {
+          //save layer index, because the keys get lost after saving
+          val = img.layerKeys[val];
+          
+        } else if(type == "boolean") {
+          //1 and 0 are slightly smaller than true and false...
+          val = (val) ? 1 : 0;
+          
+        } else if(type == "length") {
+          refIsEqual = val.value == refVal.value && val.unit == refVal.unit;
+          //arrays are smaller than objects
+          val = [val.value, val.unit];
+          
+        } else if(type == "glyph" || type == "binaryglyph") {
+          //even if the height and width are different, there is a (basically zero, but not impossible) chance that both glyph datas will be equal
+          refIsEqual = arrayIsEqualShallow(val.data, refVal.data) && val.width == refVal.width && val.height == refVal.height;
+          
+          val = val.serialize();
         }
-        return newOptions;
+        if(refIsEqual) continue;
+        newOptions[key] = val;
       }
-      const newOptionsDefault = copyKeys(layer.od, layer.typesDefault, refLayer.od);
-      const newOptions = copyKeys(layer.options, layer.types, refLayer.options);
-      
-      newLayer["name"] = layer.name;
-      //dont bother saving the name if its unchanged
-      if(layer.name != layer.displayName) {
-        newLayer["displayName"] = layer.displayName;
-      }
-      //dont save the parameter if its just the default value
-      if(Object.keys(newOptionsDefault).length > 0) newLayer["od"] = newOptionsDefault;
-      if(Object.keys(newOptions).length > 0) newLayer["options"] = newOptions;
-      saved.layers.push(newLayer);
+      return newOptions;
     }
+    const newOptionsDefault = copyKeys(layer.od, layer.typesDefault, refLayer.od);
+    const newOptions = copyKeys(layer.options, layer.types, refLayer.options);
     
-    return JSON.stringify(saved);
+    newLayer["name"] = layer.name;
+    //dont bother saving the name if its unchanged
+    if(layer.name != layer.displayName) {
+      newLayer["displayName"] = layer.displayName;
+    }
+    //dont save the parameter if its just the default value
+    if(Object.keys(newOptionsDefault).length > 0) newLayer["od"] = newOptionsDefault;
+    if(Object.keys(newOptions).length > 0) newLayer["options"] = newOptions;
+    saved.layers.push(newLayer);
   }
   
-  load(img, savedText) {
-    let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
+  return JSON.stringify(saved);
+}
+
+function deserialize(img, savedText) {
+  let saved = typeof savedText == 'string' ? JSON.parse(savedText) : savedText;
+  
+  img.bg = hex2RGB('#' + saved.img.bg);
+  img.w = saved.img.w;
+  img.h = saved.img.h;
+  img.name = saved.img.name;
+  img.author = saved.img.author;
+  if(saved.img.format == undefined) {
+    alert(`This image was saved in an ancient version of Procedraw (before VOLATILE 0.5), it will not work without repair.\n\nThe image is from version ${saved.img.version}.\n\n...Sorry!`);
+  } else if(saved.img.format < PD_SAVE_FORMAT) {
+    alert(`This image was saved in an earlier version of Procedraw.\n\nThe image uses format ${saved.img.format}, while the current save format is ${PD_SAVE_FORMAT}.\n\nThe image is also from version ${saved.img.version}\n\ntherefore, it may not load in properly!`);
+  } else if(saved.img.format > PD_SAVE_FORMAT) {
+    alert(`Either you are from the future or are using an old version of Procedraw.\n\nthe image uses format ${saved.img.format}, while this version's save format is ${PD_SAVE_FORMAT}.\n\nThe image is also from version ${saved.img.version}\n\nTherefore, it may not load in properly!`);
+  }
+  //blank layers so we arent loading images on top of eachother
+  img.layers = [];
+  img.layerKeys = [];
+  img.layerKeysFreed = [];
+
+  for(let i = 0; i < saved.layers.length; i++) {
+    const fauxLayer = saved.layers[i];
+    let newLayer = new img.layerClasses[fauxLayer.name];
+    //add back display names, for stripped out layer names
+    if(fauxLayer.displayName == undefined) {
+      newLayer.displayName = fauxLayer.name;
+    } else {
+      newLayer.displayName = fauxLayer.displayName;
+    }
     
-    img.bg = hex2RGB('#' + saved.img.bg);
-    img.w = saved.img.w;
-    img.h = saved.img.h;
-    img.name = saved.img.name;
-    img.author = saved.img.author;
-    if(saved.img.format == undefined) {
-      alert(`this image was saved in an ancient version of procedraw (before VOLATILE 0.5), it will not work without repair\n\nthe image is from version ${saved.img.version}\n\n...sorry!`);
-    } else if(saved.img.format < PD_SAVE_FORMAT) {
-      alert(`this image was saved in an earlier version of procedraw\n\nthe image uses format ${saved.img.format}, while the current save format is ${this.format}\n\nthe image is also from version ${saved.img.version}\n\ntherefore, it may not load in properly (!)`);
-    } else if(saved.img.format > PD_SAVE_FORMAT) {
-      alert(`either you are from the future or are using an old version of procedraw\n\nthe image uses format ${saved.img.format}, while this version's save format is ${this.format}\n\nthe image is also from version ${saved.img.version}\n\ntherefore, it may not load in properly (!)`);
-    }
-    //blank layers so we arent loading images on top of eachother
-    img.layers = [];
-    img.layerKeys = [];
-    img.layerKeysFreed = [];
-
-    for(let i = 0; i < saved.layers.length; i++) {
-      const fauxLayer = saved.layers[i];
-      let newLayer = new img.layerClasses[fauxLayer.name];
-      //add back display names, for stripped out layer names
-      if(fauxLayer.displayName == undefined) {
-        newLayer.displayName = fauxLayer.name;
-      } else {
-        newLayer.displayName = fauxLayer.displayName;
-      }
+    //increment layer link counts--layer rendering shits itself if it isn't right!!
+    //just using the layer index should be fine, since layer indices and keys are the same at this point
+    if(newLayer.od.base != KEY_CANVAS) img.layers[newLayer.od.base].linkCount++;
+    
+    //TODO: these comments are fucking incomprehensible, even to the person who wrote them
+    function loadOptions(fauxOptions, types) {
+      //clean up colors!
+      let newOptions = {};
+      const optionKeys = Object.keys(fauxOptions);
       
-      //increment layer link counts--layer rendering shits itself if it isn't right!!
-      //just using the layer index should be fine, since layer indices and keys are the same at this point
-      if(newLayer.od.base != KEY_CANVAS) img.layers[newLayer.od.base].linkCount++;
-      
-      //TODO: these comments are fucking incomprehensible, even to the person who wrote them
-      function loadOptions(fauxOptions, types) {
-        //clean up colors!
-        let newOptions = {};
-        const optionKeys = Object.keys(fauxOptions);
-        
-        for(let o = 0; o < optionKeys.length; o++) {
-          const key = optionKeys[o];
-          const val = fauxOptions[key];
-          const type = types[key].type;
-          if(type == "color") {
-            if(typeof val == "object") {
-              //if the value is from the default layer
-              newOptions[key] = val;
-            } else {
-              newOptions[key] = hex2RGB('#' + val);
-            }
-            
-          } else if(type == "layer") {
+      for(let o = 0; o < optionKeys.length; o++) {
+        const key = optionKeys[o];
+        const val = fauxOptions[key];
+        const type = types[key].type;
+        if(type == "color") {
+          if(typeof val == "object") {
+            //if the value is from the default layer
             newOptions[key] = val;
-            //skip link count increment if the layer has no base
-            if(val == KEY_CANVAS) continue;
-            //prevent filters from shitting themselves
-            //because layer data only gets defined when the link count is > 0
-            img.layers[img.layerKeys[val]].linkCount++;
-            
-          } else if(type == "boolean") {
-            //it does not matter if the value is from the default layer (it would be a boolean instead of a number), because true == 1! hooray for javascript!!!
-            newOptions[key] = val == 1;
-            
-          } else if(type == "length") {
-            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
-            if(Array.isArray(val)) {
-              //[value, units]
-              newOptions[key] = new UnitLength(val[0], val[1]);
-              
-            } else if(typeof(val) == "object") {
-              //if the value is from the default layer
-              newOptions[key] = val;
-            } else {
-              //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
-              newOptions[key] = val;
-              throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
-            }
-          } else if(type == "glyph") {
-            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
-            if(Array.isArray(val)) {
-              //[width, height, colorFormat, data]
-              
-              newOptions[key] = Glyph.deserialize(val);
-              
-            } else if(typeof(val) == "object") {
-              //if the value is from the default layer
-              newOptions[key] = val;
-            } else {
-              //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
-              newOptions[key] = val;
-              throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
-            }
-          } else if(type == "binaryglyph") {
-            //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
-            if(Array.isArray(val)) {
-              //[width, height, colorFormat, data]
-              
-              newOptions[key] = BinaryGlyph.deserialize(val);
-              
-            } else if(typeof(val) == "object") {
-              //if the value is from the default layer
-              newOptions[key] = val;
-            } else {
-              //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
-              newOptions[key] = val;
-              throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
-            }
           } else {
-            newOptions[key] = val;
+            newOptions[key] = hex2RGB('#' + val);
           }
-        }
-        return newOptions;
-      }
-      //make sure the faux options have the correct amount of options
-      //for when a layer has stripped out options (very likely)
-      const fauxOptionsDefault = Object.assign(newLayer.od, fauxLayer.od);
-      const fauxOptions = Object.assign(newLayer.options, fauxLayer.options);
-      //dont bother writing option data if there is none
-      if(fauxLayer.od != undefined) newLayer.od = loadOptions(fauxOptionsDefault, newLayer.typesDefault);
-      if(fauxLayer.options != undefined) newLayer.options = loadOptions(fauxOptions, newLayer.types);
-      //the layer indices should be the same as the keys at this point (starting from scratch)
-      //this should be fine....
-      img.layerKeys.push(i);
-      img.layers.push(newLayer);
-    }
-  }
-
-  async saveEnc(img) {
-    const data = this.save(img);
-
-    if (typeof CompressionStream !== 'undefined') {
-      try {
-        const zipped = await this.gzip(data);
-        //the zipped data can SOMETIMES be longer than the unzipped data
-        if(zipped.length > data.length) {
-          return data;
+          
+        } else if(type == "layer") {
+          newOptions[key] = val;
+          //skip link count increment if the layer has no base
+          if(val == KEY_CANVAS) continue;
+          //prevent filters from shitting themselves
+          //because layer data only gets defined when the link count is > 0
+          img.layers[img.layerKeys[val]].linkCount++;
+          
+        } else if(type == "boolean") {
+          //it does not matter if the value is from the default layer (it would be a boolean instead of a number), because true == 1! hooray for javascript!!!
+          newOptions[key] = val == 1;
+          
+        } else if(type == "length") {
+          //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
+          if(Array.isArray(val)) {
+            //[value, units]
+            newOptions[key] = new UnitLength(val[0], val[1]);
+            
+          } else if(typeof(val) == "object") {
+            //if the value is from the default layer
+            newOptions[key] = val;
+          } else {
+            //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
+            newOptions[key] = val;
+            throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
+          }
+        } else if(type == "glyph") {
+          //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
+          if(Array.isArray(val)) {
+            //[width, height, colorFormat, data]
+            
+            newOptions[key] = Glyph.deserialize(val);
+            
+          } else if(typeof(val) == "object") {
+            //if the value is from the default layer
+            newOptions[key] = val;
+          } else {
+            //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
+            newOptions[key] = val;
+            throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
+          }
+        } else if(type == "binaryglyph") {
+          //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
+          if(Array.isArray(val)) {
+            //[width, height, colorFormat, data]
+            
+            newOptions[key] = BinaryGlyph.deserialize(val);
+            
+          } else if(typeof(val) == "object") {
+            //if the value is from the default layer
+            newOptions[key] = val;
+          } else {
+            //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
+            newOptions[key] = val;
+            throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
+          }
         } else {
-          return zipped;
+          newOptions[key] = val;
         }
-      } catch(why) {
-        console.error("Failed to gzip save:", why);
       }
+      return newOptions;
     }
-
-    return data;
+    //make sure the faux options have the correct amount of options
+    //for when a layer has stripped out options (very likely)
+    const fauxOptionsDefault = Object.assign(newLayer.od, fauxLayer.od);
+    const fauxOptions = Object.assign(newLayer.options, fauxLayer.options);
+    //dont bother writing option data if there is none
+    if(fauxLayer.od != undefined) newLayer.od = loadOptions(fauxOptionsDefault, newLayer.typesDefault);
+    if(fauxLayer.options != undefined) newLayer.options = loadOptions(fauxOptions, newLayer.types);
+    //the layer indices should be the same as the keys at this point (starting from scratch)
+    //this should be fine....
+    img.layerKeys.push(i);
+    img.layers.push(newLayer);
   }
-  async loadEnc(img, savedText) {
-    if (typeof savedText == 'object') this.load(img, savedText);
+}
 
-    if (typeof DecompressionStream !== 'undefined') {
-      try {
-        savedText = await this.ungzip(savedText);
-      } catch (_) {}
-    }
-
-    this.load(img, savedText);
-  }
-
-  async gzip(data) {
+async function serializeEnc(img) {
+  async function gzip(data) {
     const blob = new Blob([new Uint8Array(new Array(data.length).fill().map((_, i) => data.charCodeAt(i)))]);
     const compression = new CompressionStream('gzip');
     const compressed = await new Response(blob.stream().pipeThrough(compression)).blob();
@@ -251,10 +220,39 @@ class Serialization {
       reader.readAsDataURL(compressed);
     });
   }
-  async ungzip(savedText) {
+  const data = serialize(img);
+
+  if (typeof CompressionStream !== 'undefined') {
+    try {
+      const zipped = await gzip(data);
+      //the zipped data can SOMETIMES be longer than the unzipped data
+      if(zipped.length > data.length) {
+        return data;
+      } else {
+        return zipped;
+      }
+    } catch(why) {
+      console.error("Failed to gzip save:", why);
+    }
+  }
+
+  return data;
+}
+async function deserializeEnc(img, savedText) {
+  async function ungzip(savedText) {
     const bytes = atob(savedText);
     const blob = new Blob([new Uint8Array(new Array(bytes.length).fill().map((_, i) => bytes.charCodeAt(i)))]);
     const compression = new DecompressionStream('gzip');
     return await new Response(blob.stream().pipeThrough(compression)).json();
   }
+
+  if (typeof savedText == 'object') deserialize(img, savedText);
+
+  if (typeof DecompressionStream !== 'undefined') {
+    try {
+      savedText = await ungzip(savedText);
+    } catch (_) {}
+  }
+
+  deserialize(img, savedText);
 }

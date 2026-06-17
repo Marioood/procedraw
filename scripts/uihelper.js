@@ -151,3 +151,7 @@ function killChildren(container) {
     container.removeChild(container.lastChild);
   }
 }
+
+function setErrorScreen(reason) {
+  document.getElementById("error-reason").innerText = reason;
+}

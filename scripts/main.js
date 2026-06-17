@@ -144,18 +144,20 @@ const colp = {
 };
 
 function main() {
+  if(window.location.protocol == "file:") {
+    setErrorScreen("Cannot run Procedraw directly from a file, webpage must come from a server.\n\nSee: https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Tools_and_setup/set_up_a_local_testing_server");
+    throw new ProcedrawError();
+  }
   //all of these get passed through functions
   //the carry important state shit
-  //serial is for saving/loading images
-  const serial = new Serialization();
   //tether is for interaction between the ui and images
-  const tether = new Tether();
+  const tether = new Tether(new Worker("scripts/RenderWorker.js"));
   //this is the actual image itself
   const img = new ProcedrawImage();
   
   setupLayerManagementButtons(img, tether);
-  setupImageOptions(img, tether, serial);
-  setupHeaderMenu(img, tether, serial);
+  setupImageOptions(img, tether);
+  setupHeaderMenu(img, tether);
   setupKeybinds(img, tether);
   
   //////// URL SAVE LOADING ////////
@@ -167,7 +169,7 @@ function main() {
     const o = save;
 
     try {
-      await serial.loadEnc(img, save);
+      await deserializeEnc(img, save);
       tether.generateLayerList(img);
       img.updateSize();
       tether.updateSize(img);
@@ -204,6 +206,9 @@ function main() {
   if(DEBUG) console.log("debug mode is enabled; some features may be disabled or enabled");
   tether.updateSize(img);
   tether.printImage(img, true);
+  
+  const errorScreen = document.getElementById("error-screen");
+  errorScreen.style.visibility = "hidden";
 }
 
 function setupLayerManagementButtons(img, tether) {
@@ -511,7 +516,7 @@ function setupLayerManagementButtons(img, tether) {
   }
 }
 
-function setupImageOptions(img, tether, serial) {
+function setupImageOptions(img, tether) {
   const imageOptions = document.getElementById("image-options");
   
   const nameInput = InputText(img.name,(e) => {
@@ -566,12 +571,12 @@ function setupImageOptions(img, tether, serial) {
   
   const saveImageButton = Button("save!", async (e) => {
     if(tether.compressSaves) {
-      const url = generateSaveUrl(saveImageText.value = await serial.saveEnc(img));
+      const url = generateSaveUrl(saveImageText.value = await serializeEnc(img));
       if (window.history.replaceState && tether.saveURL) {
         window.history.replaceState({}, "", url);
       }
     } else {
-      saveImageText.value = serial.save(img);
+      saveImageText.value = serialize(img);
     }
   }, "aero-btn");
   const loadImageText = Textarea("you put data here", null, "save-box");
@@ -579,7 +584,7 @@ function setupImageOptions(img, tether, serial) {
   const loadImageButton = Button("load!", async (e) => {
     if(confirm("load image?")) {
       try {
-        await serial.loadEnc(img, loadImageText.value);
+        await deserializeEnc(img, loadImageText.value);
         tether.generateLayerList(img);
         img.updateSize();
         tether.updateSize(img);
@@ -590,7 +595,7 @@ function setupImageOptions(img, tether, serial) {
         authorInput.value = img.author;
         //bgInput.remove();
         if(window.history.replaceState && tether.saveURL) {
-          window.history.replaceState({}, "", generateSaveUrl(await serial.saveEnc(img)));
+          window.history.replaceState({}, "", generateSaveUrl(await serializeEnc(img)));
         }
       } catch(error) {
         window.alert("couldn't parse data! \n\n" + error);
@@ -821,7 +826,7 @@ function setupImageOptions(img, tether, serial) {
   ));
 }
 
-function setupHeaderMenu(img, tether, serial) {
+function setupHeaderMenu(img, tether) {
   const topContainer = document.getElementById("top-container");
   let curIdx = -1;
   const makeItems = (e, idx, thetan) => {
@@ -1152,5 +1157,5 @@ function setupKeybinds(img, tether) {
     }
   }
 }
-//do this so the variables used during setup aren't in global scope
+
 main();
