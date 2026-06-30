@@ -155,3 +155,39 @@ function killChildren(container) {
 function setErrorScreen(reason) {
   document.getElementById("error-reason").innerText = reason;
 }
+  
+function showWindowUnderlay(shown) {
+  const windowUnderlay = document.getElementById("window-underlay");
+  windowUnderlay.style.display = shown ? "block" : "none";
+}
+
+function DynamicDownloadButton(name, getBlob, getFileName, className) {
+  const saveFileLink = document.createElement("a");
+  const saveFileInput = document.createElement("button");
+  
+  saveFileInput.innerText = name;
+  saveFileInput.className = className;
+  saveFileLink.href = "dummy";
+  saveFileLink.download = "dummy";
+  
+  let blobURL = "";
+  
+  saveFileInput.onmousedown = (e) => {
+    document.body.style.cursor = "wait";
+    try {
+      const blob = getBlob();
+      blobURL = URL.createObjectURL(blob);
+      saveFileLink.href = blobURL;
+      saveFileLink.download = getFileName();
+    } catch(ex) {
+      alert(ex);
+      e.preventDefaults();
+    }
+    document.body.style.cursor = "auto";
+  }
+  saveFileLink.onmouseup = (e) => {
+    URL.revokeObjectURL(blobURL);
+  }
+  saveFileLink.appendChild(saveFileInput);
+  return saveFileLink;
+}

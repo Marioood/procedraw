@@ -566,24 +566,52 @@ function setupImageOptions(img, tether) {
     return url.toString();
   }
   
-  const saveImageText = Textarea("data is saved here", null, "save-box");
-  saveImageText.readOnly = true;
-  
-  const saveImageButton = Button("save!", async (e) => {
+  const saveBox = document.getElementById("save-box");
+  const saveDialog = document.getElementById("save-dialog-container");
+    
+  const saveWindowButton = Button("save!", async (e) => {
     if(tether.compressSaves) {
-      const url = generateSaveUrl(saveImageText.value = await serializeEnc(img));
+      const url = generateSaveUrl(saveBox.value = await serializeEnc(img));
       if (window.history.replaceState && tether.saveURL) {
         window.history.replaceState({}, "", url);
       }
     } else {
-      saveImageText.value = serialize(img);
+      saveBox.value = serialize(img);
     }
-  }, "aero-btn");
-  const loadImageText = Textarea("you put data here", null, "save-box");
+    saveDialog.style.display = "initial";
+    showWindowUnderlay(true);
+  }, "aero-btn window-open-button");
   
-  const loadImageButton = Button("load!", async (e) => {
-    if(confirm("load image?")) {
+  const saveToFileButton = DynamicDownloadButton(
+    "Save to File",
+    () => new Blob([saveBox.value], {type: "application/json"}),
+    () => img.name + ".pdimg",
+    "aero-btn window-open-button"
+  );
+  document.getElementById("save-dialog-file").appendChild(saveToFileButton);
+  
+  const copyToClipboardButton = Button("Copy to Clipboard", async (e) => {
+    try {
+      await navigator.clipboard.writeText(saveBox.value);
+      alert("Copied!");
+    } catch(error) {
+      alert("Could not copy save data!\n\n" + error);
+      console.error(error);
+    }
+  }, "aero-btn window-open-button");
+  document.getElementById("save-dialog-clip").appendChild(copyToClipboardButton);
+  
+  const saveCloseButton = document.getElementById("save-dialog-x");
+  saveCloseButton.onclick = (e) => {
+    saveDialog.style.display = "none";
+    showWindowUnderlay(false);
+  };
+  
+  const loadImageButton = document.getElementById("load-from-textarea-button");
+  loadImageButton.onclick = async (e) => {
+    if(confirm("Are you sure? This will delete the currently open image.")) {
       try {
+        const loadImageText = document.getElementById("load-box");
         await deserializeEnc(img, loadImageText.value);
         tether.generateLayerList(img);
         img.updateSize();
@@ -597,13 +625,51 @@ function setupImageOptions(img, tether) {
         if(window.history.replaceState && tether.saveURL) {
           window.history.replaceState({}, "", generateSaveUrl(await serializeEnc(img)));
         }
+        const loadDialog = document.getElementById("load-dialog-container");
+        loadDialog.style.display = "none";
+        showWindowUnderlay(false);
       } catch(error) {
-        window.alert("couldn't parse data! \n\n" + error);
-        if(DEBUG) console.error(error);
+        let hint = "Unknown loading error!";
+        //TODO: still not specific enough
+        switch(error.name) {
+          case "SyntaxError":
+            //JSON is incorrect
+            hint = "Couldn't parse data!";
+            break;
+          case "TypeError":
+            //error after parsing JSON (e.g. "layers" is not present)
+            hint = "Data does not have the correct structure!";
+            break;
+        }
+        window.alert(hint + " The save is either the wrong type or is corrupted:\n\n" + error);
+        console.error(error);
         return;
       }
     }
-  }, "aero-btn");
+  };
+  const loadWindowButton = Button("load!", async (e) => {
+    const loadDialog = document.getElementById("load-dialog-container");
+    loadDialog.style.display = "initial";
+    showWindowUnderlay(true);
+  }, "aero-btn window-open-button");
+  
+  const loadCloseButton = document.getElementById("load-dialog-x");
+  loadCloseButton.onclick = (e) => {
+    const loadBox = document.getElementById("load-dialog-container");
+    loadBox.style.display = "none";
+    showWindowUnderlay(false);
+  };
+  
+  /*const exportWindowButton = Button("export!", (e) => {
+    const exportBox = document.getElementById("export-dialog-container");
+    if(exportBox.style.display == "none") {
+      exportBox.style.display = "initial";
+    } else {
+      exportBox.style.display = "none";
+    }
+    showWindowUnderlay(true);
+  }, "aero-btn window-open-button");*/
+  
   //custom color picker because i use firefox and it uses the ms paint color picker
   colp.localDisplay = divWrap("colp-display");
   colp.RGB = [0, 0, 0]; //R, G, B
@@ -804,18 +870,12 @@ function setupImageOptions(img, tether) {
     heightInput,
     document.createElement("br"),
     Tag("hr"),
-    divWrap(
-      "label-container",
-      saveImageButton
-    ),
-    saveImageText,
+    saveWindowButton,
     document.createElement("br"),
-    divWrap(
-      "label-container",
-      loadImageButton
-    ),
-    loadImageText,
-    document.createElement("br"),
+    //exportWindowButton,
+    //document.createElement("br"),
+    loadWindowButton,
+    Tag("hr"),
     Label("zoom"),
     scaleInput,
     document.createElement("br"),
@@ -846,19 +906,6 @@ function setupHeaderMenu(img, tether) {
     document.body.appendChild(thetan);
   };
   
-  let showCredits = false;
-  const creditBox = document.getElementById("credits-container");
-  creditBox.style.display = "none";
-  
-  const creditButton = Button("credits", (e) => {
-    showCredits = !showCredits;
-    
-    if(showCredits) {
-      creditBox.style.display = "initial";
-    } else {
-      creditBox.style.display = "none";
-    }
-  });
   const godButton = Button("create god image", (e) => {
     
     img.name = godText(16);
@@ -891,17 +938,18 @@ function setupHeaderMenu(img, tether) {
     tether.printImage(img);
   });
   
+  const creditsCloseButton = document.getElementById("credits-dialog-x");
+  creditsCloseButton.onclick = (e) => {
+    const creditsBox = document.getElementById("credits-dialog-container");
+    creditsBox.style.display = "none";
+    showWindowUnderlay(false);
+  };
+  
   topContainer.appendChild(
     divWrap(
       Button("file", (e) => {
         makeItems(e, 0, divWrap(
           "header-items",
-          Button("save as file"),
-          document.createElement("br"),
-          Button("load from file"),
-          document.createElement("br"),
-          Button("share"),
-          document.createElement("br"),
           godButton,
           document.createElement("br"),
           Label("compressSaves", "header-label"),
@@ -913,14 +961,6 @@ function setupHeaderMenu(img, tether) {
           InputCheckbox(tether.saveURL, (checked, e) => {
             tether.saveURL = checked;
           })
-        ));
-      }, "header-dropdown"),
-      Button("edit", (e) => {
-        makeItems(e, 1, divWrap(
-          "header-items",
-          Text("xenu is real"),
-          document.createElement("br"),
-          Text("tom cruise is a fudge packer")
         ));
       }, "header-dropdown"),
       Button("view", (e) => {
@@ -955,11 +995,10 @@ function setupHeaderMenu(img, tether) {
           })
         ));
       }, "header-dropdown"),
-      Button("????", (e) => {
-        makeItems(e, 3, divWrap(
-          "header-items",
-          creditButton
-        ));
+      Button("Credits", (e) => {
+        const creditBox = document.getElementById("credits-dialog-container");
+        creditBox.style.display = "initial";
+        showWindowUnderlay(true);
       }, "header-dropdown"),
       Text("procedraw " + PD_VERSION, "version-text")
     )
@@ -1157,5 +1196,4 @@ function setupKeybinds(img, tether) {
     }
   }
 }
-
 main();

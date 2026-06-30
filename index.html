@@ -52,56 +52,152 @@
       </div>
     </div>
     <div class="top-container" id="top-container"></div>
-    <div class="credits-container" id="credits-container">
-      <div class="credits-header">
-        <h2>credits</h2>
-      </div>
-      <ol>
-        <li>marioood: programmer, designer</li>
-        <li>Buj: programmer</li>
-        <li>void◆sprite discord: feedback</li>
-        <li>Kit: feedback and moral support</li>
-        <li>Jace, Andre, Jake, Mason, Tyler, Evan, D'Arian and Fisher: being goons</li>
-        <li>Jack: being the ultimate goon</li>
-        <li>Christian: feedback and moral support</li>
-        <li>Matty Ice: teaching me math</li>
-        <li>Shayan: moral support</li>
-        <li>Netscape: the worst programming language ever</li>
-        <li>Tim Berners-Lee: the internet</li>
-        <li>Tom Cruise: reducing my thetan levels</li>
-        <li>Inkscape: the worst svg editor ever</li>
-      </ol>
-      <div class="github-icon-container">
-        <a href="https://github.com/Marioood/procedraw">github repo</a>
-      </div>
-      <div class="valid-icon-container">
-        <a href="https://validator.w3.org/nu/?doc=https%3A%2F%2Fmarioood.github.io%2Fprocedraw%2Findex.html">
-          <img src="img/illegal.png" alt="Valid HTML 5" height="31" width="88">
-        </a>
-        <a href="https://jigsaw.w3.org/css-validator/validator?uri=https%3A%2F%2Fmarioood.github.io%2Fprocedraw%2Fstyle.css">
-          <img height="31" width="88" src="img/illegal.png" alt="Valid CSS!">
-        </a>
-      </div>
-    </div>
-    <div class="palette-container" id="palette-container">
-      <!-- PALETTE GOES HERE -->
-    </div>
     <table id="layer-select-table" class="layer-select-table">
       <tbody id="layer-select-render-layers">
         <tr>
-          <th>static</th>
-          <th>random</th>
-          <th>bizarre</th>
+          <th>Static</th>
+          <th>Random</th>
+          <th>Bizarre</th>
         </tr>
       </tbody>
       <tbody id="layer-select-filter-layers">
         <tr>
-          <th>transforms</th>
-          <th>color mod</th>
-          <th>detection</th>
+          <th>Transforms</th>
+          <th>Color Mod.</th>
+          <th>Detection</th>
         </tr>
       </tbody>
     </table>
+    
+    <div class="window-underlay" id="window-underlay" style="display: none"></div>
+    <!-- windows -->
+    <div class="credits-container window" id="credits-dialog-container" style="display: none">
+      <table style="width: 100%; border-collapse: collapse">
+        <tr class="window-handle">
+          <td>
+            <b>Credits</b>
+          </td>
+          <td>
+            <button id="credits-dialog-x" class="dialog-x aero-btn">X</button>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <ol>
+              <li>marioood: programmer, designer</li>
+              <li>Buj: programmer</li>
+              <li>void◆sprite discord: feedback</li>
+              <li>Kit: feedback and moral support</li>
+              <li>Christian: feedback and moral support</li>
+              <li>Matty Ice: teaching me math</li>
+              <li>Raven: feedback</li>
+              <li>Netscape: the worst programming language ever</li>
+              <li>Tim Berners-Lee: the internet</li>
+              <li>Tom Cruise: reducing my thetan levels</li>
+              <li>Inkscape: The worst svg editor ever</li>
+            </ol>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="github-icon-container">
+              <a href="https://github.com/Marioood/procedraw">github repo</a>
+            </div>
+          </td>
+          <td>
+            <div class="valid-icon-container">
+              <a href="https://validator.w3.org/nu/?doc=https%3A%2F%2Fmarioood.github.io%2Fprocedraw%2Findex.html">
+                <img src="img/illegal.png" alt="Valid HTML 5" height="31" width="88">
+              </a>
+              <a href="https://jigsaw.w3.org/css-validator/validator?uri=https%3A%2F%2Fmarioood.github.io%2Fprocedraw%2Fstyle.css">
+                <img height="31" width="88" src="img/illegal.png" alt="Valid CSS!">
+              </a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <div id="save-dialog-container" class="save-dialog-container window" style="display: none">
+      <!-- text area, inputs -->
+      <table style="width: 100%; border-collapse: collapse">
+        <tr class="window-handle">
+          <td colspan="2">
+            <b>Save Procedraw Image</b>
+            <button id="save-dialog-x" class="dialog-x aero-btn">X</button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <textarea id="save-box" class="save-box" placeholder="data is saved here" readonly></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td id="save-dialog-file">
+            <!-- button goes here -->
+          </td>
+          <td id="save-dialog-clip">
+            <!-- button goes here -->
+          </td>
+        </tr>
+        <!--<table style="width: 100%; border-collapse: collapse">
+          <tr>
+            <td>
+              <span>url:</span>
+            </td>
+            <td style="width: 100%">
+              <input id="url-save-box" class="url-save-box" placeholder="url data is saved here" type="text" readonly></input>
+            </td>
+          </tr>
+        </table>-->
+        <!-- <tr>
+          <td id="save-dialog-setting-container" style="width: 50%">
+            shit go here
+          </td>
+        </tr> -->
+      </table>
+    </div>
+    <div id="load-dialog-container" class="save-dialog-container window" style="display: none">
+      <!-- text area, inputs -->
+      <table style="width: 100%; border-collapse: collapse">
+        <tr class="window-handle">
+          <td colspan="2">
+            <b>Load Procedraw Image</b>
+            <button id="load-dialog-x" class="dialog-x aero-btn">X</button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <textarea id="load-box" class="save-box" placeholder="Paste save data here."></textarea>
+            <button style="width: 100%" id="load-from-textarea-button" class="aero-btn">Load from Text Area</button>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div id="export-dialog-container" class="save-dialog-container window" style="display: none">
+      <!-- text area, inputs -->
+      <table style="width: 100%">
+        <tr style="width: 100%">
+          <td>
+            <h2>export</h2>
+          </td>
+          <td>
+            <button id="export-dialog-x" style="float:right">X</button>
+          </td>
+        </tr>
+        <tr>
+          <td id="export-dialog-left-container" style="width: 50%">
+            <p>BUG: timing shit in javascript is tricky, so if you're exporting a big image you might have to hold down the export button for it to download correctly.</p>
+          </td>
+          <td id="export-dialog-right-container" style="width: 50%">
+            <!-- shit go here -->
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="palette-container" id="palette-container">
+      <!-- PALETTE GOES HERE -->
+    </div>
     <div id="error-screen" class="error-screen">
       <div class="credits-container">
         <div class="credits-header">

@@ -203,16 +203,6 @@ class LayerXorFractal extends Layer {
           }
         }
         break;
-      case O_BITWISE_PANFUNC:
-        for(let y = 0; y < img.h; y++) {
-          for(let x = 0; x < img.w; x++) {
-            const xB = x * xScale;
-            const yB = y * yScale;
-            let col = (((xB & yB) & 0x49249249) | ((xB ^ yB) & 0x92492492) | ((xB | yB) & 0x24924924)) / 255;
-            img.plotPixel(col, col, col, 1, x, y);
-          }
-        }
-        break;
     }
   }
   

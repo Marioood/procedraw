@@ -1,3 +1,6 @@
+/*All Procedraw material is licensed under MIT*/
+/*Authors: Marioood*/
+
 :root {
   --bg: #101010;
   --otln: #404040;
@@ -130,7 +133,12 @@ hr {
   background-color: var(--bg);
 }
 .save-box {
-  max-width: 256px;
+  width: 100%;
+  resize: none;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  height: 290px;
 }
 .layer-select {
   width: auto;
@@ -278,7 +286,6 @@ input[type=range]::-moz-range-thumb {
   width: 4px;
 }
 input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
-  /*TODO: just make this borders n shit*/
   color: white;
   background: linear-gradient(180deg, black 0, #404040 100%);
   border-bottom: 1px solid black;
@@ -287,6 +294,8 @@ input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
   border-right: 1px solid #202020;
   outline: 1px solid var(--otln);
   margin: 1px;
+}
+input, select, .aero-btn, .checkbox-true, .checkbox-false {
   height: 24px;
 }
 .checkbox-true {
@@ -315,7 +324,6 @@ input, select, .aero-btn, textarea, .checkbox-true, .checkbox-false {
   background-image: url("img/ui/dir-y.png");
 }
 textarea {
-  max-width: 96px;
   background: var(--bg-cont);
 }
 select {
@@ -509,7 +517,7 @@ button {
   width: 218px;
   background-image: url("img/ui/arrow-left.png");
 }
-.layer-select-table-button {
+.layer-select--button {
   background: none;
 }
 /******** MISC ********/
@@ -576,15 +584,10 @@ button {
   white-space: nowrap;
 }
 .credits-container {
-  position: absolute;
   width: 512px;
   height: 360px;
   top: calc(50% - 180px);
   left: calc(50% - 256px);
-  border: 1px solid var(--otln);
-  padding: 4px;
-  box-sizing: border-box;
-  background: var(--bg-cont);
 }
 .valid-icon-container {
   position: absolute;
@@ -595,19 +598,6 @@ button {
   position: absolute;
   bottom: 0;
   left: 2px;
-}
-.credits-header {
-  width: 100%;
-  text-align: center;
-}
-.emboss-icon-container {
-  width: 128px;
-  height: 128px;
-  background-position: 2px 2px;
-}
-.emboss-icon {
-  opacity: 0.5;
-  filter: invert(1);
 }
 .unit-button {
   width: 58px; /*the number input is wider than this for some reason?*/
@@ -623,4 +613,36 @@ button {
   height: 100vh;
   background-color: black;
   z-index: 99999;
+}
+/* SAVE WINDOW */
+.window {
+  border: 1px solid var(--otln);
+  padding: 4px;
+  box-sizing: border-box;
+  background: var(--bg-cont);
+  position: absolute;
+}
+.save-dialog-container {
+  width: 512px;
+  height: 360px;
+  top: calc(50% - 180px);
+  left: calc(50% - 256px);
+}
+.window-underlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(180deg, black 0, #00000080 100%);
+}
+.window-open-button {
+  width: 100%;
+}
+.window-handle {
+  background: linear-gradient(90deg, transparent 0, #ffffff60 100%);
+}
+.dialog-x {
+  float:right;
+  width: 40px;
 }

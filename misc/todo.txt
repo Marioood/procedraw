@@ -1,11 +1,26 @@
 TODO: (separate commits!)
-  * outsource rendering to china (AGAIN)
-  * fix hex box in color picker (it accepts and outputs funny values, i think?)
-  * save and load dialogs as windows from toomuch branch
-  * vector picker from toomuch branch
+  LAYERS:
   * graph layer, with custom programming language (single-line, arithmetic only, no branching)(weigh power vs. simplicity)
+  * rewrite image rendering so that webworkers AND layer groups work with it
+    * outsource rendering to china (AGAIN)
+    * layer groups
+  * color map filter
+  * "get" filter that takes in a vector as a direct coordinate instead of offset (or just make that an offset layer option)
+  UI:
+  * make sidebars scrollable
+  * vector picker from toomuch branch
+  * center render text, separate Time Taken: from #ms. also, convert to seconds if the render takes >1000 ms
+  * export dialog
+  * fix hex box in color picker (it accepts and outputs funny values, i think?)
   * add language support (optional save to cookies, auto-detection of language?)
+  * god image, with prompt at first but then you can ignore the prompt
 
+
+rewrite mandlebrot layer in WASM (just that layer, to see the performance gainz)
+
+http://justsolve.archiveteam.org/wiki/Paint.NET_image
+
+shift all layers
 
 Raven: takes a while to move a slider
 
@@ -13,23 +28,17 @@ Raven: takes a while to move a slider
 
 //TODO: less global variables?
 //TODO: consider making image processing a separate library?
-//TODO: less global functions?
-//TODO: rethink helper.js
 //TODO: should there just be one "procedraw" object? this would make using the image rendering as an external library possible
 //TODO: make editing less... crude. maybe? or maybe that is style
 //https://softwareengineering.stackexchange.com/questions/345344/splitting-up-a-very-large-function-program-into-smaller-functions-effective
-//REMINDER: keep ui stuff separate from serialization!
-//REMINDER: DON'T MOVE THIS STUFF TO HELPER.JS! that is for minor functions that are used everywhere, including image processing. Maybe make a "mathhelper.js" and "uihelper.js?"
 
 URGENT
 
-make plotPixel() accept 4 values instead of 1 array? (could be faster???)
-math expression UnitLength type?
 multi-layer merge
   layer groups that are just treated as one layer?
   
 append an image onto another image
-transformation layers based off of other layers? like the offset layer, but for scaling, rotation, shearing, etc.
+better rotate layer
 fix gradient layer -- it sucks ass
 verify if the normal map stuff is even correct (create a heightmap of a coin, then sunlight it blahhhh)
 crop filter
