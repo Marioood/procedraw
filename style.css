@@ -646,3 +646,6 @@ button {
   float:right;
   width: 40px;
 }
+.must-compile-text {
+  color: #ffffffa0;
+}

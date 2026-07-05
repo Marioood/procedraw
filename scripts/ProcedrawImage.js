@@ -56,6 +56,7 @@ class ProcedrawImage {
     seedFractal: LayerSeedFractal,
     cellularBlobs: LayerCellularBlobs,
     wolfram: LayerWolfram,
+    graph: LayerGraph,
     //filters
     tweak: FilterTweak,
     tile: FilterTile,

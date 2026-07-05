@@ -144,14 +144,14 @@ const colp = {
 };
 
 function main() {
-  if(window.location.protocol == "file:") {
+  /*if(window.location.protocol == "file:") {
     setErrorScreen("Cannot run Procedraw directly from a file, webpage must come from a server.\n\nSee: https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Tools_and_setup/set_up_a_local_testing_server");
     throw new ProcedrawError();
-  }
+  }*/
   //all of these get passed through functions
   //the carry important state shit
   //tether is for interaction between the ui and images
-  const tether = new Tether(new Worker("scripts/RenderWorker.js"));
+  const tether = new Tether(/*new Worker("scripts/RenderWorker.js")*/);
   //this is the actual image itself
   const img = new ProcedrawImage();
   
@@ -209,6 +209,84 @@ function main() {
   
   const errorScreen = document.getElementById("error-screen");
   errorScreen.style.visibility = "hidden";
+  
+  //////// CALCULATOR TESTS ////////
+  if(DEBUG) {
+    const splitTests = [
+      "12+2",
+      " 1 2 3 ",
+      "aa-aaaaa    bbbb",
+      "    aaaa   1111   ",
+      "++a+a++",
+      "1 + 2 * (2 - 3)"
+    ];
+
+    splitTests.forEach((t) => {
+      console.log(`"${t}" -> [${calcTokenize(t)}]`);
+    });
+    //these should compile
+    const parseTests = [
+      ["1 * (2 + 3)", "1 2 3 + *"],
+      ["1 + 2", "1 2 +"],
+      ["1 + 2 - 3", "1 2 + 3 -"],
+      ["1 + 2 * (2 - 3)", "1 2 2 3 - * +"],
+      ["sqrt(2)", "2 sqrt"],
+      ["sqrt(2 - (31 * 28)) - 42", "2 31 28 * - sqrt 42 -"],
+      ["sqrt(sqrt(sqrt(2)))", "2 sqrt sqrt sqrt"],
+      ["sin(x)", "x sin"],
+      ["mod(x - 2, 0.5)", "x 2 - 0.5 mod"],
+      ["1 + y - 3 * (x + (y / 2))", "1 y + 3 x y 2 / + * -"],
+      ["(((sin(x * 3.1415 * 2) / 2 + 0.5) * 256) ^ (y * 256)) / 256", "x 3.1415 * 2 * sin 2 / 0.5 + 256 * y 256 * ^ 256 /"],
+      ["sin(x * PI)", "x " + Math.PI + " * sin"]
+      //["9 - -(x + 2)", "9 x 2 + -u -"]
+      //["-3 - -4", "-3 -4 -"]
+    ];
+    console.log("----------------");
+    const variables = ["x", "y"];
+    
+    parseTests.forEach((t) => {
+      const errors = [];
+      const out = calcParseTokens(calcTokenize(t[0]), variables, errors);
+      if(errors.length > 0) {
+        console.log(`XXXXX "${t[0]}" could not compile, ${errors}`);
+      } else {
+        const outHuman = calcHumanProgram(out, variables);
+        console.log(`${outHuman == t[1] ? "" : "XXXXX "}"${t[0]}" -> ${outHuman}, should be ${t[1]}`);
+      }
+    });
+    //these should not compile
+    const errorTests = [
+      "mod(1 2)",
+      "sin(3.1415, 6.28 - 2)",
+      "sqrt()",
+      "sqrt(1 + sin(23 - 3), sin((rem(1, 2) * 23) / 2))",
+      ")",
+      "(",
+      "1+",
+      "2 + * 3",
+      "( + ) 1",
+      "()",
+      "12 123 43",
+      "thisVariableDoesNotExist + 43",
+      "x(12)",
+      "thisFunctionDoesNotExist(343)"
+    ];
+    
+    console.log("----------------");
+    errorTests.forEach((t) => {
+      const errors = [];
+      const out = calcParseTokens(calcTokenize(t), variables, errors);
+      if(errors.length > 0) {
+        console.log(`"${t}" did not compile, ${errors}`);
+      } else {
+        console.log(`XXXXX "${t}" compiled into ${calcHumanProgram(out, variables)}`);
+      }
+    });
+
+    let program = calcParseTokens(calcTokenize("1 + y - 3 * (x + (y / 2))"), variables);
+    console.log(program);
+    console.log(calcRun(program, [1, 2]));
+  }
 }
 
 function setupLayerManagementButtons(img, tether) {
@@ -364,7 +442,7 @@ function setupLayerManagementButtons(img, tether) {
     }
     layerSelectShown = !layerSelectShown;
   };
-  assert(Object.keys(img.layerClasses).length == 37, "layer-select-table expects 37 layers.");
+  assert(Object.keys(img.layerClasses).length == 38, "layer-select-table expects 38 layers.");
   document.getElementById("layer-select-table").style.display = "none";
   //TODO: maybe have this be decided based on some value in the layer?
   const regularNames = [
@@ -387,6 +465,7 @@ function setupLayerManagementButtons(img, tether) {
       "cellularBlobs"
     ],
     [
+      "graph",
       "xorFractal",
       "mandelbrot",
       "seedFractal",
@@ -531,6 +610,11 @@ function setupImageOptions(img, tether) {
   authorInput.id = "img-author-input";
   
   const widthInput = InputNumber(1, 512, img.h, (e) => {
+    if(e.target.value > 512) {
+      e.target.value = 512;
+    } else if(e.target.value < 1) {
+      e.target.value = 1;
+    }
     img.w = Number(e.target.value);
     img.updateSize();
     tether.updateSize(img);
@@ -539,6 +623,11 @@ function setupImageOptions(img, tether) {
   widthInput.id = "img-width-input";
   
   const heightInput = InputNumber(1, 512, img.w, (e) => {
+    if(e.target.value > 512) {
+      e.target.value = 512;
+    } else if(e.target.value < 1) {
+      e.target.value = 1;
+    }
     img.h = Number(e.target.value);
     img.updateSize();
     tether.updateSize(img);

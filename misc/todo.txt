@@ -6,6 +6,8 @@ TODO: (separate commits!)
     * layer groups
   * color map filter
   * "get" filter that takes in a vector as a direct coordinate instead of offset (or just make that an offset layer option)
+  * add 2D graph, 1D graph, and rework function pass (with custom functions)
+  * procecalc types (Vec2, Complex, Color, etc.)
   UI:
   * make sidebars scrollable
   * vector picker from toomuch branch

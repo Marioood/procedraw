@@ -58,6 +58,10 @@ function serialize(img) {
           refIsEqual = arrayIsEqualShallow(val.data, refVal.data) && val.width == refVal.width && val.height == refVal.height;
           
           val = val.serialize();
+        } else if(type == "procecalc") {
+          refIsEqual = val.src == refVal.src;
+          
+          val = val.src;
         }
         if(refIsEqual) continue;
         newOptions[key] = val;
@@ -163,7 +167,6 @@ function deserialize(img, savedText) {
           //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
           if(Array.isArray(val)) {
             //[width, height, colorFormat, data]
-            
             newOptions[key] = Glyph.deserialize(val);
             
           } else if(typeof(val) == "object") {
@@ -171,23 +174,37 @@ function deserialize(img, savedText) {
             newOptions[key] = val;
           } else {
             //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
-            newOptions[key] = val;
             throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
           }
         } else if(type == "binaryglyph") {
           //length is stored in saves as an array (smaller), but it can be an object if it's taken from the default layer options (e.g. after the default values got stripped)
           if(Array.isArray(val)) {
             //[width, height, colorFormat, data]
-            
             newOptions[key] = BinaryGlyph.deserialize(val);
-            
           } else if(typeof(val) == "object") {
             //if the value is from the default layer
             newOptions[key] = val;
           } else {
             //TODO: fixing this error is trivial, but wait to do that once the save format is finalized
-            newOptions[key] = val;
             throw new ProcedrawError(`'${key}' has incorrect type ${typeof(val)}. type should be array or object.`);
+          }
+        } else if(type == "procecalc") {
+          const errors = [];
+          const newOps = calcParseTokens(calcTokenize(val), types[key].varNames, errors);
+          if(errors.length > 0) {
+            //option could not be compiled correctly, fallback to pure black
+            newOptions[key] = {
+              src: val,
+              ops: [Op(OP_PUSH_FLOAT, 0)],
+              srcMatchesOps: false
+            };
+          } else {
+            //option could be compiled correctly
+            newOptions[key] = {
+              src: val,
+              ops: newOps,
+              srcMatchesOps: true
+            };
           }
         } else {
           newOptions[key] = val;

@@ -1,0 +1,1 @@
+{"img":{"bg":"7f7f7fff","w":128,"h":128,"name":"graph test","author":"marioood","version":"VOLATILE 0.9.1","format":0},"layers":[{"name":"graph","od":{"tint":"ffffffff"},"options":{"func":"floor(x * 8) / 7"}},{"name":"graph","od":{"alpha":0.5,"blend":4,"tint":"ff0000ff"},"options":{"func":"cos(atan2(x - 0.5, y - 0.5) + PI / 4) / 2 + 0.5"}}]}

@@ -2743,3 +2743,37 @@ class LayerWolfram extends Layer {
     }
   }
 }
+
+class LayerGraph extends Layer {
+  name = "graph";
+  
+  static description = "A graph of a custom math function.";
+  
+  options = {
+    func: {
+      src: "(x + y) / 2",
+      ops: calcParseTokens(calcTokenize("(x + y) / 2"), ["x", "y"]),
+      srcMatchesOps: true
+    }
+  };
+  
+  types = {
+    func: {
+      type: "procecalc",
+      varNames: ["x", "y"]
+    }
+  };
+  
+  generate(img, o) {
+    const program = o.func.ops;
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        //more common graphical coordinates (+y is up -y is down)
+        let col = calcRun(program, [x / (img.w), 1 - y / (img.h)]);
+        img.plotPixel(col, col, col, 1, x, y);
+      }
+    }
+    
+  }
+}

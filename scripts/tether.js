@@ -1015,29 +1015,70 @@ class Tether {
           break;
         }
         case "string": {
-          //slider
           const input2 = document.createElement("textarea");
           input2.value = options[optionKeys[i]];
           input2.className = "input-option-textarea";
           
           input2.oninput = (e) => {
             let val = input2.value;
-            //do a safety check on unsafe options
-            //"unsafe options" are ones that control loops (e.g. maxLines for wandering, thickness for border)
-            //having unsafe options too high can crash or freeze the browser!!
-            /*if(limits.unsafe) {
-              //just dont update the number - cause it makes inputting a bitch
-              if(val.length > ) {
-                input2.classList.add("input-invalid");
-                return;
-              } else {
-                input2.classList.remove("input-invalid");
-              }
-            }*/
             options[optionKeys[i]] = val;
             this.printImage(img);
           };
           container.appendChild(input2);
+          break;
+        }
+        case "procecalc": {
+          // f(x, y) = [(x + y) / 2]
+          // [Help (->)] [Compile] <- /Function must be compiled to be used.../
+          // Errors: [None.]
+          const srcTextarea = document.createElement("textarea");
+          srcTextarea.value = options[optionKeys[i]].src;
+          srcTextarea.className = "input-option-textarea";
+          srcTextarea.autocomplete = "off";
+          srcTextarea.autocorrect = "off";
+          srcTextarea.autocapitalize = "off";
+          srcTextarea.spellcheck = false;
+          
+          const mustCompileText = document.createElement("i");
+          mustCompileText.innerText = "  Compile for changes to appear";
+          mustCompileText.style.display = "none";
+          mustCompileText.className = "must-compile-text";
+          
+          srcTextarea.oninput = (e) => {
+            let val = srcTextarea.value;
+            options[optionKeys[i]].src = val;
+            mustCompileText.style.display = "initial";
+          };
+          const errorTextarea = document.createElement("textarea");
+          errorTextarea.placeholder = "No errors found.";
+          errorTextarea.className = "input-option-textarea";
+          errorTextarea.readOnly = true;
+          
+          const compileButton = Button("Compile", (e) => {
+            let srcCode = srcTextarea.value;
+            const errors = [];
+            const ops = calcParseTokens(calcTokenize(srcCode), limits.varNames, errors);
+            
+            mustCompileText.style.display = "none";
+            
+            if(errors.length > 0) {
+              errorTextarea.value = errors[0];
+            } else {
+              errorTextarea.value = "";
+              options[optionKeys[i]].ops = ops;
+              this.printImage(img);
+            }
+            
+          }, "aero-btn");
+          
+          container.appendChild(divWrap(
+            srcTextarea,
+            document.createElement("br"),
+            compileButton,
+            mustCompileText,
+            document.createElement("br"),
+            errorTextarea
+          ));
           break;
         }
         case "glyph": {

@@ -4,10 +4,6 @@
 // Purpose: All constants (enums, patterns for whatever, etc.) are stored here to make the code a bit less cluttered
 //
 
-//TODO: move some stuff from the Tether class to here
-//TODO: move some stuff from the Serialization class to here
-
-
 //////// PROGRAM INFO ////////
 const PD_VERSION = "VOLATILE 0.9.1"; //scarily close to 1.0
 //this gets changed when the SAVE FORMAT is changed, not when layer paramters are changed
