@@ -1,19 +1,103 @@
-
-
-
-
-sqrt(x)
-Square root. Negative values of x return NaN.
-
-sin(theta)
-
-
-rem(a, b)
-Returns the signed (negative or positive) remainder of a / b.
-
-mod(a, b)
-Returns the unsigned (always positive) remainder of a / b.
-
-
-neg(x)
-Returns x * -1. This will be removed once unary operators are introduced.
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <!--Only provide information that the user cares about, not grossly technical information about language implementation. This is a manual, not an implementation tutorial.-->
+    <h2>Manual</h2>
+    <p>This is the manual for the (unfinished!) Procedraw graphing language.If anything in this manual is incorrect/confusing, please create a bug report on GitHub (link) or tell me directly (you know how to if you know me).</p>
+    <h2>Structure</h2>
+    <h3>Variables</h3>
+    <p>TODO: write</p>
+    <h3>Operators</h3>
+    <p>The order of operations is the same as P.E.M.D.A.S.</p>
+    <table>
+      <tr>
+        <td>()</td><td>Parentheses. Used to group other operations.</td><td>Example usage: (a + b) * c</td>
+      </tr>
+      <tr>
+        <td>+</td><td>Addition.</td><td>Usage: a + b</td>
+      </tr>
+      <tr>
+        <td>-</td><td>Subtraction.</td><td>Usage: a - b</td>
+      </tr>
+      <tr>
+        <td>-</td><td>Negation. Has a higher order than multiplication.</td><td>Usage: -x</td>
+      </tr>
+      <tr>
+        <td>*</td><td>Multiplication.</td><td>Usage: a * b</td>
+      </tr>
+      <tr>
+        <td>/</td><td>Division.</td><td>Usage: a / b</td>
+      </tr>
+    </table>
+    <p>The following is a list of bitwise operators. These operators work by converting their inputs to whole numbers (by chopping off the decimal point) and working with their underlying bits.</p>
+    <p>These operations have a higher order than multiplication.</p>
+    <table>
+      <tr>
+        <td>&amp;</td><td>Bitwise AND.</td><td>Usage: a &amp; b</td>
+      </tr>
+      <tr>
+        <td>|</td><td>Bitwise OR.</td><td>Usage: a | b</td>
+      </tr>
+      <tr>
+        <td>@</td><td>Bitwise XOR. TODO EXPLAIN</td><td>Usage: a @ b</td>
+      </tr>
+    </table>
+    <h3>Functions</h3>
+    <p>A function is called like: functionName(arg1, arg2, arg3...)</p>
+    <p>An argument is a value passed into the function when calling it. Multiple arguments must be separated with commas.</p>
+    Examples:
+      1 argument: sqrt(2)
+      2 arguments: mod(x, 1)
+      Functions in functions: sin(atan2(x, y) * 4)
+    
+    <h2>Built-ins</h2>
+    <h3>Functions</h3>
+    <ul>
+      <li>sqrt(x) Negative values of x return NaN.</li>
+      <li>cbrt(x)</li>
+      <li>mod(dividend, divisor) Returns the unsigned (always positive) remainder of a / b.</li>
+      <li>rem(dividend, divisor) Returns the signed (negative or positive) remainder of a / b.</li>
+      <li>pow(a, b) Returns a<sup>b</sup>.</li>
+      <li>floor(x) Returns the whole number closest to x towards -Infinity.</li>
+      <li>round(x) Returns the whole number closest to x towards 0.</li>
+      <li>ceil(x) Returns the whole number closest to x towards Infinity.</li>
+      <li>abs(x) Returns the distance of x to 0.</li>
+      <li>min(a, b) Returns a if a &lt; b, b if b &lt; a.</li>
+      <li>max(a, b)</li>
+      <br>
+      <li>sin(theta)</li>
+      <li>cos(theta)</li>
+      <li>tan(theta)</li>
+      <li>asin(x)</li>
+      <li>acos(x)</li>
+      <li>atan(x)</li>
+      <li>atan2(x, y) Returns the angle of (x, y) from (0, 0)</li>
+    </ul>
+    <h3>Constants</h3>
+    <table>
+      <tr>
+        <td>PI</td><td>=</td><td>3.141592653589793</td>
+      </tr>
+      <tr>
+        <td>TAU</td><td>=</td><td>6.283185307179586</td>
+      </tr>
+      <tr>
+        <td>E</td><td>=</td><td>2.718281828459045</td>
+      </tr>
+      <tr>
+        <td>NAN</td><td>=</td><td>Not a number.</td>
+      </tr>
+      <tr>
+        <td>INFINITY</td><td>=</td><td>The number larger than all other numbers.</td>
+      </tr>
+      <tr>
+        <td>TRUE</td><td>=</td><td>1</td>
+      </tr>
+      <tr>
+        <td>FALSE</td><td>=</td><td>0</td>
+      </tr>
+    </table>
+  </body>
+</html>

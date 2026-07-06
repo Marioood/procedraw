@@ -1031,6 +1031,9 @@ class Tether {
           // f(x, y) = [(x + y) / 2]
           // [Help (->)] [Compile] <- /Function must be compiled to be used.../
           // Errors: [None.]
+          const headerText = document.createElement("span");
+          headerText.innerText = `f(${limits.varNames.join(", ")}) =`;
+          
           const srcTextarea = document.createElement("textarea");
           srcTextarea.value = options[optionKeys[i]].src;
           srcTextarea.className = "input-option-textarea";
@@ -1071,9 +1074,20 @@ class Tether {
             
           }, "aero-btn");
           
+          const helpButton = document.createElement("button");
+          helpButton.innerText = "Help";
+          helpButton.className = "aero-btn";
+          const helpLink = document.createElement("a");
+          helpLink.href = "procecalc.html";
+          helpLink.target = "_blank"; //open in new tab
+          helpLink.appendChild(helpButton);
+          
           container.appendChild(divWrap(
+            headerText,
+            document.createElement("br"),
             srcTextarea,
             document.createElement("br"),
+            helpLink,
             compileButton,
             mustCompileText,
             document.createElement("br"),

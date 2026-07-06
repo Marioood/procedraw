@@ -2258,9 +2258,9 @@ class LayerMandelbrot extends Layer {
     outputMode: {
       type: "keyvalues",
       keys: [
-        "color only",
-        "alpha only",
-        "alpha and color"
+        "brightness",
+        "alpha",
+        "alpha and brightness"
       ],
       values: [
         O_OUTPUT_COLOR,
@@ -2294,7 +2294,7 @@ class LayerMandelbrot extends Layer {
         if(o.discardInside && i == o.maxIterations)
           i = 0;
         //ts is for good normalizing
-        const col = i / (o.maxIterations - (o.discardInside ? 1 : 0));
+        const col = (i - 1) / (o.maxIterations - (o.discardInside ? 2 : 1));
         
         if(o.outputMode == O_OUTPUT_COLOR)
           img.plotPixel(col, col, col, 1, x, y);
@@ -2676,9 +2676,9 @@ class LayerWolfram extends Layer {
     outputMode: {
       type: "keyvalues",
       keys: [
-        "color only",
-        "alpha only",
-        "alpha and color"
+        "brightness",
+        "alpha",
+        "alpha and brightness"
       ],
       values: [
         O_OUTPUT_COLOR,
@@ -2752,26 +2752,74 @@ class LayerGraph extends Layer {
   options = {
     func: {
       src: "(x + y) / 2",
-      ops: calcParseTokens(calcTokenize("(x + y) / 2"), ["x", "y"]),
+      ops: calcParseTokens(calcTokenize("(x + y) / 2"), ["x", "y", "w", "h"]),
       srcMatchesOps: true
-    }
+    },
+    rangeMode: O_RANGE_0_TO_1,
+    outputMode: O_OUTPUT_COLOR
   };
   
   types = {
     func: {
       type: "procecalc",
-      varNames: ["x", "y"]
+      varNames: ["x", "y", "w", "h"]
+    },
+    rangeMode: {
+      type: "keyvalues",
+      keys: [
+        "x = 0 to 1, y = 0 to 1",
+        "x = -1 to 1, y = -1 to 1",
+        "x = 0 to w - 1, y = 0 to h - 1"
+      ],
+      values: [
+        O_RANGE_0_TO_1,
+        O_RANGE_NEG1_TO_1,
+        O_RANGE_ABSOLUTE
+      ]
+    },
+    outputMode: {
+      type: "keyvalues",
+      keys: [
+        "brightness",
+        "alpha",
+        "alpha and brightness"
+      ],
+      values: [
+        O_OUTPUT_COLOR,
+        O_OUTPUT_ALPHA,
+        O_OUTPUT_BOTH
+      ]
     }
   };
   
   generate(img, o) {
+    //TODO: fallback program
     const program = o.func.ops;
+    const vars = [-1, -1, img.w, img.h];
     
     for(let y = 0; y < img.h; y++) {
       for(let x = 0; x < img.w; x++) {
         //more common graphical coordinates (+y is up -y is down)
-        let col = calcRun(program, [x / (img.w), 1 - y / (img.h)]);
-        img.plotPixel(col, col, col, 1, x, y);
+        switch(o.rangeMode) {
+          case O_RANGE_0_TO_1:
+            vars[0] = x / (img.w - 1);
+            vars[1] = 1 - y / (img.h - 1);
+            break;
+          case O_RANGE_NEG1_TO_1:
+            vars[0] = x / (img.w - 1) * 2 - 1;
+            vars[1] = -(y / (img.h - 1) * 2 - 1);
+            break;
+          case O_RANGE_ABSOLUTE:
+            vars[0] = x;
+            vars[1] = img.h - y - 1;
+            break;
+          default:
+            throw new ProcedrawError(`Unknown range mode ${o.rangeMode}`);
+        }
+        let val = calcRun(program, vars);
+        const col = o.outputMode == O_OUTPUT_ALPHA ? 1 : val;
+        const alp = o.outputMode == O_OUTPUT_COLOR ? 1 : val;
+        img.plotPixel(col, col, col, alp, x, y);
       }
     }
     

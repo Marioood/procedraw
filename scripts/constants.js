@@ -69,6 +69,10 @@ const O_FUNCTION_NORMALIZE = 2;
 const O_FUNCTION_SQRT = 3;
 const O_FUNCTION_POWER = 4;
 
+const O_RANGE_0_TO_1 = 0;
+const O_RANGE_NEG1_TO_1 = 1;
+const O_RANGE_ABSOLUTE = 2;
+
 //////// BLEND/MIX ENUMS AND TABLES ////////
 
 //NEVER change these values!

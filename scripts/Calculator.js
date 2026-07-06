@@ -10,7 +10,8 @@
 //TODO: booleans, comparison, and a switch(cond, then, else) function (in place of ternaries)
 //TODO (AFTER FIRST REVISION): factor out constant parts of functions (e.g. shortening x / (0.5 * 3) to x / 1.5)
 //TODO: variadic functions (for hypot) or maybe not? might be pointless. what aaaaabout variadic min/max?
-
+//TODO: stack checking (make sure the expression actually returns a value/doesnt return too many)
+//TODO: type checking
 "use strict";
 
 //The calculator works as a stack machine. This means that operations are done entirely on a stack.
@@ -171,12 +172,13 @@ function calcParseTokens(tokens, variables, errors) {
     "atan2": 2
   };
   const CONSTS = {
-    //Infinity is already defined from Number.parseFloat()
     "PI": Math.PI,
     "TAU": Math.PI * 2,
     "E": Math.E,
-    "PHI": (1 + Math.sqrt(5)) / 2,
-    "NaN": NaN,
+    //"PHI": (1 + Math.sqrt(5)) / 2,
+    //"Infinity" would count as a number b/c of Number.parseFloat(), but that's been removed as it doesn't fit with the other constants
+    "INFINITY": Infinity,
+    "NAN": NaN,
     "TRUE": 1,
     "FALSE": 0
   };
@@ -188,7 +190,7 @@ function calcParseTokens(tokens, variables, errors) {
   
   for(let i = 0; i < tokens.length; i++) {
     let curTok = tokens[i];
-    const tokNumeric = Number.parseFloat(curTok);
+    const tokNumeric = curTok == "Infinity" ? NaN : Number.parseFloat(curTok);
     
     if(tokNumeric != tokNumeric) {
       //not a number
