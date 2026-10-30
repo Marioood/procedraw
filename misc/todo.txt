@@ -8,6 +8,8 @@ TODO: (separate commits!)
   * "get" filter that takes in a vector as a direct coordinate instead of offset (or just make that an offset layer option)
   * add 2D graph, 1D graph, and rework function pass (with custom functions)
   * procecalc types (Vec2, Complex, Color, etc.)
+  * split functionPass filter into graphing calculator version and logarithmicBrightness filters
+  * add new option types to god layers
   UI:
   * make sidebars scrollable
   * vector picker from toomuch branch
@@ -16,6 +18,7 @@ TODO: (separate commits!)
   * fix hex box in color picker (it accepts and outputs funny values, i think?)
   * add language support (optional save to cookies, auto-detection of language?)
   * god image, with prompt at first but then you can ignore the prompt
+  * hue to hue blend mode (current HSV hue mode - set bg hue to fg hue) and brightness to hue
 
 
 rewrite mandlebrot layer in WASM (just that layer, to see the performance gainz)

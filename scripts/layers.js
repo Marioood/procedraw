@@ -186,8 +186,8 @@ class LayerXorFractal extends Layer {
       case O_BITWISE_HAMMING_DIST:
         for(let y = 0; y < img.h; y++) {
           for(let x = 0; x < img.w; x++) {
-            const xB = x * xScale;
-            const yB = y * yScale;
+            const xB = x * xScale * 2;
+            const yB = y * yScale * 2;
             let col = (this.popcount(xB) / 16 - this.popcount(yB) / 16) + 0.5;
             img.plotPixel(col, col, col, 1, x, y);
           }
@@ -2292,7 +2292,7 @@ class LayerMandelbrot extends Layer {
           i++;
         }
         if(o.discardInside && i == o.maxIterations)
-          i = 0;
+          i = 1;
         //ts is for good normalizing
         const col = (i - 1) / (o.maxIterations - (o.discardInside ? 2 : 1));
         
@@ -2623,7 +2623,7 @@ class LayerCellularBlobs extends Layer {
 class LayerWolfram extends Layer {
   name = "wolfram";
   
-  static description = "A layer of elementary cellular automata that uses a bit pattern (number) to determine the next generation.\n\nGood patterns to try are 18, 30, 45, 90, 102, 110, 122, 193, 225 and 254";
+  static description = "A layer of elementary cellular automata that uses a bit pattern (number) to determine the next generation.\n\nGood patterns to try are 18, 30, 45, 90, 102, 110, 122, 161, 193, 225 and 254";
   
   options = {
     pattern: 110, //01101110 (bin)

@@ -442,7 +442,7 @@ function setupLayerManagementButtons(img, tether) {
     }
     layerSelectShown = !layerSelectShown;
   };
-  assert(Object.keys(img.layerClasses).length == 38, "layer-select-table expects 38 layers.");
+  assert(Object.keys(img.layerClasses).length == 39, "layer-select-table expects 39 layers.");
   document.getElementById("layer-select-table").style.display = "none";
   //TODO: maybe have this be decided based on some value in the layer?
   const regularNames = [
@@ -488,6 +488,7 @@ function setupLayerManagementButtons(img, tether) {
       "contrast",
       "HSV",
       "sine",
+      "colorize",
       "functionPass"
     ],
     [
@@ -495,7 +496,7 @@ function setupLayerManagementButtons(img, tether) {
       "emboss",
       "sharpen",
       "merge",
-      "vectorize",
+      "normalMap",
       "sunlight"
     ]
   ];

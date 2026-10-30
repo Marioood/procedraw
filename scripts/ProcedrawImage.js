@@ -72,11 +72,12 @@ class ProcedrawImage {
     HSV: FilterHSV,
     sharpen: FilterSharpen,
     offset: FilterOffset,
-    vectorize: FilterVectorize,
+    normalMap: FilterNormalMap,
     sunlight: FilterSunlight,
     shear: FilterShear,
     functionPass: FilterFunctionPass,
-    rotate: FilterRotate
+    rotate: FilterRotate,
+    colorize: FilterColorize
   };
   //TODO: make this return image data?
   renderImage() {

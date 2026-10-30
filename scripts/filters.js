@@ -1182,8 +1182,8 @@ class FilterOffset extends Filter {
   }
 }
 
-class FilterVectorize extends Filter {
-  name = "vectorize";
+class FilterNormalMap extends Filter {
+  name = "normalMap";
   
   static description = "A filter that generates a normal map of a base layer.";
   
@@ -1606,6 +1606,72 @@ class FilterRotate extends Filter {
         const col = img.getPixelFromData(mod(xRot, img.w), mod(yRot, img.h), baseData, o.interpMode);
         //const col = img.getPixelFromData(clamp(xRot + pivotX, 0, img.w - 1), clamp(yRot + pivotY, 0, img.h - 1), baseData, o.interpMode);
         img.plotPixel(col[0], col[1], col[2], col[3], x, y);
+      }
+    }
+  }
+}
+
+class FilterColorize extends Filter {
+  name = "colorize";
+  
+  static description = "Maps the brightness of another layer to a gradient, coloring it.";
+  
+  generate(img, o) {
+    const stops = [
+      [0, [1, 0, 0, 1]],
+      [1/6, [1, 1, 0, 1]],
+      [2/6, [0, 1, 0, 1]],
+      [3/6, [0, 1, 1, 1]],
+      [4/6, [0, 0, 1, 1]],
+      [5/6, [1, 0, 1, 1]],
+      [1, [1, 0, 0, 1]]
+    ];
+    //precondition: stops are always be sorted from least to greatest
+    function findStop(n) {
+      let rightmostIdx = -1;
+      let leftmostIdx = -1;
+      let closestIdx = -1;
+      let closestDist = Infinity;
+      for(let i = 0; i < stops.length; i++) {
+        const dist = Math.abs(stops[i][0] - n);
+        if(dist < closestDist) {
+          closestIdx = i;
+          closestDist = dist;
+          //could be optimized? since stops are sorted
+          if(n > stops[i][0]) {
+            leftmostIdx = closestIdx;
+            rightmostIdx = closestIdx + 1;
+          } else {
+            rightmostIdx = closestIdx;
+            leftmostIdx = closestIdx - 1;
+          }
+          rightmostIdx = clamp(rightmostIdx, 0, stops.length - 1);
+          leftmostIdx = clamp(leftmostIdx, 0, stops.length - 1);
+        }
+      }
+      if(n == 0) {
+        return stops[closestIdx][1];
+      } else {
+        const leftmost = stops[leftmostIdx]
+        const rightmost = stops[rightmostIdx]
+        const interp = (n - leftmost[0]) / (rightmost[0] - leftmost[0])
+        //console.log(interp);
+        return colorMix(leftmost[1], rightmost[1], interp);
+      }
+    }
+    
+    const data = img.layerDataFromKey(this.od.base);
+    
+    for(let y = 0; y < img.h; y++) {
+      for(let x = 0; x < img.w; x++) {
+        const idx = x + y * img.w;
+        const r = data[idx * 4];
+        const g = data[idx * 4 + 1];
+        const b = data[idx * 4 + 2];
+        //const a = data[idx * 4 + 3];
+        const brightness = (r + g + b) / 3;
+        const rgba = findStop(brightness);
+        img.plotPixel(rgba[0], rgba[1], rgba[2], rgba[3], x, y);
       }
     }
   }

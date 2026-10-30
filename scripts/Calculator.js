@@ -65,6 +65,14 @@ const OP_B_AND = 25; //a b -- c
 const OP_B_OR = 26; //a b -- c
 const OP_B_XOR = 27; //a b -- c
 
+//comparison
+const OP_LT = 28; //a b -- c
+const OP_GT = 29; //a b -- c
+const OP_EQ = 30; //a b -- c
+
+
+const OP_SWITCH = 64; //condition then else -- c
+
 const OP_COUNT = 28;
 
 function Op(t, v) {
@@ -83,12 +91,12 @@ function calcTokenize(source) {
   
   for(let i = 0; i < source.length; i++) {
     let ch = source[i];
-    if(ch == ' ') {
+    if(ch == ' ' || ch == '\n') {
       if(curToken.length > 0) {
         tokens.push(curToken);
         curToken = "";
       }
-    } else if("()+-*/%<>&|^@,".indexOf(ch) >= 0) {
+    } else if("()+-*/%<>&|^@,=".indexOf(ch) >= 0) {
       if(curToken.length > 0) {
         tokens.push(curToken);
         curToken = "";
@@ -107,14 +115,21 @@ function calcTokenize(source) {
 function calcParseTokens(tokens, variables, errors) {
   const PRECEDENCE = {
     "(": 0,
-    "+": 1,
-    "-": 1,
-    "*": 2,
-    "/": 2,
-    "u-neg": 3,
-    "&": 3,
-    "@": 3,
-    "|": 3
+    
+    "<": 1,
+    ">": 1,
+    "=": 1,
+    
+    "+": 2,
+    "-": 2,
+    
+    "*": 3,
+    "/": 3,
+    
+    "u-neg": 4,
+    "&": 4,
+    "@": 4,
+    "|": 4
   };
   const TOK2OP = {
     "+": OP_ADD,
@@ -122,6 +137,10 @@ function calcParseTokens(tokens, variables, errors) {
     "-": OP_SUB,
     "u-neg": OP_NEG,
     "/": OP_DIV,
+    
+    "<": OP_LT,
+    ">": OP_GT,
+    "=": OP_EQ,
     
     "sqrt": OP_SQRT,
     "cbrt": OP_CBRT,
@@ -209,6 +228,9 @@ function calcParseTokens(tokens, variables, errors) {
         case "&":
         case "|":
         case "@":
+        case ">":
+        case "<":
+        case "=":
           while(opStack.length > 0 && PRECEDENCE[opStack[opStack.length - 1]] >= PRECEDENCE[curTok]) {
             program.push(Op(TOK2OP[opStack.pop()]));
           }
@@ -403,6 +425,21 @@ function calcRun(program, locals) {
         stack.push(((a % b) + b) % b);
         break;
       }
+      case OP_LT: {
+        const b = stack.pop();
+        const a = stack.pop();
+        stack.push((a < b) * 1);
+        break;
+      }
+      case OP_GT: {
+        const b = stack.pop();
+        const a = stack.pop();
+        stack.push((a > b) * 1);
+        break;
+      }
+      case OP_EQ:
+        stack.push((stack.pop() == stack.pop()) * 1);
+        break;
       case OP_FLOOR:
         stack.push(Math.floor(stack.pop()));
         break;
